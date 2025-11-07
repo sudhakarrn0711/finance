@@ -1,0 +1,2495 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Budget Tracker — Glassmorphism + Reports</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<script src="asset/tracker/config.js"></script>
+  <!-- Tailwind (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js (for reports) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@2.0.2/dist/chartjs-chart-treemap.min.js"></script>
+
+
+
+
+  <style>
+    :root {
+      --card-bg: rgba(0, 0, 0, 0.4);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --sheen: rgba(255, 255, 255, 0.20);
+    }
+
+    body {
+      background: radial-gradient(1200px 600px at 100% -20%, rgba(59, 130, 246, .15), transparent 50%) #0b1220;
+      color: #e9eefb;
+    }
+
+    /* ============================
+       Glassmorphism Card + Aurora
+       ============================ */
+    .neo-card {
+      position: relative;
+      overflow: hidden;
+      background: var(--card-bg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--card-border);
+      border-radius: 1rem;
+      /* rounded-2xl vibe */
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+      transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+      isolation: isolate;
+    }
+
+    .neo-card:hover {
+      transform: translateY(-6px) scale(1.02);
+    }
+
+    /* Aurora layer (soft moving gradient blotches) */
+    .neo-card::before {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      background:
+        radial-gradient(200px 120px at 20% 30%, rgba(16, 185, 129, .15), transparent 60%),
+        radial-gradient(220px 140px at 80% 30%, rgba(251, 146, 60, .12), transparent 65%),
+        radial-gradient(240px 160px at 50% 80%, rgba(147, 51, 234, .12), transparent 65%);
+      animation: aurora-move 16s ease-in-out infinite alternate;
+      z-index: -1;
+      filter: saturate(1.2);
+    }
+
+    @keyframes aurora-move {
+      0% {
+        transform: translate3d(-2%, -2%, 0) scale(1);
+      }
+
+      50% {
+        transform: translate3d(2%, 1%, 0) scale(1.02);
+      }
+
+      100% {
+        transform: translate3d(-1%, 2%, 0) scale(1.01);
+      }
+    }
+
+    .neo-card::after {
+      content: none;
+    }
+
+    /* Color glows on hover per type */
+    .glow-income:hover {
+      box-shadow: 0 12px 40px rgba(16, 185, 129, .35);
+      border-color: rgba(16, 185, 129, .35);
+    }
+
+    .glow-expense:hover {
+      box-shadow: 0 12px 40px rgba(251, 146, 60, .35);
+      border-color: rgba(251, 146, 60, .35);
+    }
+
+    .glow-variance:hover {
+      box-shadow: 0 12px 40px rgba(236, 72, 153, .35);
+      border-color: rgba(236, 72, 153, .35);
+    }
+
+    /* Animated usage bar in cards + table */
+    .budg-bar {
+      transition: width 1s ease-in-out;
+    }
+
+    /* Small badge look on dark */
+    .badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 0.75rem;
+      line-height: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* Section framing */
+    .panel {
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 0.75rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .3);
+    }
+
+    /* floating badge styles you had */
+    @keyframes float-badge {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(-2deg);
+      }
+
+      50% {
+        transform: translateY(-3px) rotate(2deg);
+      }
+    }
+
+    .badge-float {
+      animation: float-badge 2.5s ease-in-out infinite;
+    }
+
+    .badge-wrapper {
+      position: absolute;
+      top: -0.5rem;
+      right: -0.5rem;
+      overflow: visible;
+    }
+
+    /* Tiny inline loader (next to Reload) */
+    .mini-spinner {
+      width: 16px;
+      height: 16px;
+      border-radius: 9999px;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      border-top-color: #60a5fa;
+      /* faint blue, consistent with your theme */
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Reports: card + highlight */
+    .chart-card {
+      background: rgba(0, 0, 0, .5);
+      border-radius: 1rem;
+      padding: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, .3);
+    }
+
+    canvas {
+      max-height: 320px;
+    }
+
+    .highlight {
+      outline: 2px solid #34d399;
+      border-radius: .5rem;
+      transition: outline-offset .2s ease;
+    }
+
+    /* --- Status Badge Styles --- */
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      /* pill */
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* ✅ On Track */
+    .status-ontrack {
+      background: rgba(34, 197, 94, 0.15);
+      color: #86efac;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+    }
+
+    /* ⚠️ At Risk */
+    .status-risk {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fcd34d;
+      box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+    }
+
+    /* 🔥 Overspending */
+    .status-over {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    }
+
+    /* 🔥 Pulse Animation */
+    @keyframes flamePulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.3);
+        opacity: 0.7;
+      }
+    }
+
+    .flame-animate {
+      display: inline-block;
+      margin-left: 6px;
+      color: #fb923c;
+      animation: flamePulse 1.2s infinite;
+    }
+
+    /* ⚠️ Shake Animation */
+    @keyframes shakeWarn {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-2px);
+      }
+
+      40% {
+        transform: translateX(2px);
+      }
+
+      60% {
+        transform: translateX(-2px);
+      }
+
+      80% {
+        transform: translateX(2px);
+      }
+    }
+
+    .warn-animate {
+      display: inline-block;
+      margin-left: 6px;
+      color: #fbbf24;
+      animation: shakeWarn 1s infinite;
+    }
+
+    /* Drilldown Modal — Black Glassmorphism */
+    #drilldownModal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.6);
+      /* dark backdrop */
+      backdrop-filter: blur(6px);
+      z-index: 100;
+    }
+
+    #drilldownModal .modal-content {
+      background: rgba(20, 20, 20, 0.85);
+      /* deep black glass */
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      width: 92%;
+      max-width: 700px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7), inset 0 0 25px rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      animation: modalPop 0.25s ease;
+      color: #f1f5f9;
+    }
+
+    @keyframes modalPop {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    /* Legend items */
+    #modalLegend .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #d1d5db;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #modalLegend .legend-item:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    #modalLegend .legend-item.inactive {
+      opacity: 0.35;
+      filter: grayscale(80%);
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    }
+
+    .legend-swatch.active {
+      animation: glowPulse 1.5s infinite;
+    }
+
+    @keyframes glowPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+      }
+
+      50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 14px rgba(255, 255, 255, 0.95);
+      }
+    }
+
+    /* Buttons inside modal */
+    #drilldownModal button {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f9fafb;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    #drilldownModal button:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+
+    /* Overlay (hidden on load) */
+    .treemap-modal {
+      display: none;
+      /* hidden initially */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 9999;
+      /* always on top */
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Active state */
+    .treemap-modal.active {
+      display: flex;
+    }
+
+    /* Glassmorphism box */
+    .treemap-modal-content {
+      position: relative;
+      background: rgba(20, 20, 20, 0.8);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 25px;
+      max-width: 720px;
+      width: 90%;
+      color: #fff;
+      animation: treemapFadeIn 0.25s ease-in-out;
+    }
+
+    @keyframes treemapFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+
+
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+
+    :root {
+      --calheat-bg: #050611;
+      --calheat-card: rgba(18, 18, 20, 0.70);
+      --calheat-card-2: rgba(26, 26, 28, 0.62);
+      --calheat-stroke: rgba(255, 255, 255, 0.06);
+      --calheat-muted: #9fb0c4;
+      --calheat-fg: #eef4fb;
+      --calheat-accent: #8b5cf6;
+    }
+
+    .calheat-page {
+      max-width: 1160px;
+      margin: 26px auto;
+      padding: 18px;
+    }
+
+    .calheat-hero {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .calheat-badge {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--calheat-stroke);
+      color: var(--calheat-muted);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .calheat-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .calheat-card {
+      background: var(--calheat-card);
+      border-radius: 14px;
+      padding: 18px;
+      border: 1px solid var(--calheat-stroke);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+      backdrop-filter: blur(14px) saturate(140%);
+    }
+
+    .calheat-card h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: var(--calheat-fg);
+    }
+
+    .calheat-muted {
+      color: var(--calheat-muted);
+      font-size: 13px;
+    }
+
+    /* controls */
+    .calheat-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
+    .calheat-btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--calheat-stroke);
+      color: var(--calheat-fg);
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .calheat-seg {
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 8px;
+      padding: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .calheat-seg button {
+      background: transparent;
+      border: 0;
+      color: var(--calheat-muted);
+      padding: 8px 10px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .calheat-seg button.active {
+      color: #fff;
+      background: linear-gradient(90deg, rgba(139, 92, 246, .16), rgba(34, 211, 238, .08));
+    }
+
+    /* calendar */
+    .calheat-weekday-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .calheat-weekday {
+      font-size: 12px;
+      color: var(--calheat-muted);
+      text-align: center;
+    }
+
+    .calheat-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .calheat-cell {
+      border-radius: 10px;
+      min-height: 86px;
+      padding: 8px;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      transition: transform .08s ease, box-shadow .12s ease;
+      background: rgba(255, 255, 255, 0.01);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .calheat-cell:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .6);
+    }
+
+    .calheat-cell.disabled {
+      opacity: .12;
+      pointer-events: none;
+      transform: none;
+      box-shadow: none;
+      background: transparent;
+      border: 1px dashed rgba(255, 255, 255, .02);
+    }
+
+    .calheat-dnum {
+      font-size: 13px;
+      color: var(--calheat-muted);
+    }
+
+    .calheat-summary {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--calheat-fg);
+      margin-top: auto;
+    }
+
+    /* sparkline */
+    .calheat-spark {
+      width: 100%;
+      height: 10px;
+      border-radius: 6px;
+      overflow: hidden;
+      display: block;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .calheat-spark-seg {
+      height: 100%;
+      display: inline-block;
+      vertical-align: top;
+    }
+
+    /* side */
+    .calheat-side .hsmall {
+      font-size: 14px;
+      margin: 0 0 8px;
+    }
+
+    .calheat-day-list {
+      margin-top: 10px;
+      max-height: 540px;
+      overflow: auto;
+      padding-right: 6px;
+    }
+
+    .calheat-ms {
+      background: var(--calheat-card);
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .calheat-ms .title {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .calheat-ms .meta {
+      font-size: 13px;
+      color: var(--calheat-muted);
+    }
+
+    /* legend */
+    .calheat-legend {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .calheat-sw {
+      width: 18px;
+      height: 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    /* tooltip */
+    #calheat-tooltip {
+      position: fixed;
+      pointer-events: none;
+      display: none;
+      z-index: 99999;
+      background: rgba(10, 10, 12, 0.96);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+      min-width: 180px;
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    @media (max-width:980px) {
+      .calheat-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .calheat-side {
+        order: 2;
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen p-6">
+
+
+
+  <!-- Budget Section -->
+  <section id="budg-section" class="panel p-4">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <h2 class="text-xl font-bold">Budgets vs Actual</h2>
+
+      <!-- Controls -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Hidden value holder to keep your existing code contract -->
+        <input id="budgPeriod" type="hidden" />
+
+        <!-- Custom Month Dropdown Trigger -->
+        <div class="relative">
+          <button id="budgPeriodBtn" type="button"
+            class="px-3 py-1 rounded bg-white/10 border border-white/10 flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-gray-300"></i>
+            <span id="budgPeriodLabel">Select month</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-300"></i>
+          </button>
+
+          <!-- Dropdown Panel -->
+          <div id="budgMonthDrop"
+            class="absolute right-0 mt-2 w-64 bg-black/60 backdrop-blur-lg border border-white/10 rounded-lg shadow-xl p-3 hidden z-50">
+            <div class="flex items-center justify-between mb-2">
+              <button id="yearPrev" class="p-1 rounded bg-white/5 hover:bg-white/10 border border-white/10">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+              </button>
+              <div id="yearLabel" class="text-sm font-semibold"></div>
+              <button id="yearNext" class="p-1 rounded bg-white/5 hover:bg-white/10 border border-white/10">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <div id="monthGrid" class="grid grid-cols-3 gap-2"></div>
+
+            <div class="mt-3 flex items-center justify-between text-xs">
+              <button id="pickThisMonth" class="px-2 py-1 rounded bg-white/10 border border-white/10 hover:bg-white/20">
+                This month
+              </button>
+              <button id="clearPeriod" class="px-2 py-1 rounded bg-white/10 border border-white/10 hover:bg-white/20">
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search box -->
+        <input id="budgSearch" class="px-3 py-1 rounded bg-white/10 border border-white/10 w-64"
+          placeholder="Search category/type..." />
+
+        <!-- Reload with tiny loader -->
+        <button id="budgReload"
+          class="px-3 py-1 rounded bg-white/10 hover:bg-white/20 border border-white/10 flex items-center gap-2">
+          <span>Reload</span>
+          <span id="budgSpinner" class="mini-spinner hidden"></span>
+        </button>
+
+        <button id="budgToggleView" class="px-3 py-1 rounded bg-white/10 hover:bg-white/20 border border-white/10">
+          Switch to Card View
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <br>
+  <!-- Summary Section -->
+  <section id="budg-summary-section" class="panel p-4 mb-6">
+    <h2 class="text-xl font-bold mb-4">Summary</h2>
+    <div id="budgSummary" class="grid md:grid-cols-3 gap-4"></div>
+  </section>
+
+  <section id="budg-section" class="panel p-4">
+    <!-- Table View -->
+    <div id="budgTableView" class="mt-4 overflow-auto">
+      <table class="min-w-full">
+        <thead class="bg-white/10">
+          <tr>
+            <th class="px-3 py-2 text-left">Type</th>
+            <th class="px-3 py-2 text-left">Category</th>
+            <th class="px-3 py-2 text-right">Budget</th>
+            <th class="px-3 py-2 text-right">Actual</th>
+            <th class="px-3 py-2 text-right">Variance</th>
+            <th class="px-3 py-2 text-left">Used</th>
+          </tr>
+        </thead>
+        <tbody id="budgBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Card View -->
+    <div id="budgCardView" class="mt-4 hidden grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </section>
+
+
+
+  <!-- =============================== -->
+  <!-- Reports Dashboard (Interactive) -->
+  <!-- =============================== -->
+  <section id="health-section" class="panel p-4 mt-6">
+    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+      <i data-lucide="traffic-light" class="w-5 h-5 text-gray-300"></i>
+      Budget Health
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3" id="healthMetrics"></div>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2">
+      <div class="neo-card p-4 rounded-2xl bg-black/40 border border-white/10 shadow-lg">
+        <h2 class="text-lg font-semibold mb-3 flex items-center gap-2">
+          🚦 Budget Health
+        </h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- Chart -->
+          <div class="flex flex-col items-center">
+            <canvas id="chartHealth" width="300" height="300"></canvas>
+            <div id="healthLegend" class="mt-4 flex flex-wrap justify-center gap-2"></div>
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm text-left border border-white/10 rounded-lg overflow-hidden">
+              <thead class="bg-white/5">
+                <tr>
+                  <th class="px-3 py-2">Category</th>
+                  <th class="px-3 py-2">Budget</th>
+                  <th class="px-3 py-2">Actual</th>
+                </tr>
+              </thead>
+              <tbody id="budgBodyHealth" class="divide-y divide-white/10">
+                <!-- rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3 class="font-semibold mb-2">🔥 Burn Rate</h3>
+        <div id="burnStatus" class="text-center mb-3"></div>
+        <canvas id="chartBurn" height="120"></canvas>
+      </div>
+
+      <div class="chart-card">
+
+        <!-- 📈 Analytics Timeline Block -->
+        <div class="neo-card p-4 max-w-3xl mx-auto">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-lg font-semibold flex items-center gap-2">📈 Analytics Timeline</h2>
+            <div class="flex gap-2">
+              <select id="monthSelector" class="bg-slate-700 text-white text-sm rounded px-2 py-1"></select>
+              <button id="toggleYearBtn" class="bg-slate-700 text-white text-sm rounded px-3 py-1">🔄 This Year</button>
+            </div>
+          </div>
+          <div id="summaryRow" class="flex flex-wrap gap-3 text-sm text-gray-300 mb-3 items-center"></div>
+          <canvas id="chartTimeline" height="200"></canvas>
+        </div>
+
+        <!-- 🔹 Drilldown Modal -->
+        <div id="drilldownModal" class="modal">
+          <div class="modal-content">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-md font-medium">🔎 Daily Drilldown (<span id="weekLabel"></span>)</h3>
+              <button id="closeDrilldown"
+                class="px-2 py-1 text-xs rounded bg-white/10 border border-white/10 hover:bg-white/20">✖ Close</button>
+            </div>
+            <div class="flex justify-between items-center mb-2">
+              <div id="modalLegend" class="flex flex-wrap gap-2"></div>
+              <button id="toggleAllBtn"
+                class="px-2 py-1 text-xs rounded bg-white/10 border border-white/10 hover:bg-white/20 flex items-center">
+                <span id="toggleText">Deselect All</span>
+                <span id="toggleCount" class="counter-badge">0/0</span>
+              </button>
+            </div>
+            <canvas id="chartDrilldown" height="160"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+
+      <div class="chart-card">
+        <div class="neo-card">
+          <h2 class="text-lg font-semibold mb-3 flex items-center gap-2">🧩 Expense Treemap</h2>
+          <canvas id="chartTreemap" height="420"></canvas>
+        </div>
+
+        <!-- 🔹 Treemap Drilldown Modal -->
+        <div id="treemapModal" class="treemap-modal">
+          <div class="treemap-modal-content">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-md font-medium">🔎 Daily Breakdown — <span id="modalCategory"></span></h3>
+              <button id="treemapClose"
+                class="px-2 py-1 text-xs rounded bg-white/10 border border-white/10 hover:bg-white/20">✖ Close</button>
+            </div>
+            <canvas id="chartBreakdown" height="180"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+
+      <div class="chart-card">
+        <h3 class="font-semibold mb-2">🚨 Overrun Categories (≥100%)</h3>
+        <ul id="overrunList" class="list-disc ml-6"></ul>
+      </div>
+      <div class="chart-card">
+        <h3 class="font-semibold mb-2">🔎 Drill-down Category Explorer</h3>
+        <div id="explorer" class="space-y-2"></div>
+      </div>
+
+
+
+      <div class="chart-card md:col-span-2" >
+
+        <div class="calheat-page">
+          <div class="calheat-hero">
+            <div class="calheat-badge">Budget • Heatmap</div>
+            <h1>📆 Monthly Expense Heatmap — Advanced</h1>
+          </div>
+
+          <div class="calheat-layout">
+            <div class="calheat-card" id="calheat-calendarCard">
+              <div style="display:flex;align-items:center;gap:12px;justify-content:space-between">
+                <div style="display:flex;flex-direction:column">
+                  <h2 id="calheat-titleMonth">August 2025</h2>
+                  <div class="calheat-muted" id="calheat-monthCaption">Expenses only • Sparklines show category
+                    composition</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <button id="calheat-prevMonth" class="calheat-btn">◀ Prev</button>
+                  <button id="calheat-todayBtn" class="calheat-btn">Today</button>
+                  <button id="calheat-nextMonth" class="calheat-btn">Next ▶</button>
+                </div>
+              </div>
+
+              <div class="calheat-controls" style="margin-top:12px">
+                <div class="calheat-seg">
+                  <button id="calheat-modeAmount" class="active">Color: Amount</button>
+                  <button id="calheat-modeCount">Color: Count</button>
+                </div>
+                <div style="flex:1"></div>
+                <div class="calheat-muted">Auto color scale • Click cell for details</div>
+              </div>
+
+              <div class="calheat-weekday-row" id="calheat-weekdayRow"></div>
+              <div class="calheat-grid" id="calheat-grid"></div>
+
+              <div class="calheat-legend">
+                <div class="calheat-muted">Low</div>
+                <div class="calheat-sw" id="calheat-sw0"></div>
+                <div class="calheat-sw" id="calheat-sw1"></div>
+                <div class="calheat-sw" id="calheat-sw2"></div>
+                <div class="calheat-sw" id="calheat-sw3"></div>
+                <div class="calheat-muted">High</div>
+              </div>
+            </div>
+
+            <div class="calheat-card calheat-side" id="calheat-sidePanel">
+              <h2 id="calheat-sideTitle">Select a day</h2>
+              <div id="calheat-sideSummary" class="calheat-muted">Click any calendar day to view expense details and
+                category composition.</div>
+              <div class="calheat-day-list" id="calheat-dayList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="calheat-tooltip"></div>
+
+      </div>
+
+
+      <div class="chart-card md:col-span-2">
+        <h3 class="font-semibold mb-2">💡 Smart Recommendations</h3>
+        <ul id="smartTips" class="space-y-2"></ul>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    /* ==========================
+       ORIGINAL APP (Live Data)
+       ========================== */
+    const BudgetApp = (() => {
+      
+	  //const API_BASE = "https://script.google.com/macros/s/AKfycbyLxDfYb54dQsu0KcP6XsJK0GyBf4FodbJzB8tC0DlPlC3nYyB8eEiIk8fT6_WLChuE3g/exec";
+
+    const API_BASE = window.getScriptURL("budget");
+
+
+      const qs = (sel, el = document) => el.querySelector(sel);
+      const fmt = (n) => {
+        const v = Number(n || 0);
+        return v.toLocaleString(undefined, { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+      };
+      const ymNow = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      };
+      const labelFromYM = (val) => {
+        if (!val) return 'Select month';
+        const [y, m] = val.split('-').map(Number);
+        const d = new Date(y, (m || 1) - 1, 1);
+        return d.toLocaleString(undefined, { month: 'long' }) + ', ' + y;
+      };
+
+      // --- Small loader toggler
+      function setLoading(on) { qs('#budgSpinner').classList.toggle('hidden', !on); }
+
+      // cache for local filtering
+      let budgetsCache = [];
+
+      async function apiGet(action, params = {}) {
+        const u = new URL(API_BASE);
+        u.searchParams.set("action", action);
+        Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
+        const res = await fetch(u.toString(), { method: 'GET' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      }
+
+      /* ===== Custom Month Dropdown ===== */
+      const MP = { year: new Date().getFullYear(), monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], open: false };
+
+      function renderMonthGrid() {
+        const grid = qs('#monthGrid'); grid.innerHTML = '';
+        qs('#yearLabel').textContent = MP.year;
+        const currentVal = qs('#budgPeriod').value; const [selY, selM] = currentVal ? currentVal.split('-').map(Number) : [null, null];
+        MP.monthsShort.forEach((name, idx) => {
+          const ym = `${MP.year}-${String(idx + 1).padStart(2, '0')}`;
+          const isSelected = selY === MP.year && selM === (idx + 1);
+          const btn = document.createElement('button'); btn.type = 'button';
+          btn.className = `px-2 py-2 rounded border text-sm ${isSelected ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-200' : 'bg-white/10 border-white/10 hover:bg-white/20 text-gray-100'}`;
+          btn.textContent = name;
+          btn.addEventListener('click', () => { setPeriod(ym); closeMonthDrop(); loadBudgets().catch(console.error); });
+          grid.appendChild(btn);
+        });
+      }
+
+      function openMonthDrop() {
+        const drop = qs('#budgMonthDrop');
+        const val = qs('#budgPeriod').value || ymNow();
+        MP.year = Number(val.slice(0, 4)) || new Date().getFullYear();
+        renderMonthGrid();
+        drop.classList.remove('hidden'); MP.open = true;
+        document.addEventListener('click', onOutsideClick); document.addEventListener('keydown', onEsc);
+      }
+      function closeMonthDrop() { qs('#budgMonthDrop').classList.add('hidden'); MP.open = false; document.removeEventListener('click', onOutsideClick); document.removeEventListener('keydown', onEsc); }
+      function onOutsideClick(e) { const wrap = qs('#budgMonthDrop'); const btn = qs('#budgPeriodBtn'); if (!wrap.contains(e.target) && !btn.contains(e.target)) closeMonthDrop(); }
+      function onEsc(e) { if (e.key === 'Escape') closeMonthDrop(); }
+      function setPeriod(ym) { qs('#budgPeriod').value = ym || ''; qs('#budgPeriodLabel').textContent = labelFromYM(ym); }
+
+      /* ===== Filtering + Rendering ===== */
+      function getFilteredBudgets() {
+        const q = (qs('#budgSearch').value || '').trim().toLowerCase();
+        if (!q) return budgetsCache;
+        return budgetsCache.filter(b => String(b.category || '').toLowerCase().includes(q) || String(b.type || '').toLowerCase().includes(q));
+      }
+
+      function renderBudgets(list) {
+        const tbody = qs('#budgBody'); const cardView = qs('#budgCardView');
+        tbody.innerHTML = ''; cardView.innerHTML = '';
+        let totalBudget = 0, totalActual = 0, totalVariance = 0;
+
+        (list || []).forEach((b, i) => {
+          const t = String(b.type || '').toLowerCase();
+          totalBudget += Number(b.budget) || 0; totalActual += Number(b.actual) || 0; totalVariance += Number(b.variance) || 0;
+          const budgetNum = Number(b.budget) || 0; const actualNum = Number(b.actual) || 0;
+          const usedPct = budgetNum > 0 ? Math.round((actualNum / budgetNum) * 100) : 0;
+
+          /* Table Row */
+          const tr = document.createElement('tr'); tr.className = i % 2 ? 'bg-white/5' : ''; tr.dataset.cat = b.category;
+          tr.innerHTML = `
+            <td class="px-3 py-2">${b.type}</td>
+            <td class="px-3 py-2">${b.category}</td>
+            <td class="px-3 py-2 text-right">${fmt(b.budget)}</td>
+            <td class="px-3 py-2 text-right">${fmt(b.actual)}</td>
+            <td class="px-3 py-2 text-right">
+              <span class="badge ${Number(b.variance) < 0 ? 'text-rose-300 border-rose-400/30 bg-rose-500/10' : 'text-emerald-300 border-emerald-400/30 bg-emerald-500/10'}">
+                <i data-lucide="trending-up" class="w-4 h-4"></i>${fmt(b.variance)}
+              </span>
+            </td>
+            <td class="px-3 py-2">
+              <div class="w-40 bg-white/10 rounded-full h-2 overflow-hidden">
+                <div class="h-2 budg-bar ${usedPct > 100 ? 'bg-rose-500' : 'bg-emerald-400'}" style="width:0%"></div>
+              </div>
+              <div class="text-xs mt-1 text-gray-400">${usedPct}%</div>
+            </td>`;
+          tbody.appendChild(tr);
+
+          /* Card View */
+          const typeGlow = t === 'income' ? 'glow-income' : t === 'expense' ? 'glow-expense' : 'glow-variance';
+          const typePill = t === 'income' ? 'bg-green-500/15 text-green-300 border-green-400/30' : t === 'expense' ? 'bg-orange-500/15 text-orange-300 border-orange-400/30' : 'bg-pink-500/15 text-pink-300 border-pink-400/30';
+          const variancePill = (Number(b.variance) || 0) < 0 ? 'bg-rose-500/20 text-rose-300 border-rose-400/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30';
+          const exceeded = usedPct > 100; const atRisk = !exceeded && usedPct >= 85;
+          const statusPill = exceeded ? 'bg-rose-500/20 text-rose-300 border-rose-400/30' : atRisk ? 'bg-orange-500/15 text-orange-300 border-orange-400/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30';
+          const statusIcon = exceeded ? 'alert-triangle' : atRisk ? 'activity' : 'shield-check';
+          const statusText = exceeded ? `Exceeded by ${Math.max(0, usedPct - 100)}%` : atRisk ? `At risk • ${usedPct}% used` : 'On track';
+
+          const card = document.createElement('div'); card.className = `neo-card ${typeGlow} p-4`; card.dataset.cat = b.category;
+          card.innerHTML = `
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-lg font-semibold text-gray-200">${b.category}</h3>
+              <div class="flex items-center gap-2">
+                <span class="badge ${typePill}"><i data-lucide="${t === 'income' ? 'wallet' : t === 'expense' ? 'shopping-cart' : 'circle-equal'}" class="w-4 h-4"></i>${b.type}</span>
+                <span class="badge ${statusPill} ${exceeded ? 'animate-pulse' : ''}"><i data-lucide="${statusIcon}" class="w-4 h-4"></i>${statusText}</span>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap justify-between gap-2 mb-3">
+              <span class="badge bg-blue-500/15 text-blue-300 border-blue-400/30"><i data-lucide="wallet" class="w-4 h-4"></i>Budget: ${fmt(b.budget)}</span>
+              <span class="badge bg-purple-500/15 text-purple-300 border-purple-400/30"><i data-lucide="credit-card" class="w-4 h-4"></i>Actual: ${fmt(b.actual)}</span>
+            </div>
+
+            <div class="mb-3"><span class="badge ${variancePill}"><i data-lucide="${(Number(b.variance) || 0) < 0 ? 'trending-down' : 'trending-up'}" class="w-4 h-4"></i>Variance: ${fmt(b.variance)}</span></div>
+
+            <div class="mt-1">
+              <div class="w-full bg-white/15 rounded-full h-2 overflow-hidden"><div class="h-2 budg-bar ${usedPct > 100 ? 'bg-rose-500' : 'bg-emerald-400'}" style="width:0%"></div></div>
+              <div class="text-xs mt-1 text-gray-400">${usedPct}% used</div>
+            </div>`;
+          cardView.appendChild(card);
+
+          requestAnimationFrame(() => {
+            card.querySelector('.budg-bar').style.width = `${Math.min(usedPct, 130)}%`;
+            tr.querySelector('.budg-bar').style.width = `${Math.min(usedPct, 130)}%`;
+          });
+        });
+
+        // Summary (based on displayed rows)
+        qs('#budgSummary').innerHTML = `
+          <div class="neo-card glow-income p-4 text-center">
+            <div class="flex items-center justify-center gap-2 mb-2"><i data-lucide="wallet" class="w-6 h-6 text-green-300"></i><div class="text-lg font-bold text-green-300">${fmt(totalBudget)}</div></div>
+            <div class="text-sm text-gray-300">Income</div>
+          </div>
+          <div class="neo-card glow-expense p-4 text-center">
+            <div class="flex items-center justify-center gap-2 mb-2"><i data-lucide="shopping-cart" class="w-6 h-6 text-orange-300"></i><div class="text-lg font-bold text-orange-300">${fmt(totalActual)}</div></div>
+            <div class="text-sm text-gray-300">Expense</div>
+          </div>
+          <div class="neo-card glow-variance p-4 text-center">
+            <div class="flex items-center justify-center gap-2 mb-2"><i data-lucide="trending-up" class="w-6 h-6 ${(totalVariance < 0) ? 'text-rose-300' : 'text-emerald-300'}"></i><div class="text-lg font-bold ${(totalVariance < 0) ? 'text-rose-300' : 'text-emerald-300'}">${fmt(totalVariance)}</div></div>
+            <div class="text-sm text-gray-300">Balance / Variance</div>
+          </div>`;
+
+        // 🔗 Update the Reports section with the same list
+        if (typeof renderReports === 'function') renderReports(list);
+
+        lucide.createIcons();
+      }
+
+      async function loadBudgets() {
+        try {
+          setLoading(true);
+          const period = qs('#budgPeriod').value || ymNow();
+          const data = await apiGet('getBudgets', { period });
+          budgetsCache = data.budgets || [];
+          renderBudgets(getFilteredBudgets());
+        } catch (e) { console.error(e); }
+        finally { setLoading(false); }
+      }
+
+      function toggleView() {
+        const table = qs('#budgTableView'); const cards = qs('#budgCardView'); const btn = qs('#budgToggleView');
+        if (table.classList.contains('hidden')) { table.classList.remove('hidden'); cards.classList.add('hidden'); btn.textContent = "Switch to Card View"; }
+        else { table.classList.add('hidden'); cards.classList.remove('hidden'); btn.textContent = "Switch to Table View"; }
+      }
+
+      async function init() {
+        setPeriod(ymNow()); lucide.createIcons();
+        qs('#budgPeriodBtn').addEventListener('click', () => { MP.open ? closeMonthDrop() : openMonthDrop(); });
+        qs('#yearPrev').addEventListener('click', () => { MP.year--; renderMonthGrid(); });
+        qs('#yearNext').addEventListener('click', () => { MP.year++; renderMonthGrid(); });
+        qs('#pickThisMonth').addEventListener('click', () => { setPeriod(ymNow()); closeMonthDrop(); loadBudgets().catch(console.error); });
+        qs('#clearPeriod').addEventListener('click', () => { setPeriod(''); closeMonthDrop(); });
+        qs('#budgSearch').addEventListener('input', () => renderBudgets(getFilteredBudgets()));
+        qs('#budgReload').addEventListener('click', () => loadBudgets().catch(console.error));
+        qs('#budgToggleView').addEventListener('click', toggleView);
+
+        await loadBudgets().catch(err => console.error('Budgets error:', err));
+        qs('#budgTableView').classList.add('hidden'); qs('#budgCardView').classList.remove('hidden'); qs('#budgToggleView').textContent = "Switch to Table View";
+      }
+
+      return { init };
+    })();
+
+    window.addEventListener('DOMContentLoaded', BudgetApp.init);
+
+    /* ======================================
+       REPORTS (hooked to live budgets list)
+       ====================================== */
+    const charts = {}; // store chart instances
+
+    function upsertChart(id, cfg) {
+      const ctx = document.getElementById(id);
+      if (!ctx) return;
+      if (charts[id]) charts[id].destroy();
+      charts[id] = new Chart(ctx, cfg);
+    }
+
+    function topCategoryByActual(expenses) {
+      if (!expenses.length) return null;
+      return expenses.slice().sort((a, b) => (+b.actual || 0) - (+a.actual || 0))[0]?.category || null;
+    }
+
+    function highlightCategory(category) {
+      if (!category) return;
+      // show budgets section
+      document.getElementById('budg-section').scrollIntoView({ behavior: 'smooth' });
+
+      // highlight table row
+      const rows = Array.from(document.querySelectorAll('#budgBody tr'));
+      rows.forEach(r => {
+        r.classList.toggle('highlight', r.dataset.cat === category);
+        if (r.dataset.cat === category) r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      // remove after 2.5s
+      setTimeout(() => rows.forEach(r => r.classList.remove('highlight')), 2500);
+
+      // also highlight card
+      const cards = Array.from(document.querySelectorAll('#budgCardView [data-cat]'));
+      cards.forEach(c => {
+        c.classList.toggle('highlight', c.dataset.cat === category);
+        if (c.dataset.cat === category) c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      setTimeout(() => cards.forEach(c => c.classList.remove('highlight')), 2500);
+    }
+
+    function renderReports(budgets) {
+      if (!budgets || !budgets.length) return;
+      const expenses = budgets.filter(b => String(b.type).toLowerCase() === 'expense');
+      const totalB = expenses.reduce((a, b) => a + (+b.budget || 0), 0);
+      const totalA = expenses.reduce((a, b) => a + (+b.actual || 0), 0);
+      const usedPct = totalB ? Math.round(totalA / totalB * 100) : 0;
+
+      // 1) 🚦 Budget Health (KPI cards instead of doughnut chart)
+
+      // --- Status Counts ---
+      const statusCounts = {
+        done: expenses.filter(b => (+b.actual || 0) === (+b.budget || 0)).length,
+        onTrack: expenses.filter(b => (+b.actual || 0) < (+b.budget || 0) * 0.85).length,
+        risk: expenses.filter(b => (+b.actual || 0) >= (+b.budget || 0) * 0.85 && (+b.actual || 0) < (+b.budget || 0)).length,
+        over: expenses.filter(b => (+b.actual || 0) > (+b.budget || 0)).length
+      };
+
+      const labelsHealth = ['Done', 'On Track', 'At Risk', 'Over Budget'];
+      const valuesHealth = [
+        statusCounts.done,
+        statusCounts.onTrack,
+        statusCounts.risk,
+        statusCounts.over
+      ];
+      const colorsHealth = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
+
+      // --- Chart ---
+      const charts = {};
+      charts['chartHealth'] = new Chart(document.getElementById('chartHealth'), {
+        type: 'doughnut',
+        data: {
+          labels: labelsHealth,
+          datasets: [{
+            data: valuesHealth,
+            backgroundColor: colorsHealth.map(c => c + 'cc'),
+            borderWidth: 0,
+            hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          cutout: '65%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) =>
+                  `${ctx.label}: ${ctx.parsed} categories (${Math.round((ctx.parsed / expenses.length) * 100)}%)`
+              }
+            }
+          },
+          animation: { animateRotate: true, animateScale: true },
+          onClick(evt) {
+            const points = charts['chartHealth'].getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+            if (points.length) {
+              const idx = points[0].index;
+              const clickedStatus = labelsHealth[idx];
+              toggleFilter(clickedStatus, idx);
+            }
+          }
+        },
+        plugins: [{
+          id: 'centerText',
+          afterDraw(chart) {
+            const { ctx, chartArea: { width, height } } = chart;
+            ctx.save();
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillStyle = '#e5e7eb';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${expenses.length} Categories`, width / 2, height / 2);
+            ctx.restore();
+          }
+        }]
+      });
+
+      // --- Legend Chips ---
+      const legendEl = document.getElementById('healthLegend');
+      legendEl.innerHTML = '';
+      let activeStatus = null;
+
+      labelsHealth.forEach((lbl, i) => {
+        const chip = document.createElement('span');
+        chip.className = `
+      px-3 py-1 text-xs rounded-full 
+      bg-black/40 border border-white/10 text-gray-300 
+      backdrop-blur-md transition cursor-pointer 
+      flex items-center gap-1 
+      hover:shadow-[0_0_8px_${colorsHealth[i]}] hover:border-opacity-40
+    `;
+        chip.innerHTML = `<span style="color:${colorsHealth[i]}">●</span> ${lbl} (${valuesHealth[i]})`;
+
+        chip.addEventListener('click', () => toggleFilter(lbl, i, chip));
+        legendEl.appendChild(chip);
+      });
+
+      // --- Filter Helpers ---
+      function getStatus(item) {
+        const actual = +item.actual || 0;
+        const budget = +item.budget || 0;
+        if (budget === 0) return "Done";
+        if (actual === budget) return "Done";
+        if (actual < budget * 0.85) return "On Track";
+        if (actual >= budget * 0.85 && actual < budget) return "At Risk";
+        if (actual > budget) return "Over Budget";
+        return "On Track";
+      }
+
+      function filterByStatus(status) {
+        const table = document.getElementById("budgBodyHealth"); // use new ID for Health-linked table
+        if (!table) return;
+
+        let firstMatch = null;
+        [...table.querySelectorAll("tr")].forEach(row => {
+          const cat = row.dataset.cat;
+          const match = expenses.find(e => e.category === cat);
+
+          if (!status || (match && getStatus(match) === status)) {
+            row.style.display = "";
+            if (!firstMatch) firstMatch = row;
+          } else {
+            row.style.display = "none";
+          }
+        });
+
+        if (firstMatch) {
+          firstMatch.classList.add("ring-2", "ring-yellow-400");
+          setTimeout(() => firstMatch.classList.remove("ring-2", "ring-yellow-400"), 1500);
+        }
+      }
+
+      function toggleFilter(lbl, idx, chipEl) {
+        const chart = charts['chartHealth'];
+        const dataset = chart.data.datasets[0];
+
+        // Reset
+        [...legendEl.children].forEach(c => c.style.boxShadow = '');
+        dataset._activeOffsets = dataset._activeOffsets || Array(labelsHealth.length).fill(0);
+        dataset._activeOffsets.fill(0);
+
+        if (activeStatus === lbl) {
+          activeStatus = null;
+          filterByStatus(null);
+          resetChip.style.display = "none";
+        } else {
+          activeStatus = lbl;
+          filterByStatus(lbl);
+
+          if (chipEl) chipEl.style.boxShadow = `0 0 12px ${colorsHealth[idx]}`;
+          dataset._activeOffsets[idx] = 20;
+
+          resetChip.style.display = "inline-block";
+        }
+
+        chart.update();
+      }
+
+      // --- Render Table with data-cat ---
+      const tableBody = document.getElementById("budgBodyHealth");
+      expenses.forEach(b => {
+        const tr = document.createElement("tr");
+        tr.dataset.cat = b.category;
+        tr.innerHTML = `
+      <td class="px-3 py-2">${b.category}</td>
+      <td class="px-3 py-2">₹${b.budget.toLocaleString("en-IN")}</td>
+      <td class="px-3 py-2">₹${b.actual.toLocaleString("en-IN")}</td>
+    `;
+        tableBody.appendChild(tr);
+      });
+
+
+      // --- Reset Filter Chip ---
+      const resetChip = document.createElement('span');
+      resetChip.className = `
+  px-3 py-1 text-xs rounded-full ml-2
+  bg-black/40 border border-white/10 text-gray-400 
+  backdrop-blur-md transition cursor-pointer
+  flex items-center gap-1
+  hover:shadow-[0_0_10px_rgba(255,255,255,0.5)]
+  hover:text-gray-200 hover:border-white/20
+`;
+      resetChip.innerHTML = `⟳ <span>Reset</span>`;
+      resetChip.style.display = "none"; // hidden until filter is active
+
+      resetChip.addEventListener('click', () => {
+        activeStatus = null;
+        filterByStatus(null);
+
+        // reset chart slice offsets
+        const chart = charts['chartHealth'];
+        const dataset = chart.data.datasets[0];
+        dataset._activeOffsets = dataset._activeOffsets || Array(labelsHealth.length).fill(0);
+        dataset._activeOffsets.fill(0);
+        chart.update();
+
+        // reset chip glows
+        [...legendEl.children].forEach(c => c.style.boxShadow = '');
+        resetChip.style.display = "none";
+      });
+
+      legendEl.appendChild(resetChip);
+
+
+      // 2) 🔥 Burn Rate (modern UI/UX)
+
+      // 2) 🔥 Burn Rate (modern UI/UX with animations + badge)
+      const now = new Date();
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const day = now.getDate();
+
+      const idealPerDay = totalB / daysInMonth;
+      const actualPerDay = day ? totalA / day : 0;
+
+      const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+      const idealSeries = days.map(d => Math.round(idealPerDay * d));
+      const actualSeries = days.map(d => Math.round(actualPerDay * d));
+
+      const todayIdeal = day > 0 ? idealSeries[day - 1] : 0;
+
+      // --- Status Badge Logic ---
+      const paceDiff = idealPerDay > 0 ? (actualPerDay / idealPerDay) : 0;
+      const pctDiff = Math.round((paceDiff - 1) * 100);
+
+      let badgeClass = "", burnStatusHTML = "";
+
+      if (paceDiff > 1.05) {
+        badgeClass = "status-badge status-over";
+        burnStatusHTML = `🔥 Overspending <span class="ml-1">+${pctDiff}%</span> <span class="flame-animate">🔥</span>`;
+      } else if (paceDiff >= 0.85) {
+        badgeClass = "status-badge status-risk";
+        burnStatusHTML = `⚠️ At Risk <span class="ml-1">${pctDiff >= 0 ? "+" : ""}${pctDiff}%</span> <span class="warn-animate">⚠️</span>`;
+      } else {
+        badgeClass = "status-badge status-ontrack";
+        burnStatusHTML = `✅ On Track <span class="ml-1">${pctDiff}%</span>`;
+      }
+
+      const burnEl = document.getElementById("burnStatus");
+      burnEl.className = `mb-4 text-sm font-medium ${badgeClass}`;
+      burnEl.innerHTML = burnStatusHTML;
+
+      // --- Chart Gradient Setup ---
+      const ctxBurn = document.getElementById('chartBurn').getContext('2d');
+      const gradientActual = ctxBurn.createLinearGradient(0, 0, 0, 400);
+      gradientActual.addColorStop(0, 'rgba(251,113,133,1)');
+      gradientActual.addColorStop(1, 'rgba(251,191,36,0.6)');
+
+      const gradientIdeal = ctxBurn.createLinearGradient(0, 0, 0, 400);
+      gradientIdeal.addColorStop(0, 'rgba(59,130,246,1)');
+      gradientIdeal.addColorStop(1, 'rgba(147,197,253,0.6)');
+
+      // --- Chart ---
+      upsertChart('chartBurn', {
+        type: 'line',
+        data: {
+          labels: days,
+          datasets: [
+            {
+              label: 'Actual Pace',
+              data: actualSeries,
+              borderColor: gradientActual,
+              borderWidth: 3,
+              pointRadius: 0,
+              fill: false,
+              tension: 0.4,
+            },
+            {
+              label: 'Budget Pace',
+              data: idealSeries,
+              borderColor: gradientIdeal,
+              borderWidth: 3,
+              borderDash: [6, 6],
+              pointRadius: 0,
+              fill: false,
+              tension: 0.4,
+            }
+          ]
+        },
+        options: {
+          interaction: { mode: 'nearest', intersect: false },
+          plugins: {
+            legend: { labels: { color: '#e5e7eb' } },
+            tooltip: {
+              callbacks: {
+                afterBody: (ctx) => {
+                  if (ctx.length === 2) {
+                    const actual = ctx[0].parsed.y;
+                    const ideal = ctx[1].parsed.y;
+                    const diff = Math.round(((actual - ideal) / ideal) * 100);
+                    return `Diff: ${diff > 0 ? '+' : ''}${diff}%`;
+                  }
+                  return '';
+                }
+              }
+            },
+            annotation: {
+              annotations: {
+                todayLine: {
+                  type: 'line',
+                  xMin: day,
+                  xMax: day,
+                  borderColor: 'rgba(255,255,255,0.6)',
+                  borderWidth: 1,
+                  borderDash: [4, 4],
+                  label: {
+                    display: true,
+                    content: 'Today',
+                    position: 'end',
+                    color: '#fff'
+                  }
+                }
+              }
+            }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Day of Month', color: '#9ca3af' }, ticks: { color: '#9ca3af' } },
+            y: { title: { display: true, text: '₹ Cumulative', color: '#9ca3af' }, ticks: { color: '#9ca3af' } }
+          },
+          // --- Click: highlight top category (per-day if data available) ---
+          onClick(evt) {
+            const points = charts['chartBurn'].getElementsAtEventForMode(
+              evt, 'nearest', { intersect: false }, true
+            );
+            if (points.length) {
+              const clickedDay = points[0].index + 1;
+              const targetCat = topCategoryByActual(expenses); // 🔧 replace later with daily data if available
+              console.log("Clicked day:", clickedDay, "→ showing category:", targetCat);
+              highlightCategory(targetCat);
+            }
+          }
+        }
+      });
+
+
+
+      // 3) 📈 Analytics Timeline (simple weekly bars)
+
+      // 🔹 Dynamic color generator for categories
+      const colorCache = {};
+      function getCategoryColor(cat) {
+        if (colorCache[cat]) return colorCache[cat];
+        let hash = 0;
+        for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash);
+        const hue = Math.abs(hash) % 360;
+        colorCache[cat] = `hsl(${hue},70%,55%)`;
+        return colorCache[cat];
+      }
+
+      // 🔹 Fetch live data
+      async function loadData() {
+        const url = "https://script.google.com/macros/s/AKfycbzhFphQXTTa6FpyR38ISZH9F9bs1gHAjbIYkus7L5doXUlJN8F_tfcOOspk-s26MFau9A/exec?action=getData";
+        const resp = await fetch(url);
+        const json = await resp.json();
+        console.log("Live API response:", json);
+        const tx = Array.isArray(json.transactions?.rows) ? json.transactions.rows : (json.transactions || []);
+        return tx.filter(t => String(t.type).toLowerCase() === "expense")
+          .map(t => ({ category: t.category, actual: +t.amount || 0, date: t.date }));
+      }
+
+      // 🔹 Month selector
+      function populateMonthSelector() {
+        const sel = document.getElementById("monthSelector");
+        const now = new Date();
+        for (let i = 0; i < 12; i++) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          const opt = document.createElement("option");
+          opt.value = val;
+          opt.textContent = d.toLocaleString("default", { month: "long", year: "numeric" });
+          if (i === 0) opt.selected = true;
+          sel.appendChild(opt);
+        }
+      }
+
+      let timelineChart = null;
+      let drilldownChart = null;
+      let toggleAllState = true;
+      let allExpenses = [];
+      let yearMode = false;
+
+      // 🔹 Render timeline (month or year)
+      function renderTimeline(expenses, monthVal, yearMode) {
+        let labels = [], totals = [];
+
+        if (!yearMode) {
+          const [year, month] = monthVal.split("-").map(Number);
+          labels = ['W1', 'W2', 'W3', 'W4'];
+          totals = [0, 0, 0, 0];
+          expenses.forEach(b => {
+            const dt = new Date(b.date);
+            if (dt.getMonth() + 1 !== month || dt.getFullYear() !== year) return;
+            const week = Math.min(Math.ceil(dt.getDate() / 7), 4);
+            totals[week - 1] += b.actual;
+          });
+        } else {
+          const year = new Date().getFullYear();
+          labels = Array.from({ length: 12 }, (_, i) => new Date(year, i, 1).toLocaleString("default", { month: "short" }));
+          totals = Array(12).fill(0);
+          expenses.forEach(b => {
+            const dt = new Date(b.date);
+            if (dt.getFullYear() !== year) return;
+            totals[dt.getMonth()] += b.actual;
+          });
+        }
+
+        const totalSpent = totals.reduce((a, b) => a + b, 0);
+        const peakIdx = totals.indexOf(Math.max(...totals));
+        const avgVal = Math.round(totalSpent / labels.length);
+
+        document.getElementById("summaryRow").innerHTML = `
+        <span class="badge bg-gradient-to-br from-blue-500/30 to-indigo-500/20 text-blue-200">
+          💰 Total: ₹${totalSpent.toLocaleString('en-IN')}
+        </span>
+        <span class="badge ${totals[peakIdx] > avgVal
+            ? 'bg-gradient-to-br from-rose-500/30 to-orange-500/20 text-rose-200'
+            : 'bg-gradient-to-br from-green-500/30 to-lime-500/20 text-green-200'}">
+          📌 Peak: ${labels[peakIdx]} (₹${totals[peakIdx].toLocaleString('en-IN')})
+        </span>
+        <span class="badge bg-gradient-to-br from-purple-500/30 to-cyan-500/20 text-purple-200">
+          📊 Avg: ₹${avgVal.toLocaleString('en-IN')}
+        </span>
+      `;
+
+        if (timelineChart) timelineChart.destroy();
+        timelineChart = new Chart(document.getElementById("chartTimeline"), {
+          type: 'bar',
+          data: {
+            labels, datasets: [{
+              label: yearMode ? "Monthly Spend" : "Weekly Spend",
+              data: totals,
+              backgroundColor: (ctx) => {
+                const val = ctx.raw;
+                if (val > avgVal * 1.1) return 'rgba(239,68,68,0.85)';
+                if (val < avgVal * 0.9) return 'rgba(34,197,94,0.85)';
+                return 'rgba(34,211,238,0.85)';
+              },
+              borderRadius: 8
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { color: '#9ca3af' } }, y: { ticks: { color: '#9ca3af' } } },
+            onClick(evt, els) {
+              if (!els.length) return;
+              const idx = els[0].index;
+              if (!yearMode) {
+                const [year, month] = monthVal.split("-").map(Number);
+                showDrilldown(idx, expenses, month, year, labels);
+              } else {
+                const year = new Date().getFullYear();
+                showMonthDrilldown(idx, expenses, year, labels);
+              }
+            }
+          }
+        });
+      }
+
+      // 🔹 Drilldown (month mode)
+      function showDrilldown(weekIdx, expenses, month, year, labels) {
+        const startDay = weekIdx * 7 + 1;
+        const endDay = Math.min(startDay + 6, new Date(year, month, 0).getDate());
+        renderDrilldown(expenses, d => {
+          const dt = new Date(d.date);
+          return dt.getMonth() + 1 === month && dt.getFullYear() === year && dt.getDate() >= startDay && dt.getDate() <= endDay;
+        }, `Week ${labels[weekIdx]}`);
+      }
+
+      // 🔹 Drilldown (year mode, per month)
+      function showMonthDrilldown(monthIdx, expenses, year, labels) {
+        renderDrilldown(expenses, d => {
+          const dt = new Date(d.date);
+          return dt.getFullYear() === year && dt.getMonth() === monthIdx;
+        }, labels[monthIdx]);
+      }
+
+      // 🔹 Drilldown renderer
+      function renderDrilldown(expenses, filterFn, labelText) {
+        const filtered = expenses.filter(filterFn);
+        const days = [...new Set(filtered.map(f => new Date(f.date).getDate()))].map(d => `Day ${d}`);
+        const categories = [...new Set(filtered.map(f => f.category))];
+        const datasets = categories.map(cat => ({
+          label: cat,
+          data: days.map(day => {
+            const num = +day.replace("Day ", "");
+            return filtered.filter(f => new Date(f.date).getDate() === num && f.category === cat).reduce((a, b) => a + b.actual, 0);
+          }),
+          backgroundColor: getCategoryColor(cat),
+          borderRadius: 4,
+          hidden: false
+        }));
+
+        let maxCat = null, maxVal = 0;
+        datasets.forEach(ds => {
+          const total = ds.data.reduce((a, b) => a + b, 0);
+          if (total > maxVal) { maxVal = total; maxCat = ds.label; }
+        });
+
+        document.getElementById("weekLabel").textContent = labelText;
+        document.getElementById("drilldownModal").style.display = "flex";
+        if (drilldownChart) drilldownChart.destroy();
+        drilldownChart = new Chart(document.getElementById("chartDrilldown"), {
+          type: 'bar',
+          data: {
+            labels: days, datasets: datasets.map(ds => ({
+              ...ds,
+              backgroundColor: ds.label === maxCat ? getCategoryColor(ds.label).replace("55%)", "45%)") : ds.backgroundColor
+            }))
+          },
+          options: {
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ₹${ctx.formattedValue}` } } },
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            scales: { x: { stacked: true, ticks: { color: '#9ca3af' } }, y: { stacked: true, ticks: { color: '#9ca3af' } } }
+          }
+        });
+
+        const legendEl = document.getElementById("modalLegend");
+        legendEl.innerHTML = "";
+        datasets.forEach((ds, idx) => {
+          const item = document.createElement("div");
+          item.className = "legend-item";
+          const isHighlight = ds.label === maxCat;
+          item.innerHTML = `<span class="legend-swatch active ${isHighlight ? "highlight" : ""}" style="background:${getCategoryColor(ds.label)}"></span> ${ds.label}`;
+          item.addEventListener("click", () => {
+            const meta = drilldownChart.getDatasetMeta(idx);
+            meta.hidden = !meta.hidden;
+            item.classList.toggle("inactive", meta.hidden);
+            item.querySelector(".legend-swatch").classList.toggle("active", !meta.hidden);
+            drilldownChart.update();
+            updateToggleCounter(drilldownChart);
+          });
+          legendEl.appendChild(item);
+        });
+
+        toggleAllState = true;
+        document.getElementById("toggleText").textContent = "Deselect All";
+        updateToggleCounter(drilldownChart);
+      }
+
+      // 🔹 Legend counter
+      function updateToggleCounter(chart) {
+        const total = chart.data.datasets.length;
+        const visible = chart.data.datasets.filter(ds => !ds.hidden).length;
+        document.getElementById("toggleCount").textContent = `${visible}/${total}`;
+      }
+
+      document.getElementById("toggleAllBtn").addEventListener("click", () => {
+        if (!drilldownChart) return;
+        toggleAllState = !toggleAllState;
+        drilldownChart.data.datasets.forEach((ds, idx) => {
+          ds.hidden = !toggleAllState;
+          const swatch = document.getElementById("modalLegend").children[idx].querySelector(".legend-swatch");
+          swatch.classList.toggle("active", !ds.hidden);
+          document.getElementById("modalLegend").children[idx].classList.toggle("inactive", ds.hidden);
+        });
+        drilldownChart.update();
+        document.getElementById("toggleText").textContent = toggleAllState ? "Deselect All" : "Select All";
+        updateToggleCounter(drilldownChart);
+      });
+
+      document.getElementById("closeDrilldown").addEventListener("click", () => {
+        document.getElementById("drilldownModal").style.display = "none";
+        if (drilldownChart) { drilldownChart.destroy(); drilldownChart = null; }
+      });
+
+      // 🔹 Init
+      populateMonthSelector();
+      loadData().then(exp => {
+        allExpenses = exp;
+        renderTimeline(allExpenses, document.getElementById("monthSelector").value, yearMode);
+      });
+
+      document.getElementById("monthSelector").addEventListener("change", e => {
+        yearMode = false;
+        renderTimeline(allExpenses, e.target.value, yearMode);
+      });
+
+      document.getElementById("toggleYearBtn").addEventListener("click", () => {
+        yearMode = !yearMode;
+        document.getElementById("toggleYearBtn").textContent = yearMode ? "📅 Month View" : "🔄 This Year";
+        renderTimeline(allExpenses, document.getElementById("monthSelector").value, yearMode);
+      });
+
+
+
+      // 4) 🧩 Treemap (doughnut as category share)
+
+
+      const API_URL = "https://script.google.com/macros/s/AKfycbzhFphQXTTa6FpyR38ISZH9F9bs1gHAjbIYkus7L5doXUlJN8F_tfcOOspk-s26MFau9A/exec?action=getData";
+
+      let chartTreemap = null;
+      let chartBreakdown = null;
+      let treemapexpenses = [];
+
+      // 🔹 Color map for consistency
+      const categoryColors = {};
+      function getCategoryColor(cat) {
+        if (!categoryColors[cat]) {
+          const palette = [
+            "#60a5fa", "#f87171", "#34d399", "#fbbf24",
+            "#a78bfa", "#f472b6", "#38bdf8", "#fb923c"
+          ];
+          categoryColors[cat] = palette[Object.keys(categoryColors).length % palette.length] + "cc";
+        }
+        return categoryColors[cat];
+      }
+
+      async function fetchData() {
+        try {
+          const resp = await fetch(API_URL);
+          const data = await resp.json();
+          console.log("Live API response:", data);
+
+          const txRows = (data.transactions?.rows || data.transactions || []).map(t => ({
+            category: t.category || "Uncategorized",
+            amount: Number(t.amount || 0),
+            type: (t.type || "").toLowerCase(),
+            date: t.date
+          }));
+
+          treemapexpenses = txRows.filter(t => t.type === "expense");
+          renderTreemap(treemapexpenses);
+        } catch (err) {
+          console.error("❌ Error loading API:", err);
+        }
+      }
+
+      function renderTreemap(treemapexpenses) {
+        if (chartTreemap) chartTreemap.destroy();
+
+        const totals = {};
+        treemapexpenses.forEach(e => {
+          totals[e.category] = (totals[e.category] || 0) + e.amount;
+        });
+
+        const data = Object.keys(totals).map(cat => ({ label: cat, value: totals[cat] }));
+        const values = Object.values(totals);
+        const total = values.reduce((a, b) => a + b, 0);
+
+        chartTreemap = new Chart(document.getElementById("chartTreemap"), {
+          type: "treemap",
+          data: {
+            datasets: [{
+              tree: data,
+              key: "value",
+              groups: ["label"],
+              borderWidth: 2,
+              borderColor: "rgba(255,255,255,0.1)",
+              backgroundColor(ctx) {
+                const cat = ctx.raw?.g || "Other";
+                return getCategoryColor(cat);
+              },
+              labels: {
+                display: true,
+                color: "#e5e7eb",
+                font: { size: 12, weight: "500" },
+                formatter(ctx) {
+                  const d = ctx.raw;
+                  if (!d) return "";
+                  return `${d.g}\n₹${d.v.toLocaleString("en-IN")}`;
+                }
+              }
+            }]
+          },
+          options: {
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label(ctx) {
+                    const d = ctx.raw;
+                    const pct = total ? ((d.v / total) * 100).toFixed(1) : 0;
+                    return `${d.g}: ₹${d.v.toLocaleString("en-IN")} (${pct}%)`;
+                  }
+                }
+              }
+            },
+            onClick(evt) {
+              // ✅ Always get the active elements from chart
+              const activeEls = chartTreemap.getActiveElements();
+              if (!activeEls.length) return;
+
+              const first = activeEls[0];
+              const raw = first.element.$context.raw;
+
+              if (raw && raw.g) {
+                console.log("Clicked category:", raw.g);
+                openTreemapDrilldown(raw.g); // 👈 make sure your function name matches here
+              }
+            }
+          }
+        });
+      }
+
+
+      let chartTreemapBreakdown = null; // 👈 declare globally at the top
+
+      // 🔹 Treemap Modal logic
+      const treemapModal = document.getElementById("treemapModal");
+      const treemapCloseBtn = document.getElementById("treemapClose");
+
+      function openTreemapModal() {
+        treemapModal.classList.add("active");
+      }
+
+      function closeTreemapModal() {
+        treemapModal.classList.remove("active");
+        if (chartTreemapBreakdown) {
+          chartTreemapBreakdown.destroy();
+          chartTreemapBreakdown = null;
+        }
+      }
+
+      treemapCloseBtn.addEventListener("click", closeTreemapModal);
+
+      // Close when clicking outside modal content
+      treemapModal.addEventListener("click", (e) => {
+        if (e.target === treemapModal) closeTreemapModal();
+      });
+
+
+      function openTreemapDrilldown(category) {
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+
+        // 🔹 Aggregate daily data
+        const daily = {};
+        treemapexpenses.forEach(e => {
+          const dt = new Date(e.date);
+          if (e.category === category && dt.getMonth() === thisMonth && dt.getFullYear() === thisYear) {
+            const d = dt.getDate();
+            daily[d] = (daily[d] || 0) + e.amount;
+          }
+        });
+
+        const labels = Object.keys(daily).map(d => `Day ${d}`);
+        const values = Object.values(daily);
+
+        if (chartTreemapBreakdown) chartTreemapBreakdown.destroy();
+
+        chartTreemapBreakdown = new Chart(document.getElementById("chartBreakdown"), {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [{
+              label: category,
+              data: values,
+              backgroundColor: getCategoryColor(category), // ✅ same color as Treemap
+              borderRadius: 6
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: "#9ca3af" } },
+              y: { ticks: { color: "#9ca3af" } }
+            }
+          }
+        });
+
+        document.getElementById("modalCategory").textContent = category;
+        openTreemapModal();
+      }
+
+
+
+
+      fetchData();
+
+
+
+      // 5) 🚨 Overrun List
+      // 5) 🚨 Overrun Categories (≥100%) — Modern UI with Animated Progress Ring + Tooltip
+      const overrun = expenses
+        .filter(b => (+b.budget || 0) > 0 && (+b.actual || 0) >= (+b.budget || 0))
+        .sort((a, b) => (b.actual / b.budget) - (a.actual / a.budget));
+
+      const overEl = document.getElementById('overrunList');
+      overEl.innerHTML = '';
+
+      if (overrun.length === 0) {
+        overEl.innerHTML = '<li class="text-gray-400">No overruns — great job! 🎉</li>';
+      }
+
+      overrun.forEach(b => {
+        const li = document.createElement('li');
+        const pct = Math.round(((+b.actual || 0) / (+b.budget || 0)) * 100);
+
+        // Severity background + ring color
+        let bgClass, strokeColor;
+        if (pct >= 150) {
+          bgClass = 'bg-rose-500/20 border-rose-400/30';
+          strokeColor = '#f43f5e'; // rose
+        } else if (pct >= 120) {
+          bgClass = 'bg-orange-500/20 border-orange-400/30';
+          strokeColor = '#f97316'; // orange
+        } else {
+          bgClass = 'bg-amber-500/15 border-amber-400/30';
+          strokeColor = '#f59e0b'; // amber
+        }
+
+        // Ring geometry
+        const radius = 10;
+        const circumference = 2 * Math.PI * radius;
+        const progress = Math.min(pct, 200) / 200; // cap at 200%
+        const offset = circumference * (1 - progress);
+
+        // Chip with SVG ring + tooltip
+        li.innerHTML = `
+    <div class="chip-animate group inline-flex items-center justify-between gap-2 px-3 py-1.5 rounded-full ${bgClass} hover:brightness-110 cursor-pointer border transition-all">
+      <span class="flex items-center gap-2 relative tooltip-container">
+        <svg class="w-6 h-6 progress-ring" viewBox="0 0 24 24" data-offset="${offset}" data-circ="${circumference}">
+          <circle cx="12" cy="12" r="${radius}" stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none"/>
+          <circle class="progress-circle" cx="12" cy="12" r="${radius}" stroke="${strokeColor}" stroke-width="3" fill="none"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}" stroke-linecap="round"/>
+        </svg>
+        <div class="tooltip-text">${pct}% of budget</div>
+        <span class="font-medium">${b.category}</span>
+      </span>
+      <span class="text-sm text-gray-300 group-hover:opacity-100 opacity-80 transition">
+        ${pct}% • ₹${(+b.actual || 0).toLocaleString('en-IN')}/${(+b.budget || 0).toLocaleString('en-IN')}
+      </span>
+    </div>
+  `;
+
+        li.addEventListener('click', () => highlightCategory(b.category));
+        overEl.appendChild(li);
+      });
+
+      // Extra CSS + animation + tooltip
+      const style = document.createElement('style');
+      style.textContent = `
+  .chip-animate { transition: all 0.25s ease; }
+  .chip-animate:hover { transform: scale(1.05); padding-right: 1.75rem; }
+
+  .progress-circle { transition: stroke-dashoffset 1s ease-out; }
+
+  .tooltip-container { position: relative; display: inline-flex; align-items: center; }
+  .tooltip-text {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 125%; /* show above */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    white-space: nowrap;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+  .tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+`;
+      document.head.appendChild(style);
+
+      // Animate all rings after render
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.progress-ring').forEach(svg => {
+          const offset = parseFloat(svg.dataset.offset);
+          const circle = svg.querySelector('.progress-circle');
+          circle.style.strokeDashoffset = offset; // animate ring
+        });
+      });
+
+
+      // 6) 🔎 Explorer (accordion)
+      const ex = document.getElementById('explorer');
+      ex.innerHTML = '';
+      expenses.forEach(b => {
+        const used = (+b.budget || 0) ? Math.round((+b.actual || 0) / (+b.budget || 0) * 100) : 0;
+        const det = document.createElement('details');
+        det.className = 'neo-card p-3';
+        det.innerHTML = `<summary class="cursor-pointer">${b.category} <span class="text-xs text-gray-400 ml-2">${used}% used</span></summary>
+      <div class="mt-2 flex flex-wrap gap-2 text-sm">
+        <span class="badge bg-blue-500/15 text-blue-300 border-blue-400/30">Budget: ${(+b.budget || 0).toLocaleString('en-IN')}</span>
+        <span class="badge bg-purple-500/15 text-purple-300 border-purple-400/30">Actual: ${(+b.actual || 0).toLocaleString('en-IN')}</span>
+        <span class="badge ${(+b.variance || 0) < 0 ? 'bg-rose-500/20 text-rose-300 border-rose-400/30' : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'}">Var: ${(+b.variance || 0).toLocaleString('en-IN')}</span>
+        <button class="ml-auto px-2 py-1 text-xs bg-white/10 rounded border border-white/10 hover:bg-white/20" data-cat="${b.category}">View in table</button>
+      </div>`;
+        det.querySelector('button').addEventListener('click', (e) => highlightCategory(e.currentTarget.dataset.cat));
+        ex.appendChild(det);
+      });
+
+
+
+
+      // 9) 💡 Monthly Expense Heatmap — Advanced
+
+
+
+const calAPI_URL = "https://script.google.com/macros/s/AKfycbzhFphQXTTa6FpyR38ISZH9F9bs1gHAjbIYkus7L5doXUlJN8F_tfcOOspk-s26MFau9A/exec?action=getData";
+const THEME_ACCENT = "#8b5cf6";
+const getCalCategoryColor = {};
+
+function getCategoryColor(cat){
+  if(!cat) cat='Other';
+  if(getCalCategoryColor[cat]) return getCalCategoryColor[cat];
+  const palette=["#60a5fa","#f87171","#34d399","#fbbf24","#a78bfa","#f472b6","#38bdf8","#fb923c","#ef4444","#06b6d4","#f97316","#60a5fa"];
+  const idx=Object.keys(getCalCategoryColor).length % palette.length;
+  getCalCategoryColor[cat]=palette[idx];
+  return getCalCategoryColor[cat];
+}
+function hexToRgb(hex){hex=(hex||'#000').replace('#',''); if(hex.length===3) hex=hex.split('').map(x=>x+x).join(''); const r=parseInt(hex.slice(0,2),16), g=parseInt(hex.slice(2,4),16), b=parseInt(hex.slice(4,6),16); return {r,g,b};}
+function mixHex(a,b,t){const A=hexToRgb(a),B=hexToRgb(b); const r=Math.round(A.r+(B.r-A.r)*t),g=Math.round(A.g+(B.g-A.g)*t),bl=Math.round(A.b+(B.b-A.b)*t); return `rgb(${r},${g},${bl})`; }
+
+let expenseByDate={}, currentYear,currentMonth,colorMode='amount';
+
+// 🔹 renamed to avoid collision
+const calheatWeekdayRow=document.getElementById('calheat-weekdayRow'),
+      calheatGrid=document.getElementById('calheat-grid'),
+      calheatSideTitle=document.getElementById('calheat-sideTitle'),
+      calheatSideSummary=document.getElementById('calheat-sideSummary'),
+      calheatDayList=document.getElementById('calheat-dayList'),
+      calheatTitleMonth=document.getElementById('calheat-titleMonth'),
+      calheatTooltip=document.getElementById('calheat-tooltip'),
+      sw0=document.getElementById('calheat-sw0'),
+      sw1=document.getElementById('calheat-sw1'),
+      sw2=document.getElementById('calheat-sw2'),
+      sw3=document.getElementById('calheat-sw3');
+
+document.getElementById('calheat-prevMonth').addEventListener('click', ()=> shiftMonth(-1));
+document.getElementById('calheat-nextMonth').addEventListener('click', ()=> shiftMonth(1));
+document.getElementById('calheat-todayBtn').addEventListener('click', ()=>{
+  const n=new Date(); currentYear=n.getFullYear(); currentMonth=n.getMonth(); renderCalendar();
+});
+document.getElementById('calheat-modeAmount').addEventListener('click', ()=> setMode('amount'));
+document.getElementById('calheat-modeCount').addEventListener('click', ()=> setMode('count'));
+
+function setMode(m){
+  colorMode=m;
+  document.getElementById('calheat-modeAmount').classList.toggle('active', m==='amount');
+  document.getElementById('calheat-modeCount').classList.toggle('active', m==='count');
+  renderCalendar();
+}
+function toISODate(val){ if(!val) return ""; if(typeof val==='string' && /^\\d{4}-\\d{2}-\\d{2}/.test(val)) return val.slice(0,10); const d=new Date(val); if(isNaN(d.getTime())) return ""; return d.toISOString().slice(0,10);}
+function fmtINR(n){return '₹'+Number(n||0).toLocaleString('en-IN');}
+
+async function fetchHeatmapData(){
+  try{
+    const res=await fetch(calAPI_URL);
+    const json=await res.json();
+    indexExpenses(json);
+    const now=new Date(); currentYear=now.getFullYear(); currentMonth=now.getMonth();
+    renderCalendar();
+  }catch(err){
+    calheatSideSummary.textContent='Error loading data. See console.';
+  }
+}
+
+function indexExpenses(api){
+  expenseByDate={};
+  const rows=api.transactions?.rows||api.transactions||[];
+  rows.forEach(r=>{
+    const iso=toISODate(r.date||r.Date||(Array.isArray(r)?r[0]:null));
+    if(!iso) return;
+    if((r.type||'').toLowerCase()!=='expense') return;
+    const tx={date:iso,category:r.category||r.desc||'Uncategorized',amount:Number(r.amount||0),desc:r.desc||r.description||'',account:r.account||''};
+    if(!expenseByDate[iso]) expenseByDate[iso]=[];
+    expenseByDate[iso].push(tx);
+  });
+}
+
+function renderWeekdays(){
+  calheatWeekdayRow.innerHTML='';
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(n=>{
+    const el=document.createElement('div');
+    el.className='calheat-weekday';
+    el.textContent=n;
+    calheatWeekdayRow.appendChild(el);
+  });
+}
+
+function shiftMonth(delta){
+  const d=new Date(currentYear,currentMonth,1);
+  d.setMonth(d.getMonth()+delta);
+  currentYear=d.getFullYear();
+  currentMonth=d.getMonth();
+  renderCalendar();
+}
+
+function renderCalendar(){
+  renderWeekdays();
+  calheatGrid.innerHTML='';
+  calheatDayList.innerHTML='';
+  calheatSideTitle.textContent='Select a day';
+  calheatSideSummary.textContent='Click a day to view expense details.';
+
+  const mm=new Date(currentYear,currentMonth,1);
+  calheatTitleMonth.textContent=mm.toLocaleString('default',{month:'long',year:'numeric'});
+
+  let maxAmount=0,maxCount=0;
+  Object.keys(expenseByDate).forEach(d=>{
+    const dt=new Date(d);
+    if(dt.getFullYear()===currentYear&&dt.getMonth()===currentMonth){
+      const arr=expenseByDate[d];
+      const sum=arr.reduce((s,x)=>s+(+x.amount||0),0);
+      maxAmount=Math.max(maxAmount,sum);
+      maxCount=Math.max(maxCount,arr.length);
+    }
+  });
+
+  const base='#0b1220';
+  const c1=mixHex(base,THEME_ACCENT,0.25),
+        c2=mixHex(base,THEME_ACCENT,0.45),
+        c3=mixHex(base,THEME_ACCENT,0.72),
+        c4=mixHex(base,THEME_ACCENT,0.95);
+  sw0.style.background=c1; sw1.style.background=c2; sw2.style.background=c3; sw3.style.background=c4;
+
+  const first=new Date(currentYear,currentMonth,1);
+  const startDow=(first.getDay()+6)%7;
+  const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
+
+  for(let i=0;i<42;i++){
+    const idx=i-startDow+1;
+    const cell=document.createElement('div');
+
+    if(idx>0&&idx<=daysInMonth){
+      cell.className='calheat-cell';
+      const dateObj=new Date(currentYear,currentMonth,idx);
+      const iso=dateObj.toISOString().slice(0,10);
+
+      const dn=document.createElement('div');
+      dn.className='calheat-dnum';
+      dn.textContent=idx;
+      cell.appendChild(dn);
+
+      const txs=expenseByDate[iso]||[];
+      const total=txs.reduce((s,x)=>s+(+x.amount||0),0);
+      const count=txs.length;
+
+      let metric=0,metricMax=1;
+      if(colorMode==='amount'){ metric=total; metricMax=maxAmount||1; }
+      else{ metric=count; metricMax=maxCount||1; }
+
+      if(metric>0&&metricMax>0){
+        let t=Math.min(1,metric/metricMax);
+        t=0.12+0.88*t;
+        cell.style.background=mixHex('#0b1220',THEME_ACCENT,t);
+      } else {
+        cell.style.background='rgba(255,255,255,0.01)';
+      }
+
+      const sparkWrap=document.createElement('div');
+      sparkWrap.className='calheat-spark';
+
+      if(txs.length>0){
+        const byCat={};
+        txs.forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+(+t.amount||0);});
+        const totalAmt=Object.values(byCat).reduce((s,v)=>s+v,0)||1;
+        const cats=Object.keys(byCat).sort((a,b)=>byCat[b]-byCat[a]);
+        cats.forEach(cat=>{
+          const amt=byCat[cat];
+          const w=Math.max(1,Math.round((amt/totalAmt)*100));
+          const seg=document.createElement('span');
+          seg.className='calheat-spark-seg';
+          seg.style.width=w+'%';
+          seg.style.background=getCategoryColor(cat);
+          sparkWrap.appendChild(seg);
+        });
+      }
+      cell.appendChild(sparkWrap);
+
+      const sumEl=document.createElement('div');
+      sumEl.className='calheat-summary';
+      sumEl.textContent=colorMode==='amount'&&total>0?fmtINR(total):count>0?count+' tx':'';
+      cell.appendChild(sumEl);
+
+      cell.addEventListener('click',()=>{
+        calheatSideTitle.textContent='Day '+idx;
+        if(count===0){
+          calheatSideSummary.textContent='No expenses.';
+          calheatDayList.innerHTML='';
+        } else {
+          calheatSideSummary.textContent=`Total ${fmtINR(total)} • ${count} transaction${count>1?'s':''}`;
+          const byCat={};
+          txs.forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+t.amount;});
+          const maxVal=Math.max(...Object.values(byCat));
+          calheatDayList.innerHTML=Object.keys(byCat).map(cat=>{
+            const val=byCat[cat];
+            const pct=Math.round((val/maxVal)*100);
+            const color=getCategoryColor(cat);
+            return `<div class=\"calheat-ms\"><div class=\"title\"><span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:6px\"></span>${cat}</div><div class=\"bar\" style=\"height:6px;border-radius:4px;background:rgba(255,255,255,0.05);overflow:hidden\"><span style=\"display:block;width:${pct}%;background:${color};height:100%\"></span></div><div class=\"meta\">${fmtINR(val)}</div></div>`;
+          }).join('');
+        }
+      });
+
+      cell.addEventListener('mouseenter', e=>{
+        if(count>0){
+          calheatTooltip.innerHTML=`<b>Day ${idx}</b><br>${fmtINR(total)} • ${count} tx`;
+          calheatTooltip.style.display='block';
+        }
+      });
+      cell.addEventListener('mousemove', e=>{
+        calheatTooltip.style.left=(e.pageX+14)+'px';
+        calheatTooltip.style.top=(e.pageY+14)+'px';
+      });
+      cell.addEventListener('mouseleave', ()=>{calheatTooltip.style.display='none';});
+    } else {
+      cell.className='calheat-cell disabled';
+    }
+    calheatGrid.appendChild(cell);
+  }
+}
+
+fetchHeatmapData();
+
+
+
+      // 9) 💡 Smart Recommendations (Gradient Style + Clickable Chips + Collapse All + Counter Badge)
+      const tipsWrap = document.getElementById('smartTips');
+      tipsWrap.innerHTML = '';
+
+      // Clear & rebuild summary + feed containers
+      tipsWrap.innerHTML = `
+  <div id="smartSummary" class="mb-3 flex flex-wrap gap-2 items-center"></div>
+  <div id="smartFeed" class="space-y-3"></div>
+`;
+
+      const summaryEl = document.getElementById('smartSummary');
+      const feedEl = document.getElementById('smartFeed');
+
+      // Build model (counts + recs)
+      const overspent = expenses.filter(b => (+b.budget || 0) > 0 && (+b.actual || 0) >= (+b.budget || 0));
+      const atRisk = expenses.filter(b => {
+        const p = (+b.actual || 0) / (+b.budget || 0);
+        return (+b.budget || 0) > 0 && p >= 0.85 && p < 1;
+      });
+      const biggest = topCategoryByActual(expenses);
+
+      const recs = [];
+
+      // Overspent recs
+      overspent.forEach(b => {
+        const p = Math.round(((+b.actual) / (+b.budget)) * 100);
+        recs.push({
+          kind: 'warning',
+          title: `⚠️ Overspend in ${b.category}`,
+          detail: `${b.category} is at ${p}% (₹${(+b.actual).toLocaleString('en-IN')} / ₹${(+b.budget).toLocaleString('en-IN')}). Consider pausing non-essentials.`,
+          category: b.category
+        });
+      });
+
+      // At-risk recs
+      atRisk.slice(0, 3).forEach(b => {
+        const p = Math.round(((+b.actual) / (+b.budget)) * 100);
+        recs.push({
+          kind: 'risk',
+          title: `🔎 ${b.category} nearing limit`,
+          detail: `${b.category} is at ${p}%. Tighten spending to avoid overrun.`,
+          category: b.category
+        });
+      });
+
+      // Biggest spend rec
+      if (biggest) {
+        recs.push({
+          kind: 'tip',
+          title: `💡 Largest spend: ${biggest}`,
+          detail: `Set a micro-cap for the next 7 days in ${biggest}.`,
+          category: biggest
+        });
+      }
+
+      // Helper for classes
+      const kindClasses = {
+        warning: "metric-card bg-black/40 border border-red-500/20 text-red-300 backdrop-blur-md rounded-xl p-4 shadow-lg transition hover:shadow-red-500/40 hover:border-red-400",
+        risk: "metric-card bg-black/40 border border-amber-500/20 text-amber-300 backdrop-blur-md rounded-xl p-4 shadow-lg transition hover:shadow-amber-400/40 hover:border-amber-400",
+        tip: "metric-card bg-black/40 border border-emerald-500/20 text-emerald-300 backdrop-blur-md rounded-xl p-4 shadow-lg transition hover:shadow-emerald-400/40 hover:border-emerald-400"
+      };
+
+      // Feed collapsibles
+      const detMap = { warning: [], risk: [], tip: [] };
+
+      recs.forEach(r => {
+        const det = document.createElement('details');
+        det.className = `${kindClasses[r.kind]} transition-transform duration-200 hover:translate-y-[-2px]`;
+        const iconMap = {
+          warning: '<span class="text-red-400 animate-pulse">⚡</span>',
+          risk: '<span class="text-amber-300 animate-pulse">⏳</span>',
+          tip: '<span class="text-emerald-300 animate-pulse">🌱</span>'
+        };
+
+        det.innerHTML = `
+  <summary class="cursor-pointer flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2">
+      ${iconMap[r.kind]}
+      <span class="font-semibold">${r.title.replace(/^⚠️|🔎|💡/, '').trim()}</span>
+    </div>
+    <svg class="chev w-4 h-4 opacity-70 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none"
+         viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+  </summary>
+  <div class="mt-2 text-sm">${r.detail}</div>
+  <div class="mt-3">
+    <button class="px-3 py-1 rounded-md text-xs bg-white/30 border border-white/20 hover:bg-white/40"
+            onclick="highlightCategory('${r.category.replace(/'/g, "\\'")}')">View in Table</button>
+  </div>
+`;
+        det.addEventListener('toggle', () => {
+          const icon = det.querySelector('.chev');
+          if (det.open) icon.classList.add('rotate-180');
+          else icon.classList.remove('rotate-180');
+          updateCollapseCounter();
+        });
+        detMap[r.kind].push(det);
+        feedEl.appendChild(det);
+      });
+
+      // Summary chips (click to expand related)
+      if (overspent.length) {
+        const chip = document.createElement('span');
+        chip.className = "flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-black/40 border border-red-500/20 text-red-300 backdrop-blur-md shadow cursor-pointer transition hover:shadow-red-500/40 hover:border-red-400";
+        chip.innerHTML = `<span class="text-red-400 animate-pulse">⚡</span> ${overspent.length} overspent`;
+        chip.addEventListener('click', () => detMap.warning.forEach(d => d.open = true));
+        summaryEl.appendChild(chip);
+      }
+      if (atRisk.length) {
+        const chip = document.createElement('span');
+        chip.className = "flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-black/40 border border-amber-500/20 text-amber-300 backdrop-blur-md shadow cursor-pointer transition hover:shadow-amber-400/40 hover:border-amber-400";
+        chip.innerHTML = `<span class="text-amber-300 animate-pulse">⏳</span> ${atRisk.length} at risk`;
+        chip.addEventListener('click', () => detMap.risk.forEach(d => d.open = true));
+        summaryEl.appendChild(chip);
+      }
+      if (biggest) {
+        const chip = document.createElement('span');
+        chip.className = "flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-black/40 border border-emerald-500/20 text-emerald-300 backdrop-blur-md shadow cursor-pointer transition hover:shadow-emerald-400/40 hover:border-emerald-400";
+        chip.innerHTML = `<span class="text-emerald-300 animate-pulse">🌱</span> 1 opportunity`;
+        chip.addEventListener('click', () => detMap.tip.forEach(d => d.open = true));
+        summaryEl.appendChild(chip);
+      }
+
+      // ➕ Collapse All button with counter badge
+      const collapseBtn = document.createElement('button');
+      collapseBtn.className = "ml-auto relative px-3 py-1 rounded-full text-xs bg-black/40 border border-white/10 text-gray-300 backdrop-blur-md shadow cursor-pointer transition hover:shadow-white/20 hover:border-white/30 flex items-center gap-2";
+      collapseBtn.innerHTML = `
+  Collapse All
+  <span id="collapseCount" class="absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] rounded-full px-1.5 py-0.5">0</span>
+`;
+      collapseBtn.addEventListener('click', () => {
+        Object.values(detMap).flat().forEach(d => d.open = false);
+        updateCollapseCounter();
+      });
+      summaryEl.appendChild(collapseBtn);
+
+      // 🔄 Counter updater
+      function updateCollapseCounter() {
+        const openCount = Object.values(detMap).flat().filter(d => d.open).length;
+        document.getElementById('collapseCount').innerText = openCount;
+      }
+      updateCollapseCounter();
+
+
+
+
+    }
+
+
+  </script>
+</body>
+
+</html>

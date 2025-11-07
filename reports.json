@@ -1,0 +1,14 @@
+[
+  { "name":"Finance",   "file":"finance_tracker.html",   "icon":"💲", "accent":"#38bdf8", "group":"main" },
+  { "name":"Networth",  "file":"networth_tracker.html",  "icon":"📊", "accent":"#a78bfa", "group":"main" },
+  { "name":"Budget",    "file":"budget.html",            "icon":"📈", "accent":"#34d399", "group":"main" },
+  { "name":"Budget+",   "file":"budget_additional.html", "icon":"🗂", "accent":"#fbbf24", "group":"main" },
+  { "name":"Category",  "file":"catagory_insight.html",  "icon":"🗃", "accent":"#f43f5e", "group":"main" },
+  { "name":"Goals",     "file":"Goals.html",             "icon":"🎯", "accent":"#ef4444", "group":"main" },
+
+  { "name":"Report 6",  "file":"report6.html",           "icon":"🗂", "accent":"#06b6d4", "group":"more" },
+  { "name":"Report 7",  "file":"report7.html",           "icon":"📄", "accent":"#ec4899", "group":"more" },
+  { "name":"Report 8",  "file":"report8.html",           "icon":"📄", "accent":"#f97316", "group":"more" },
+  { "name":"Report 9",  "file":"report9.html",           "icon":"📄", "accent":"#84cc16", "group":"more" },
+  { "name":"Report 10", "file":"report10.html",          "icon":"📄", "accent":"#0ea5e9", "group":"more" }
+]

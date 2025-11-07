@@ -1,0 +1,1794 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>21-Report Dashboard — Glassmorphism Live (Fixed)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Chart.js -->
+
+<script src="asset/tracker/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ============ Glassmorphism Dark Theme ============ */
+    :root {
+      --bg: #08101a;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.06);
+      --accent: #60a5fa;
+      --muted: #9aa7b8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --glass-radius: 12px;
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:
+        radial-gradient(800px 400px at 10% 10%, rgba(96, 165, 250, 0.06), transparent 15%),
+        radial-gradient(600px 320px at 90% 80%, rgba(99, 102, 241, 0.04), transparent 12%),
+        var(--bg);
+      color: #e6eef8;
+      -webkit-font-smoothing: antialiased;
+      padding: 18px;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.2px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select,
+    button {
+      background: rgba(255, 255, 255, 0.03);
+      color: inherit;
+      border: 1px solid var(--card-border);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, var(--accent), #3b82f6);
+      border: none;
+      color: #031026;
+      font-weight: 600;
+    }
+
+    .chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    /* card */
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      border: 1px solid var(--card-border);
+      border-radius: var(--glass-radius);
+      padding: 14px;
+      box-shadow: 0 6px 20px rgba(2, 6, 23, 0.6);
+      backdrop-filter: blur(10px) saturate(1.1);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width:900px) {
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 220px !important;
+    }
+
+    .kpi {
+      font-size: 20px;
+      font-weight: 700;
+      color: #e8f7ff;
+    }
+
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    #heatGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .heat-cell {
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .heat-cell:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .heat-cell:hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: 110%;
+      /* show above the cell */
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+
+    .badge {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .progress {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 999px;
+      height: 22px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--success), #34d399);
+      width: 0%;
+      text-align: center;
+      font-size: 12px;
+      color: #021215;
+      padding-left: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: inherit;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      color: inherit
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600
+    }
+
+    .tips .card {
+      margin-bottom: 8px;
+    }
+
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* Heatmap Sort Button */
+    .heat-btn {
+      background: #2563eb;
+      /* blue theme */
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      /* rounded corners */
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .heat-btn:hover {
+      background: #1e40af;
+      /* darker blue on hover */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .heat-btn:active {
+      transform: scale(0.97);
+      /* subtle click effect */
+    }
+
+    #loadBtn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    #loadBtn:hover {
+      background: #1e40af;
+    }
+
+    /* Tiny spinner hidden by default */
+    #loadBtn .btn-loader {
+      display: none;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #fff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .alert-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      line-height: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>💼 Personal Finance — 21 Report Dashboard</h1>
+        <div class="sub">Live fetch + robust normalizer. Theme: black glassmorphism.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center;">
+        <div class="chip" id="dataSourceChip">Data: sample</div>
+      </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="card controls">
+      <div>
+        <label class="small">Year</label><br>
+        <select id="yearSel"></select>
+      </div>
+      <div>
+        <label class="small">Month</label><br>
+        <select id="monthSel"></select>
+      </div>
+      <div>
+        <label class="small">Currency</label><br>
+        <select id="ccySel">
+          <option selected>INR</option>
+          <option>USD</option>
+          <option>EUR</option>
+        </select>
+      </div>
+      <div style="margin-left:auto">
+        <button id="loadBtn">
+          <span class="btn-text">🔄 Load Live</span>
+          <span class="btn-loader"></span>
+        </button>
+      </div>
+    </div>
+
+    <main>
+      <!-- KPIs -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="small">Income (Month)</div>
+          <div id="kpiIncome" class="kpi">—</div>
+        </div>
+        <div class="card">
+          <div class="small">Expense (Month)</div>
+          <div id="kpiExpense" class="kpi">—</div>
+        </div>
+        <div class="card">
+          <div class="small">Savings Rate</div>
+          <div id="kpiSaveRate" class="kpi">—</div>
+        </div>
+        <div class="card">
+          <div class="small">Over-Budget Categories</div>
+          <div id="kpiOver" class="kpi">—</div>
+        </div>
+      </div>
+
+      <!-- (All other sections unchanged from your original layout) -->
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">1. Budget vs Actual</h3>
+          <canvas id="chBudgetVsActual"></canvas>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">2. Income vs Expense — 12 mo</h3>
+          <canvas id="chIncExpTrend"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">3. Monthly Cashflow</h3><canvas id="chCashflow"></canvas>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">4. Top 5 Expenses</h3><canvas id="chTop5"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">5. Category Heatmap</h3>
+          <div style="margin-bottom:10px; text-align:right;">
+            <button id="heatSortToggle" class="heat-btn">Sort: By Overspend</button>
+          </div>
+          <div id="heatGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">6. Recurring vs One-time</h3><canvas id="chRecurring"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">7. Payment Methods</h3><canvas id="chPayMethod"></canvas>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">8. Income Streams</h3><canvas id="chIncomeStreams"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">9. Variance by Category</h3><canvas id="chVariance"></canvas>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">10. Cumulative Budget Burn (YTD)</h3><canvas id="chBurn"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">11. Affordability Index</h3><canvas id="chAfford"></canvas>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">12. Alerts & Exceptions (≥100%)</h3>
+
+          <div class="text-right mb-2">
+            <select id="alertSort" class="px-2 py-1 rounded bg-white/10 border border-white/20 text-sm">
+              <option value="used">Sort: By Used %</option>
+              <option value="variance">Sort: By Variance</option>
+              <option value="alpha">Sort: Alphabetical</option>
+            </select>
+          </div>
+
+
+          <div style="overflow:auto">
+            <table class="min-w-full">
+              <thead class="bg-white/10">
+                <tr>
+                  <th class="px-3 py-2 text-left">Category</th>
+                  <th class="px-3 py-2 text-right">Budget</th>
+                  <th class="px-3 py-2 text-right">Actual</th>
+                  <th class="px-3 py-2 text-right">Used%</th>
+                  <th class="px-3 py-2 text-left">Status</th>
+                  <th class="px-3 py-2 text-left">Style</th>
+                </tr>
+              </thead>
+              <tbody id="tblAlerts"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">13. Savings Rate Trend</h3><canvas id="chSaveTrend"></canvas>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">14. Expense Forecast (3 mo)</h3><canvas id="chForecast"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">15. Net Worth Trend</h3><canvas id="chNetWorth"></canvas>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">16. Debt & EMI</h3><canvas id="chDebt"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">17. Seasonality YoY</h3><canvas id="chSeasonality"></canvas>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">18. Scenario Simulator</h3>
+
+          <!-- Sliders will be injected dynamically -->
+          <div id="simSliders"></div>
+
+          <!-- Savings summary -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px">
+            <div class="card">
+              <div class="small">Projected Monthly Savings</div>
+              <div id="simSavings" class="kpi">—</div>
+            </div>
+            <div class="card">
+              <div class="small">New Savings Rate</div>
+              <div id="simRate" class="kpi">—</div>
+            </div>
+          </div>
+
+          <!-- Chart -->
+          <canvas id="chScenario" style="margin-top:10px"></canvas>
+        </div>
+
+      </div>
+
+
+      <div class="card">
+        <div style="display:grid; grid-template-columns: 1fr 2fr; gap:12px; align-items:start">
+          <div>
+            <h3 style="margin:0 0 8px 0">19. Savings Opportunity Meter</h3>
+            <canvas id="gaugeCanvas" height="180"></canvas>
+            <div id="gaugeSummary" class="small" style="margin-top:8px">—</div>
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center">
+              <h3 id="tipsHeading" style="margin:0">Top Tips of the Month</h3>
+              <div class="badge small">Actionable</div>
+            </div>
+            <div id="tipsContainer" class="tips" style="margin-top:8px"></div>
+
+            <div style="margin-top:12px">
+              <h4 id="whatIfHeading" style="margin:0 0 8px 0">What-If Simulator</h4>
+              <div id="slidersArea" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px"></div>
+
+              <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px">
+                <div class="card text-center">
+                  <div class="small">Projected New Expense</div>
+                  <div id="projExpense" class="kpi">—</div>
+                </div>
+                <div class="card text-center">
+                  <div class="small">Projected New Savings</div>
+                  <div id="projSavings" class="kpi">—</div>
+                </div>
+                <div class="card text-center">
+                  <div class="small">Projected Savings Rate</div>
+                  <div id="projRate" class="kpi">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <h4 style="margin:0 0 6px 0">Savings Challenge Tracker</h4>
+          <div class="small">Goal: ₹5,000 this month</div>
+          <div class="progress" style="margin-top:8px">
+            <div id="challengeBar" class="progress-bar">0%</div>
+          </div>
+          <div id="challengeSummary" class="small" style="margin-top:8px">—</div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+        <h4 id="whatIfHeading" style="margin:0">What-If Simulator</h4>
+        <button id="resetBtn" class="btn small">Reset</button>
+      </div>
+
+    </main>
+
+    <footer>Dashboard demo — Live fetch frontend. If your API returns another shape, provide sample JSON and I will
+      adapt the normalizer.</footer>
+  </div>
+
+  <script>
+    /* ============================
+      Fixed Dashboard JS — normalizes your Apps Script response shape:
+      { budget: { period, budgets:[{category,type,budget,actual,...}] }, transactions: { rows: [...] } }
+      and builds monthly arrays + per-category actuals for selected year/month.
+      ============================ */
+
+    // your live endpoint (from your message)
+    
+	//const LIVE_URL = "https://script.google.com/macros/s/AKfycbyLxDfYb54dQsu0KcP6XsJK0GyBf4FodbJzB8tC0DlPlC3nYyB8eEiIk8fT6_WLChuE3g/exec?action=getData";
+	const LIVE_URL = window.getScriptURL("budget_additional");
+
+
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const CHARTS = {};
+    let lastRaw = null;      // last raw API response (cached)
+    let lastNorm = null;     // last normalized data (for quick re-render)
+
+    /* ---------------- utilities ---------------- */
+    function toNumber(v) {
+      if (typeof v === 'number') return v;
+      if (!v && v !== 0) return 0;
+      if (typeof v === 'string') {
+        // remove commas / currency symbols
+        const cleaned = v.replace(/[^\d.-]/g, '').trim();
+        return cleaned === '' ? 0 : Number(cleaned);
+      }
+      return Number(v) || 0;
+    }
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function fmtCurrency(n, ccy = "INR") {
+      if (n === null || n === undefined) return "-";
+      try {
+        return Number(n).toLocaleString(undefined, { style: 'currency', currency: ccy, maximumFractionDigits: 0 });
+      } catch (e) {
+        return (ccy === "INR" ? "₹" : "") + Math.round(n);
+      }
+    }
+    function upsertChart(id, cfg) {
+      try {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        if (CHARTS[id]) { try { CHARTS[id].destroy(); } catch (e) { } }
+        CHARTS[id] = new Chart(el, cfg);
+        return CHARTS[id];
+      } catch (e) {
+        console.error("Chart create error", id, e);
+        return null;
+      }
+    }
+
+    /* ---------------- parse transactions rows robustly ----------------
+       Accepts many key-name variants and returns normalized tx objects:
+       { date: "YYYY-MM-DD...", type: "income|expense", category, amount, account, desc }
+    */
+    function parseTxRows(rows) {
+      if (!Array.isArray(rows)) return [];
+      return rows.map(raw => {
+        // capture common key variations
+        const get = (keys) => {
+          for (const k of keys) {
+            if (raw[k] !== undefined) return raw[k];
+            // case-insensitive
+            const lower = Object.keys(raw).find(x => x.toLowerCase() === String(k).toLowerCase());
+            if (lower) return raw[lower];
+          }
+          return undefined;
+        };
+        const dateRaw = get(['date', 'Date', 'timestamp', 'Timestamp', 'time', 'Time']) || '';
+        const typeRaw = (get(['type', 'Type']) || '').toString().toLowerCase();
+        const category = get(['category', 'Category', 'cat', 'Cat', 'payee', 'Payee']) || '';
+        const amountRaw = get(['amount', 'Amount', 'AMOUNT', 'value', 'Value']) || 0;
+        const account = get(['account', 'Account']) || '';
+        const desc = get(['desc', 'description', 'Description', 'memo', 'Memo']) || '';
+
+        // normalize amount
+        const amount = toNumber(String(amountRaw));
+        // normalize date to ISO-like string if possible; but we only use substring(0,7) to group
+        const date = (typeof dateRaw === 'string' && dateRaw.length) ? dateRaw : (dateRaw instanceof Date ? dateRaw.toISOString() : String(dateRaw || ''));
+        // normalize type
+        let type = 'expense';
+        if (/income|credit|inc|deposit/i.test(typeRaw)) type = 'income';
+        if (/expense|debit|withdraw/i.test(typeRaw)) type = 'expense';
+        // If category empty but desc contains recognizable keywords, not necessary now.
+
+        return { date, type, category: String(category || '').trim(), amount, account, desc: String(desc || '') };
+      });
+    }
+
+    /* ---------------- extract years/months map from transactions ---------------- */
+    function extractMonthsByYear(txRows) {
+      const map = {};
+      txRows.forEach(tx => {
+        if (!tx || !tx.date) return;
+        const s = String(tx.date).slice(0, 7); // YYYY-MM
+        if (!/^\d{4}-\d{2}$/.test(s)) return;
+        const [y, m] = s.split('-');
+        map[y] = map[y] || new Set();
+        map[y].add(m);
+      });
+      // convert sets to sorted arrays
+      const out = {};
+      Object.keys(map).forEach(y => {
+        out[y] = Array.from(map[y]).sort((a, b) => a.localeCompare(b));
+      });
+      return out;
+    }
+
+    /* ---------------- normalize API shapes ----------------
+       Accepts: resp (your Apps Script shape) and requested year, month (numbers)
+       Returns object matching dashboard's expected shape:
+       { year, monthlyIncome:[], monthlyExpense:[], categories:[], categoryBudget:[], categoryActual:[], incomeSplit:{labels,values}, expenseSplit:{labels,values}, savingsGoal }
+    */
+    function normalizeAPIResponse(resp, yearRequested = (new Date()).getFullYear(), monthRequested = (new Date().getMonth() + 1)) {
+      if (!resp) return null;
+
+      // Case A: your exact shape: resp.budget && resp.budget.budgets && resp.transactions.rows
+      if (resp.budget && Array.isArray(resp.budget.budgets) && resp.transactions && (Array.isArray(resp.transactions.rows) || Array.isArray(resp.transactions))) {
+        // transactions array
+        const txRowsRaw = Array.isArray(resp.transactions.rows) ? resp.transactions.rows : (Array.isArray(resp.transactions) ? resp.transactions : []);
+        const txRows = parseTxRows(txRowsRaw);
+
+        // budgets array -> map category -> budget value
+        const budgetsRaw = resp.budget.budgets || [];
+        const budgetMap = {};
+        budgetsRaw.forEach(b => {
+          // support different key names
+          const cat = (b.category || b.Category || b.name || b.Name || '').toString();
+          // b.budget or b.Budget or b.plan or b.amount
+          const bud = toNumber(b.budget || b.Budget || b.plan || b.amount || b.BudgetAmount || 0);
+          budgetMap[cat] = bud;
+        });
+
+        // categories: union of budget categories + tx categories
+        const txCats = Array.from(new Set(txRows.map(t => t.category).filter(Boolean)));
+        const budgetCats = Object.keys(budgetMap).filter(Boolean);
+        const categories = Array.from(new Set([...budgetCats, ...txCats])).filter(Boolean);
+
+        // monthly arrays (12 months) for requested year
+        const y = String(yearRequested);
+        const monthlyIncome = Array.from({ length: 12 }, (_, i) => 0);
+        const monthlyExpense = Array.from({ length: 12 }, (_, i) => 0);
+        txRows.forEach(tx => {
+          const s = String(tx.date).slice(0, 7); // "YYYY-MM"
+          if (!/^\d{4}-\d{2}$/.test(s)) return;
+          const [ty, tm] = s.split('-');
+          if (ty !== y) return; // only requested year
+          const mIdx = Number(tm) - 1;
+          if (tx.type === 'income') monthlyIncome[mIdx] += Number(tx.amount || 0);
+          else monthlyExpense[mIdx] += Number(tx.amount || 0);
+        });
+
+        // categoryActual: sum of expense amounts for the selected month (budget.period or requested month)
+        // prefer resp.budget.period if present
+        const budgetPeriod = (resp.budget && resp.budget.period) ? String(resp.budget.period).slice(0, 7) : null;
+        const selectedMonthStr = budgetPeriod || `${String(y)}-${String(monthRequested).padStart(2, '0')}`; // "YYYY-MM"
+        const categoryActual = categories.map(cat => {
+          return txRows
+            .filter(tx => tx.category === cat && tx.type === 'expense' && String(tx.date).startsWith(selectedMonthStr))
+            .reduce((s, tx) => s + Number(tx.amount || 0), 0);
+        });
+
+        // If budgetsRaw has 'actual' field per category for the budget period, prefer that if categoryActual is zero
+        categories.forEach((cat, idx) => {
+          const row = budgetsRaw.find(b => String(b.category || b.Category || '').trim() === String(cat).trim());
+          if (row && (row.actual !== undefined) && (categoryActual[idx] === 0)) {
+            categoryActual[idx] = toNumber(row.actual);
+          }
+        });
+
+        // incomeSplit and expenseSplit for the selected month (top categories)
+        const incomeAgg = {};
+        const expenseAgg = {};
+        txRows.forEach(tx => {
+          if (!tx.date || !String(tx.date).startsWith(selectedMonthStr)) return;
+          if (!tx.category) return;
+          if (tx.type === 'income') incomeAgg[tx.category] = (incomeAgg[tx.category] || 0) + Number(tx.amount || 0);
+          else expenseAgg[tx.category] = (expenseAgg[tx.category] || 0) + Number(tx.amount || 0);
+        });
+        const incLabels = Object.keys(incomeAgg).sort((a, b) => incomeAgg[b] - incomeAgg[a]).slice(0, 8);
+        const incValues = incLabels.map(l => Math.round(incomeAgg[l]));
+        const expLabels = Object.keys(expenseAgg).sort((a, b) => expenseAgg[b] - expenseAgg[a]).slice(0, 12);
+        const expValues = expLabels.map(l => Math.round(expenseAgg[l]));
+
+        // savingsGoal fallback
+        const savingsGoal = resp.savingsGoal || (resp.budget && resp.budget.savingsGoal) || (resp.savings_goal) || null;
+
+        return {
+          year: Number(y),
+          monthlyIncome: monthlyIncome.map(v => Math.round(v)),
+          monthlyExpense: monthlyExpense.map(v => Math.round(v)),
+          categories,
+          categoryBudget: categories.map(c => Number(budgetMap[c] || 0)),
+          categoryActual,
+          incomeSplit: { labels: incLabels.length ? incLabels : ["Salary", "Freelance", "Investments"], values: incValues.length ? incValues : [0, 0, 0] },
+          expenseSplit: { labels: expLabels.length ? expLabels : categories, values: expValues.length ? expValues : categories.map((_, i) => categoryActual[i] || 0) },
+          savingsGoal: savingsGoal || null,
+          // expose some helper info for selectors
+          _txRows: txRows,
+          _budgetPeriod: budgetPeriod,
+          _rawBudgets: budgetsRaw
+        };
+      }
+
+      // fall back to previous normalizers if you have other shapes — keep original attempts
+      // If resp.budgets = array of objects {category, budget, actual}
+      if (Array.isArray(resp.budgets) && resp.budgets.length) {
+        const cats = resp.budgets.map(x => x.category || x.name || "");
+        const cb = resp.budgets.map(x => Number(x.budget || x.plan || 0));
+        const ca = resp.budgets.map(x => Number(x.actual || x.spent || 0));
+        return {
+          year: resp.year || (new Date()).getFullYear(),
+          monthlyIncome: resp.monthlyIncome || Array.from({ length: 12 }, () => 0),
+          monthlyExpense: resp.monthlyExpense || Array.from({ length: 12 }, () => 0),
+          categories: cats,
+          categoryBudget: cb,
+          categoryActual: ca,
+          incomeSplit: resp.incomeSplit || { labels: [], values: [] },
+          expenseSplit: resp.expenseSplit || { labels: [], values: [] },
+          savingsGoal: resp.savingsGoal || null
+        };
+      }
+
+      // If shape: { expenses: {Food:100, Rent:200} }
+      if (resp.expenses && typeof resp.expenses === 'object') {
+        const cats = Object.keys(resp.expenses);
+        const cbMap = resp.budgets || {};
+        return {
+          year: resp.year || (new Date()).getFullYear(),
+          monthlyIncome: resp.income || resp.monthlyIncome || Array.from({ length: 12 }, () => 0),
+          monthlyExpense: resp.monthlyExpense || Array.from({ length: 12 }, () => 0),
+          categories: cats,
+          categoryBudget: cats.map(c => Number(cbMap[c] || 0)),
+          categoryActual: cats.map(c => Number(resp.expenses[c] || 0)),
+          incomeSplit: resp.incomeSplit || { labels: [], values: [] },
+          expenseSplit: resp.expenseSplit || { labels: [], values: [] },
+          savingsGoal: resp.savingsGoal || null
+        };
+      }
+
+      // arrays: categories & categoryBudget & categoryActual
+      if (Array.isArray(resp.categories) && Array.isArray(resp.categoryBudget) && Array.isArray(resp.categoryActual)) {
+        return resp;
+      }
+
+      return null;
+    }
+
+    /* ---------------- populate year/month selectors using txRows and budget period ---------------- */
+    function populateYearMonthSelectors(normObj) {
+      const yearEl = document.getElementById('yearSel');
+      const monthEl = document.getElementById('monthSel');
+
+      // derive months by year from txRows
+      const txRows = normObj._txRows || [];
+      const monthsByYear = extractMonthsByYear(txRows);
+
+      // include budgetPeriod if present even if no transactions that month
+      if (normObj._budgetPeriod) {
+        const [y, m] = normObj._budgetPeriod.split('-');
+        monthsByYear[y] = monthsByYear[y] || [];
+        if (!monthsByYear[y].includes(m)) monthsByYear[y].push(m);
+        monthsByYear[y] = monthsByYear[y].sort();
+      }
+
+      const years = Object.keys(monthsByYear).sort((a, b) => b - a); // newest first
+      // if no years found, create current year
+      if (!years.length) {
+        const curY = String(new Date().getFullYear());
+        monthsByYear[curY] = monthsByYear[curY] || [];
+        years.push(curY);
+      }
+
+      const prevYear = yearEl.value;
+      yearEl.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+
+      // choose selected year (prefer previous selection if available)
+      const selectedYear = (prevYear && years.includes(prevYear)) ? prevYear : years[0];
+      yearEl.value = selectedYear;
+
+      // fill months for selectedYear
+      const months = monthsByYear[selectedYear] || [];
+      // convert to list of full month options in natural calendar order (Jan..Dec) but only include those present
+      const orderedMonths = [];
+      for (let i = 1; i <= 12; i++) {
+        const mm = String(i).padStart(2, '0');
+        if (months.includes(mm)) orderedMonths.push(mm);
+      }
+      // if none present, include current month
+      if (orderedMonths.length === 0) {
+        const cur = String(new Date().getMonth() + 1).padStart(2, '0');
+        orderedMonths.push(cur);
+      }
+
+      // preserve previously selected month if exists
+      const prevMonth = monthEl.value;
+      monthEl.innerHTML = orderedMonths.map(m => `<option value="${m}">${m} — ${monthNames[Number(m) - 1]}</option>`).join('');
+
+      // set default month
+      const selectedMonth = (prevMonth && orderedMonths.includes(prevMonth)) ? prevMonth : orderedMonths[orderedMonths.length - 1];
+      monthEl.value = selectedMonth;
+    }
+
+    /* ---------------- main orchestration: normalize lastRaw and render ---------------- */
+    function normalizeAndRenderFromRaw(raw, ccy) {
+      const year = Number(document.getElementById('yearSel')?.value || (new Date()).getFullYear());
+      const month = Number(document.getElementById('monthSel')?.value || (new Date().getMonth() + 1));
+      const norm = normalizeAPIResponse(raw, year, month);
+      if (!norm) {
+        console.warn("Normalizer couldn't handle API shape; falling back to sample.");
+        return null;
+      }
+
+      // store normalized for re-renders
+      lastNorm = norm;
+
+      // populate selectors (months+years) from normalized object (contains _txRows)
+      populateYearMonthSelectors(norm);
+
+      // final normal object: remove internal helpers before handing to render
+      const safe = Object.assign({}, norm);
+      delete safe._txRows;
+      delete safe._budgetPeriod;
+      delete safe._rawBudgets;
+
+      // update KPI and charts
+      renderAllReports(safe, ccy, month);
+
+      document.getElementById('dataSourceChip').textContent = 'Data: live';
+      return safe;
+    }
+
+    /* ---------------- loadData: fetch LIVE then normalize (with caching) ---------------- */
+    async function loadData(fetchLive = true) {
+      const loadBtn = document.getElementById("loadBtn");
+      const btnLoader = loadBtn?.querySelector(".btn-loader");
+      const btnText = loadBtn?.querySelector(".btn-text");
+
+      const ccy = document.getElementById("ccySel")?.value || "INR";
+      const yearUI = Number(document.getElementById("yearSel")?.value || new Date().getFullYear());
+      const monthUI = Number(document.getElementById("monthSel")?.value || new Date().getMonth() + 1);
+
+      // 👉 Show tiny loader if button exists
+      if (btnLoader && btnText) {
+        btnLoader.style.display = "inline-block";
+        btnText.textContent = "Loading...";
+        loadBtn.disabled = true; // prevent double-click
+      }
+
+      try {
+        if (fetchLive) {
+          const url = LIVE_URL + (LIVE_URL.includes("?") ? "&" : "?") + `t=${Date.now()}`;
+          const res = await fetch(url, { mode: "cors" });
+          const raw = await res.json();
+          console.log("Live API response:", raw);
+          lastRaw = raw;
+
+          const ok = normalizeAndRenderFromRaw(lastRaw, ccy);
+          if (!ok) {
+            throw new Error("normalize failed");
+          }
+          return; // ✅ but cleanup will still happen in finally
+        }
+
+        // If fetchLive = false, fall through to sample
+        throw new Error("Skipping live fetch, using fallback");
+      } catch (err) {
+        console.warn("Live fetch/normalize failed — falling back to sample:", err);
+
+        document.getElementById("dataSourceChip").textContent = "Data: sample (fallback)";
+        const sampleCats = [
+          "Rent", "Groceries", "Dining", "Transport", "Utilities", "Entertainment",
+          "Shopping", "Healthcare", "Education", "Travel", "Misc"
+        ];
+        const baseBud = [25000, 9000, 5000, 3000, 4500, 3500, 6000, 3000, 2000, 7000, 2000];
+        const baseAct = baseBud.map(b => Math.round(b * (0.7 + Math.random() * 0.6)));
+
+        const sample = {
+          year: new Date().getFullYear(),
+          monthlyIncome: Array.from({ length: 12 }, (_, i) =>
+            Math.round(100000 * (0.8 + Math.sin((i / 12) * 2 * Math.PI) * 0.12))
+          ),
+          monthlyExpense: Array.from({ length: 12 }, (_, i) =>
+            Math.round(72000 * (0.8 + Math.cos((i / 12) * 2 * Math.PI) * 0.12))
+          ),
+          categories: sampleCats,
+          categoryBudget: baseBud,
+          categoryActual: baseAct,
+          incomeSplit: { labels: ["Salary", "Freelance", "Investments"], values: [80, 12, 8] },
+          expenseSplit: { labels: sampleCats, values: baseAct },
+          savingsGoal: 300000,
+        };
+
+        lastNorm = sample;
+        renderAllReports(sample, ccy, monthUI);
+      } finally {
+        // 👉 Always reset loader, success or fail
+        if (btnLoader && btnText) {
+          btnLoader.style.display = "none";
+          btnText.textContent = "🔄 Load Live";
+          loadBtn.disabled = false;
+        }
+      }
+    }
+
+
+    /* ---------------- init wiring ---------------- */
+    (function init() {
+      // wire reload button -> refetch live
+      document.getElementById('btnReload')?.addEventListener('click', () => loadData(true).catch(e => console.error(e)));
+
+      // when year/month changed by user, use cached raw (if available) to re-normalize and re-render
+      document.getElementById('yearSel')?.addEventListener('change', () => {
+        if (lastRaw) { normalizeAndRenderFromRaw(lastRaw, document.getElementById('ccySel')?.value); }
+      });
+      document.getElementById('monthSel')?.addEventListener('change', () => {
+        if (lastRaw) { normalizeAndRenderFromRaw(lastRaw, document.getElementById('ccySel')?.value); }
+      });
+      document.getElementById('ccySel')?.addEventListener('change', () => {
+        if (lastNorm) renderAllReports(lastNorm, document.getElementById('ccySel')?.value, Number(document.getElementById('monthSel')?.value || (new Date().getMonth() + 1)));
+      });
+
+      window.addEventListener('DOMContentLoaded', () => loadData(true).catch(e => console.error(e)));
+    })();
+
+
+
+
+
+    /* ===========================
+      ---------- YOUR ORIGINAL renderAllReports ----------
+      Kept unchanged except: it now consumes normalized data from normalizeAPIResponse.
+      =========================== */
+
+
+
+
+    function renderAllReports(data, ccy = "INR", monthNum = (new Date().getMonth() + 1)) {
+      // (This function is the large renderAllReports you provided originally)
+      // It's identical to your function but using the normalized `data` object.
+      // For brevity in this message I re-insert the exact implementation (unchanged) below.
+
+      const monthlyIncome = (data && data.monthlyIncome) ? data.monthlyIncome : Array.from({ length: 12 }, () => 0);
+      const monthlyExpense = (data && data.monthlyExpense) ? data.monthlyExpense : Array.from({ length: 12 }, () => 0);
+      const categories = (data && data.categories) ? data.categories : [];
+      const categoryBudget = (data && data.categoryBudget) ? data.categoryBudget : categories.map(() => 0);
+      const categoryActual = (data && data.categoryActual) ? data.categoryActual : categories.map(() => 0);
+      const savingsGoal = data && data.savingsGoal ? data.savingsGoal : 0;
+
+      const budgetsArr = categories.map((c, i) => Number(categoryBudget[i] || 0));
+      const actualsArr = categories.map((c, i) => Number(categoryActual[i] || 0));
+
+      const mIdx = clamp(monthNum - 1, 0, 11);
+      const monthIncome = (monthlyIncome[mIdx] !== undefined) ? monthlyIncome[mIdx] : monthlyIncome[0];
+      const monthExpense = (monthlyExpense[mIdx] !== undefined) ? monthlyExpense[mIdx] : monthlyExpense[0];
+
+      // ✅ Make globals accessible to setupScenario
+      window.categories = categories;
+      window.actualsArr = actualsArr;
+      window.monthIncome = monthIncome;
+      window.monthExpense = monthExpense;
+      window.ccy = ccy;
+
+      const savings = Math.max(0, monthIncome - monthExpense);
+      const saveRate = monthIncome ? Math.round((savings / monthIncome) * 100) : 0;
+      const usedPct = budgetsArr.map((b, i) => Math.round((b > 0) ? (actualsArr[i] / b) * 100 : (actualsArr[i] ? 999 : 0)));
+      const overCount = usedPct.filter(p => p >= 100).length;
+
+      // update KPIs
+
+      const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      setText('kpiIncome', fmtCurrency(monthIncome, ccy));
+      setText('kpiExpense', fmtCurrency(monthExpense, ccy));
+      setText('kpiSaveRate', `${saveRate}%`);
+      setText('kpiOver', String(overCount));
+
+
+      const srEl = document.getElementById("kpiSaveRate");
+      if (srEl) {
+        // Compute from your already-available numbers
+        const totalIncome = monthIncome ?? 0;
+        const totalExpense = monthExpense ?? 0;
+
+        let saveRate = 0;
+        if (totalIncome > 0) {
+          saveRate = ((totalIncome - totalExpense) / totalIncome) * 100;
+        }
+
+        // Always show explicit sign
+        const formatted = (saveRate > 0 ? "+" : "") + saveRate.toFixed(1) + "%";
+
+        // Pick badge color
+        let bg = "gray", color = "white";
+        if (saveRate > 0) { bg = "green"; }
+        else if (saveRate < 0) { bg = "red"; }
+
+        // Render as a pill badge
+        srEl.innerHTML = `<span style="
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:12px;
+    background:${bg};
+    color:${color};
+    font-weight:600;
+  ">${formatted}</span>`;
+      }
+
+
+
+      /* ---------------- Report 1: Budget vs Actual ---------------- */
+      upsertChart('chBudgetVsActual', {
+        type: 'bar',
+        data: {
+          labels: categories, datasets: [
+            { label: 'Budget', data: budgetsArr, backgroundColor: 'rgba(59,130,246,0.6)' },
+            { label: 'Actual', data: actualsArr, backgroundColor: 'rgba(239,68,68,0.7)' }
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmtCurrency(ctx.parsed.y, ccy)}` } } }, scales: { y: { beginAtZero: true } } }
+      });
+
+      /* ---------------- Report 2: Income vs Expense Trend ---------------- */
+      upsertChart('chIncExpTrend', {
+        type: 'line',
+        data: {
+          labels: monthNames, datasets: [
+            { label: 'Income', data: monthlyIncome, borderColor: '#10b981', tension: .35, fill: false },
+            { label: 'Expense', data: monthlyExpense, borderColor: '#ef4444', tension: .35, fill: false }
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+
+      /* ---------------- Report 3: Cashflow ---------------- */
+      const cashflow = monthlyIncome.map((v, i) => v - (monthlyExpense[i] || 0));
+      upsertChart('chCashflow', {
+        type: 'line',
+        data: { labels: monthNames, datasets: [{ label: 'Cashflow', data: cashflow, fill: true, backgroundColor: 'rgba(99,102,241,0.12)', borderColor: '#6366f1' }] },
+        options: { responsive: true }
+      });
+
+      /* ---------------- Report 4: Top 5 Expenses ---------------- */
+      const top5 = categories.map((c, i) => ({ c, v: actualsArr[i] })).sort((a, b) => b.v - a.v).slice(0, 5);
+      upsertChart('chTop5', {
+        type: 'bar',
+        data: { labels: top5.map(x => x.c), datasets: [{ label: 'Actual', data: top5.map(x => x.v), backgroundColor: 'rgba(99,102,241,0.8)' }] },
+        options: { indexAxis: 'y', responsive: true }
+      });
+
+      // ✅ Make categories/actuals available globally
+      window.categories = categories;
+      window.actualsArr = actualsArr;
+      window.monthIncome = monthIncome;
+      window.monthExpense = monthExpense;
+
+      // ✅ Now safe to run simulator
+      setupScenario();
+
+
+      /* ---------------- Report 5: Heatmap ---------------- */
+      const heatGrid = document.getElementById("heatGrid");
+      const sortToggle = document.getElementById("heatSortToggle"); // 👈 add this button in HTML
+
+      if (heatGrid) {
+        heatGrid.innerHTML = "";
+
+        // default sort mode
+        let sortMode = "overspend"; // or "alpha"
+
+        function renderHeatmap() {
+          heatGrid.innerHTML = "";
+
+          try {
+            // Build category data
+            const catData = (data.categories || []).map((cat, i) => {
+              const budgetAmt = (data.categoryBudget && data.categoryBudget[i]) || 0;
+              const actual = (data.categoryActual && data.categoryActual[i]) || 0;
+              const p = budgetAmt ? Math.round((actual / budgetAmt) * 100) : 0;
+              return { cat, budgetAmt, actual, p };
+            });
+
+            // ✅ Sort based on current mode
+            if (sortMode === "overspend") {
+              catData.sort((a, b) => b.p - a.p);
+            } else {
+              catData.sort((a, b) => a.cat.localeCompare(b.cat));
+            }
+
+            catData.forEach(({ cat, budgetAmt, actual, p }) => {
+              const el = document.createElement("div");
+              el.className = "heat-cell";
+
+              // ✅ Smooth gradient color (0% green → 100% red)
+              const ratio = Math.min(p, 100) / 100;
+              const red = Math.round(34 + (239 - 34) * ratio);
+              const green = Math.round(197 + (68 - 197) * ratio);
+              const blue = Math.round(94 + (68 - 94) * ratio);
+              const bg = `rgba(${red},${green},${blue},0.85)`;
+              el.style.background = bg;
+
+              // Contrast text
+              const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
+              el.style.color = brightness < 128 ? "#fff" : "#000";
+
+              // Border if overspent
+              el.style.border =
+                p >= 100
+                  ? "2px solid rgba(239,68,68,1)"
+                  : "1px solid rgba(0,0,0,0.08)";
+
+              // Label inside cell
+              el.textContent = `${cat} • ${p}%`;
+
+              // ✅ Tooltip
+              const tooltip = document.createElement("div");
+              tooltip.className = "tooltip";
+              if (budgetAmt === 0 && actual === 0) {
+                tooltip.textContent = "No data available";
+              } else {
+                tooltip.textContent = `Budget: ${fmtCurrency(
+                  budgetAmt
+                )} | Actual: ${fmtCurrency(actual)}`;
+              }
+              el.appendChild(tooltip);
+
+              heatGrid.appendChild(el);
+            });
+
+            // ✅ Responsive grid
+            heatGrid.style.display = "grid";
+            heatGrid.style.gridTemplateColumns =
+              "repeat(auto-fit, minmax(160px, 1fr))";
+            heatGrid.style.gap = "10px";
+          } catch (err) {
+            console.error("Report 5 heatmap failed:", err);
+            const msg = document.createElement("div");
+            msg.textContent = "⚠️ Heatmap unavailable";
+            msg.style.color = "red";
+            heatGrid.appendChild(msg);
+          }
+        }
+
+        // 👇 Setup toggle button listener
+        if (sortToggle) {
+          sortToggle.addEventListener("click", () => {
+            sortMode = sortMode === "overspend" ? "alpha" : "overspend";
+            sortToggle.textContent =
+              sortMode === "overspend" ? "Sort: By Overspend" : "Sort: Alphabetical";
+            renderHeatmap();
+          });
+        }
+
+        // initial render
+        renderHeatmap();
+      }
+
+      /* ---------------- Report 6: Recurring vs One-time ---------------- */
+      const recurringSet = new Set(["Rent", "Groceries", "Transport", "Utilities", "Healthcare", "Education"]);
+      let recurringTotal = 0;
+      categories.forEach((c, i) => { if (recurringSet.has(c)) recurringTotal += actualsArr[i]; });
+      const oneTimeTotal = Math.max(0, (monthExpense || monthlyExpense[0]) - recurringTotal);
+      upsertChart('chRecurring', {
+        type: 'doughnut',
+        data: { labels: ['Recurring', 'One-time'], datasets: [{ data: [recurringTotal, oneTimeTotal], backgroundColor: ['#3b82f6', '#f59e0b'] }] },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+
+      /* ---------------- Report 7: Payment Methods (synthetic) ---------------- */
+      (function () {
+        const total = monthExpense || monthlyExpense[0];
+        const upi = Math.round(total * 0.46), card = Math.round(total * 0.38), cash = Math.round(total * 0.12), wallet = Math.round(total * 0.04);
+        upsertChart('chPayMethod', { type: 'pie', data: { labels: ['UPI', 'Card', 'Cash', 'Wallet'], datasets: [{ data: [upi, card, cash, wallet] }] }, options: { responsive: true } });
+      })();
+
+      /* ---------------- Report 8: Income Streams (fallback if missing) ---------------- */
+      const incSplit = data.incomeSplit && data.incomeSplit.labels ? data.incomeSplit : { labels: ['Salary', 'Side Hustle', 'Investments'], values: [Math.round(monthIncome * 0.78), Math.round(monthIncome * 0.12), Math.round(monthIncome * 0.1)] };
+      upsertChart('chIncomeStreams', { type: 'pie', data: { labels: incSplit.labels, datasets: [{ data: incSplit.values }] }, options: { responsive: true } });
+
+      /* ---------------- Report 9: Variance by Category ---------------- */
+      const variances = actualsArr.map((a, i) => a - budgetsArr[i]);
+      upsertChart('chVariance', {
+        type: 'bar',
+        data: { labels: categories, datasets: [{ label: 'Variance', data: variances, backgroundColor: variances.map(v => v > 0 ? 'rgba(239,68,68,0.85)' : 'rgba(16,185,129,0.8)') }] },
+        options: { responsive: true }
+      });
+
+      /* ---------------- Report 10: Cumulative Budget Burn ---------------- */
+      const monthlyBudgetTotal = budgetsArr.reduce((a, b) => a + b, 0);
+      const monthlyActualTotals = monthlyExpense.slice(0, 12).map(v => v || monthlyExpense[0]);
+      const cum = arr => arr.reduce((acc, v, i) => (acc.push((acc[i - 1] || 0) + v), acc), []);
+      upsertChart('chBurn', {
+        type: 'line',
+        data: {
+          labels: monthNames, datasets: [
+            { label: 'Cumulative Budget', data: cum(Array.from({ length: 12 }, () => Math.round(monthlyBudgetTotal / 12))), tension: .25 },
+            { label: 'Cumulative Actual', data: cum(monthlyActualTotals), tension: .25 }
+          ]
+        },
+        options: { responsive: true }
+      });
+
+      /* ---------------- Report 11: Affordability ---------------- */
+      const totBud = Math.max(1, budgetsArr.reduce((a, b) => a + b, 0));
+      const totAct = Math.max(1, actualsArr.reduce((a, b) => a + b, 0));
+      upsertChart('chAfford', {
+        type: 'bubble',
+        data: { datasets: [{ label: 'Categories', data: categories.map((c, i) => ({ x: Math.round((budgetsArr[i] / totBud) * 100), y: Math.round((actualsArr[i] / totAct) * 100), r: 6, label: c })) }] },
+        options: { responsive: true, plugins: { tooltip: { callbacks: { label(ctx) { return `${ctx.raw.label}: Budg% ${ctx.raw.x}, Spend% ${ctx.raw.y}` } } } } }
+      });
+
+      /* ---------------- Report 12: Alerts & Exceptions ---------------- */
+      function renderAlerts() {
+        const tbody = document.getElementById('tblAlerts');
+        if (!tbody) return;
+
+        tbody.innerHTML = "";
+
+        // Build rows
+        let rows = categories.map((c, i) => {
+          let budget = budgetsArr[i] || 0;
+          let actual = actualsArr[i] || 0;
+
+          let pct;
+          if (budget === 0) {
+            pct = actual > 0 ? Infinity : 0;
+          } else {
+            pct = Math.round((actual / budget) * 100);
+          }
+
+          return { cat: c, budget, actual, pct, variance: actual - budget };
+        });
+
+        // Sorting
+        const sortMode = document.getElementById("alertSort")?.value || "used";
+        if (sortMode === "used") {
+          rows.sort((a, b) => (b.pct === Infinity ? 99999 : b.pct) - (a.pct === Infinity ? 99999 : a.pct));
+        } else if (sortMode === "variance") {
+          rows.sort((a, b) => b.variance - a.variance);
+        } else if (sortMode === "alpha") {
+          rows.sort((a, b) => a.cat.localeCompare(b.cat));
+        }
+
+        // Render
+        rows.forEach(r => {
+          const pct = r.pct;
+
+          let statusText = "";
+          let styleBadge = "";
+
+          if (pct === Infinity) {
+            statusText = "🚨 Undefined Budget";
+            styleBadge = `<span class="alert-badge bg-red-600/20 text-red-300 border border-red-500/30 animate-pulse">∞</span>`;
+          } else if (pct >= 120) {
+            statusText = "🔥 Critical";
+            styleBadge = `<span class="alert-badge bg-red-600/20 text-red-300 border border-red-500/30 animate-pulse">🔥</span>`;
+          } else if (pct >= 110) {
+            statusText = "⏰ Overdue";
+            styleBadge = `<span class="alert-badge bg-red-500/15 text-red-300 border border-red-400/30">⏰</span>`;
+          } else if (pct >= 100) {
+            statusText = "⚠️ Over";
+            styleBadge = `<span class="alert-badge bg-orange-500/15 text-orange-300 border border-orange-400/30">⚠️</span>`;
+          } else if (pct >= 50) {
+            statusText = "🟡 Watch";
+            styleBadge = `<span class="alert-badge bg-yellow-500/15 text-yellow-300 border border-yellow-400/30">🟡</span>`;
+          } else {
+            statusText = "✅ On Track";
+            styleBadge = `<span class="alert-badge bg-green-500/15 text-green-300 border border-green-400/30">✅</span>`;
+          }
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+      <td>${r.cat}</td>
+      <td style="text-align:right">${fmtCurrency(r.budget, ccy)}</td>
+      <td style="text-align:right">${fmtCurrency(r.actual, ccy)}</td>
+      <td style="text-align:right">${pct === Infinity ? '∞%' : pct + '%'}</td>
+      <td>${statusText}</td>
+      <td>${styleBadge}</td>
+    `;
+          tbody.appendChild(tr);
+        });
+
+        if (!tbody.children.length) {
+          tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center;color:#94a3b8;padding:10px">
+          No categories found 🎉
+        </td>
+      </tr>`;
+        }
+      }
+
+      // 🔄 Re-render when dropdown changes
+      document.getElementById("alertSort")?.addEventListener("change", renderAlerts);
+
+      // Initial load
+      renderAlerts();
+
+
+
+
+
+      /* ---------------- Report 13: Savings Rate Trend ---------------- */
+      const saveRateSeries = monthNames.map((_, i) => {
+        const inc = monthlyIncome[i] || monthlyIncome[0];
+        const exp = monthlyExpense[i] || monthlyExpense[0];
+        return inc ? Math.round(((inc - exp) / inc) * 100) : 0;
+      });
+      upsertChart('chSaveTrend', { type: 'line', data: { labels: monthNames, datasets: [{ label: 'Savings %', data: saveRateSeries, backgroundColor: 'rgba(16,185,129,0.12)', borderColor: '#10b981', fill: true }] }, options: { responsive: true } });
+
+      /* ---------------- Report 14: Expense Forecast ---------------- */
+      const last6 = monthlyExpense.slice(-6);
+      const avg6 = last6.reduce((a, b) => a + b, 0) / (last6.length || 1);
+      const slope = (last6[last6.length - 1] - last6[0]) / Math.max(1, last6.length - 1);
+      const next3 = [1, 2, 3].map(i => Math.round(avg6 + slope * i));
+      upsertChart('chForecast', { type: 'line', data: { labels: [...monthNames, "M+1", "M+2", "M+3"], datasets: [{ label: 'Actual Expense', data: monthlyExpense }, { label: 'Forecast', data: [...Array(monthlyExpense.length).fill(null), ...next3], borderDash: [6, 6] }] }, options: { responsive: true } });
+
+      /* ---------------- Report 15: Net Worth ---------------- */
+      upsertChart('chNetWorth', { type: 'line', data: { labels: monthNames, datasets: [{ label: 'Net Worth', data: monthlyIncome.map((v, i) => Math.round((monthlyIncome[i] || monthlyIncome[0]) * 6 + i * 10000)), fill: true }] }, options: { responsive: true } });
+
+      /* ---------------- Report 16: Debt & EMI ---------------- */
+      const debtBal = monthlyIncome.map((_, i) => Math.round(200000 - (i * 5000)));
+      const emi = debtBal.map(b => Math.round(Math.max(8000, b * 0.01)));
+      upsertChart('chDebt', {
+        type: 'bar',
+        data: { labels: monthNames, datasets: [{ label: 'EMI', data: emi, backgroundColor: '#f97316' }, { type: 'line', label: 'Debt Balance', data: debtBal, yAxisID: 'y1', borderColor: '#6366f1' }] },
+        options: { responsive: true, scales: { y1: { position: 'right', beginAtZero: true } } }
+      });
+
+      /* ---------------- Report 17: Seasonality YoY ---------------- */
+      upsertChart('chSeasonality', { type: 'bar', data: { labels: categories, datasets: [{ label: `${(new Date().getFullYear()) - 1}`, data: categories.map((_, i) => Math.round((actualsArr[i] || 0) * 0.92)) }, { label: `${new Date().getFullYear()}`, data: actualsArr }] }, options: { responsive: true } });
+
+      /* ---------------- Report 18: Scenario Simulator (dynamic top2 overspent) ---------------- */
+
+      function setupScenario() {
+        if (!window.categories || !window.actualsArr) {
+          console.log("Scenario Simulator: categories/actuals not ready");
+          return;
+        }
+
+        // ✅ Find top 5 expense categories
+        const catWithAmt = window.categories.map((c, i) => ({
+          cat: c,
+          amt: window.actualsArr[i] || 0
+        }));
+        catWithAmt.sort((a, b) => b.amt - a.amt);
+        const topCats = catWithAmt.slice(0, 5);
+
+        // ✅ Inject sliders into simSliders div
+        const slidersDiv = document.getElementById("simSliders");
+        slidersDiv.innerHTML = "";
+
+        // chunk into pairs
+        for (let i = 0; i < topCats.length; i += 2) {
+          const pair = topCats.slice(i, i + 2);
+          let rowHtml = `<div class="simRow" style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px">`;
+
+          pair.forEach((c, j) => {
+            const id = i + j + 1;
+            rowHtml += `
+      <div>
+        <label class="small" style="display:block; margin-bottom:4px">
+          Reduce <span id="simCat${id}Name">${c.cat}</span>:
+          <span id="simPct${id}">10</span>% 
+          (<span id="simSave${id}">₹0</span>)
+        </label>
+        <input type="range" id="rngSim${id}" min="0" max="50" value="10" 
+               data-cat="${c.cat}" data-idx="${id}" style="width:100%">
+      </div>
+    `;
+          });
+
+          rowHtml += `</div>`;
+          slidersDiv.innerHTML += rowHtml;
+        }
+
+        // ✅ Collect sliders globally
+        window.sliders = Array.from(slidersDiv.querySelectorAll("input[type=range]"));
+
+        // Attach listeners
+        window.sliders.forEach(sl => sl.addEventListener("input", computeScenario));
+
+        // Initial compute
+        computeScenario();
+
+        function computeScenario() {
+          if (!window.sliders) return;
+
+          const newActuals = window.actualsArr.slice();
+
+          window.sliders.forEach(sl => {
+            const pct = Number(sl.value || 0);
+            const catName = sl.dataset.cat;
+            const idx = window.categories.indexOf(catName);
+
+            if (idx >= 0) {
+              const original = window.actualsArr[idx];
+              const reduced = Math.round(original * (1 - pct / 100));
+              newActuals[idx] = reduced;
+
+              // ✅ Update savings per category
+              const catSaving = original - reduced;
+              const saveSpan = document.getElementById(`simSave${sl.dataset.idx}`);
+              if (saveSpan) {
+                saveSpan.textContent = catSaving.toLocaleString("en-IN", {
+                  style: "currency",
+                  currency: ccy || "INR"
+                });
+              }
+            }
+
+            document.getElementById(`simPct${sl.dataset.idx}`).textContent = pct;
+          });
+
+          const newExpense = newActuals.reduce((a, b) => a + b, 0);
+          const newSavings = window.monthIncome - newExpense;
+          const newRate = window.monthIncome
+            ? Math.round((newSavings / window.monthIncome) * 100)
+            : 0;
+
+          // Totals
+          const simSavingsEl = document.getElementById("simSavings");
+          const simRateEl = document.getElementById("simRate");
+
+          simSavingsEl.textContent = newSavings.toLocaleString("en-IN", {
+            style: "currency",
+            currency: ccy || "INR",
+          });
+          simRateEl.textContent = `${newRate}%`;
+
+          // ✅ Color coding
+          if (newSavings < 0) {
+            simSavingsEl.style.color = "red";
+            simRateEl.style.color = "red";
+          } else if (newSavings > 0) {
+            simSavingsEl.style.color = "green";
+            simRateEl.style.color = "green";
+          } else {
+            simSavingsEl.style.color = "";
+            simRateEl.style.color = "";
+          }
+
+          // Chart with Expense + Savings
+          upsertChart("chScenario", {
+            type: "bar",
+            data: {
+              labels: ["Current Expense", "Scenario Expense", "Current Savings", "Scenario Savings"],
+              datasets: [
+                {
+                  label: "Amount",
+                  data: [
+                    window.monthExpense,
+                    newExpense,
+                    window.monthIncome - window.monthExpense,
+                    newSavings
+                  ],
+                  backgroundColor: [
+                    "#ef4444",        // current expense red
+                    "#3b82f6",        // scenario expense blue
+                    "#22c55e",        // current savings green
+                    newSavings >= 0 ? "#22c55e" : "#ef4444" // scenario savings
+                  ]
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true } }
+            }
+          });
+        }
+
+        // Attach listeners
+        sliders.forEach(sl => sl.addEventListener("input", computeScenario));
+
+        // Initial run
+        computeScenario();
+      }
+
+
+
+      /* ---------------- Report 19/20/21 (unchanged logic) ---------------- */
+
+      // --- Analysis of categories (sort by actual spend) ---
+      // --- Analysis of categories ---
+      const analysisCats = categories.map((name, i) => ({
+        name,
+        budget: budgetsArr[i],
+        actual: actualsArr[i],
+        usedPct: usedPct[i]
+      }));
+
+      // --- Global state for tips & sliders ---
+      const appliedState = {};   // from tips Apply buttons
+      let sliderState = [];      // from What-If sliders
+
+      // --- Unified Projection Update ---
+      function updateProjectionCombined() {
+        const reducedMap = {};
+
+        // calculate reduced values from tips + sliders
+        analysisCats.forEach(c => {
+          let actual = c.actual;
+
+          // if tips applied
+          if (appliedState[c.name]) {
+            const pct = appliedState[c.name];
+            actual = Math.round(actual * ((100 - pct) / 100));
+          }
+
+          // if sliders adjusted
+          const slider = sliderState.find(s => s.name === c.name);
+          if (slider) {
+            actual = Math.round(slider.actual * slider.multiplier);
+          }
+
+          reducedMap[c.name] = actual;
+        });
+
+        // totals
+        let projectedExpense = 0;
+        analysisCats.forEach(c => projectedExpense += reducedMap[c.name]);
+        const projectedSavings = Math.max(0, monthIncome - projectedExpense);
+        const projectedRate = Math.round((projectedSavings / Math.max(1, monthIncome)) * 100);
+
+        // --- Update UI ---
+        document.getElementById("projExpense").textContent = fmtCurrency(projectedExpense, ccy);
+        document.getElementById("projSavings").textContent = fmtCurrency(projectedSavings, ccy);
+        document.getElementById("projRate").textContent = `${projectedRate}%`;
+
+        // gauge
+        const potentialMonthlySave = Math.max(0, analysisCats.reduce((a, b) => a + b.actual, 0) - projectedExpense);
+        const maxGauge = Math.max(1, Math.round(monthIncome * 0.30));
+        upsertChart("gaugeCanvas", {
+          type: "doughnut",
+          data: {
+            labels: ["Potential", "Remaining"],
+            datasets: [{
+              data: [potentialMonthlySave, Math.max(0, maxGauge - potentialMonthlySave)],
+              backgroundColor: ["#10b981", "#111827"]
+            }]
+          },
+          options: {
+            cutout: "70%",
+            rotation: -90,
+            circumference: 180,
+            responsive: true,
+            plugins: { legend: { display: false } }
+          }
+        });
+
+        document.getElementById("gaugeSummary").textContent =
+          `Projected potential savings: ${fmtCurrency(potentialMonthlySave, ccy)} — gauge max ${fmtCurrency(maxGauge, ccy)}`;
+
+        // challenge tracker
+        const challengeGoal = 5000;
+        const currentSaved = Math.max(0, monthIncome - monthExpense);
+        const total = currentSaved + potentialMonthlySave;
+        const pct = clamp(Math.round((total / challengeGoal) * 100), 0, 100);
+
+        const challengeBar = document.getElementById("challengeBar");
+        if (challengeBar) {
+          challengeBar.style.width = pct + "%";
+          challengeBar.textContent = pct + "%";
+        }
+        const challengeSummary = document.getElementById("challengeSummary");
+        if (challengeSummary)
+          challengeSummary.textContent = `Projected saved this month: ${fmtCurrency(total, ccy)} of ${fmtCurrency(challengeGoal, ccy)} goal.`;
+      }
+
+      // --- Top 4 Tips (Apply buttons) ---
+      const topCats = analysisCats
+        .slice()
+        .sort((a, b) => (b.actual || 0) - (a.actual || 0)) // top spenders
+        .slice(0, 4);
+
+      const tipsHeading = document.getElementById("tipsHeading");
+      if (tipsHeading) {
+        tipsHeading.textContent = `Top ${topCats.length} Spending Categories (Tips)`;
+      }
+
+      const tipsContainer = document.getElementById("tipsContainer");
+      if (tipsContainer) {
+        tipsContainer.innerHTML = "";
+
+        topCats.forEach((c) => {
+          const suggestedPct = c.usedPct >= 140 ? 20 : c.usedPct >= 110 ? 15 : 10;
+          const saveAmt = Math.round((c.actual || 0) * (suggestedPct / 100));
+
+          const card = document.createElement("div");
+          card.className = "card";
+          card.style.display = "flex";
+          card.style.justifyContent = "space-between";
+          card.style.alignItems = "center";
+          card.style.gap = "8px";
+
+          card.innerHTML = `
+      <div>
+        <div style="font-weight:700">${c.name}</div>
+        <div class="small">Reduce ${suggestedPct}% → Save ${fmtCurrency(saveAmt, ccy)}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="small">Suggested</div>
+        <div style="color:#34d399;font-weight:700">${suggestedPct}%</div>
+        <button class="btn small" style="margin-top:6px">Apply</button>
+      </div>
+    `;
+
+          const btn = card.querySelector("button");
+          btn.addEventListener("click", () => {
+            appliedState[c.name] = suggestedPct;
+            updateProjectionCombined();
+          });
+
+          tipsContainer.appendChild(card);
+        });
+      }
+
+      // --- What-If Simulator (Top 4) ---
+      const slidersArea = document.getElementById("slidersArea");
+      if (slidersArea) {
+        slidersArea.innerHTML = "";
+        const sliderCandidates = analysisCats
+          .slice()
+          .sort((a, b) => (b.actual || 0) - (a.actual || 0)) // top spenders
+          .slice(0, 4);
+
+        const slidersHeading = document.getElementById("whatIfHeading");
+        if (slidersHeading) {
+          slidersHeading.textContent = `What-If Simulator (Top ${sliderCandidates.length} categories)`;
+        }
+
+        sliderState = sliderCandidates.map(c => ({
+          name: c.name,
+          actual: c.actual,
+          multiplier: 1.0
+        }));
+
+        function buildSliders() {
+          slidersArea.innerHTML = "";
+          sliderState.forEach((s, idx) => {
+            const wrap = document.createElement("div");
+            wrap.className = "card";
+            wrap.innerHTML = `
+        <div style="display:flex;justify-content:space-between">
+          <div style="font-weight:700">${s.name}</div>
+          <div class="small">Actual: ${fmtCurrency(s.actual, ccy)}</div>
+        </div>
+        <input type="range" min="60" max="100" value="${Math.round(s.multiplier * 100)}" data-idx="${idx}" style="width:100%;margin-top:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#9aa7b8;margin-top:8px">
+          <div>Reduce by <span class="reducePct">0</span>%</div>
+          <div>New: <span class="newAmt">${fmtCurrency(s.actual, ccy)}</span></div>
+        </div>`;
+            slidersArea.appendChild(wrap);
+
+            const input = wrap.querySelector("input");
+            const reducePctEl = wrap.querySelector(".reducePct");
+            const newAmtEl = wrap.querySelector(".newAmt");
+            input.addEventListener("input", (e) => {
+              const v = Number(e.target.value);
+              const reduce = 100 - v;
+              reducePctEl.textContent = reduce;
+              const newAmt = Math.round(s.actual * (v / 100));
+              newAmtEl.textContent = fmtCurrency(newAmt, ccy);
+              sliderState[idx].multiplier = v / 100;
+              updateProjectionCombined();
+            });
+          });
+        }
+
+        buildSliders();
+        updateProjectionCombined();
+      }
+
+// --- Reset Button ---
+const resetBtn = document.getElementById("resetBtn");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    // clear tips
+    for (let key in appliedState) delete appliedState[key];
+
+    // reset sliders to 100%
+    sliderState.forEach(s => s.multiplier = 1.0);
+
+    // rebuild sliders UI
+    buildSliders();
+
+    // recalc everything
+    updateProjectionCombined();
+  });
+}
+
+
+
+    }
+
+
+
+  </script>
+</body>
+
+</html>

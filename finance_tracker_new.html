@@ -1,0 +1,1872 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Finance Tracker — Admin UI</title>
+
+  <script src="asset/tracker/config.js"></script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+  <script src="asset/tracker/finance_tracker_new.js" defer></script>
+  <script src="asset/tracker/support.js" defer></script>
+
+  <!-- <link rel="stylesheet" href="asset/tracker/reportdashboard.css" defer>
+  <script src="asset/tracker/reportdashboard.js" defer></script> -->
+
+
+  <style>
+    :root {
+      --color-primary: #9a22f6;
+      --color-secondary: #f96fdc;
+      --accent1: #9a22f6;
+      --accent2: #f96fdc;
+      --bg: linear-gradient(to right, #fdfbfb, #ebedee);
+      --card-bg: rgba(255, 255, 255, 0.90);
+      --muted: #6b7280;
+      --glass-border: rgba(200, 200, 200, 0.4);
+      --text-dark: #111827;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, system-ui, Arial;
+      color: var(--text-dark);
+      background: var(--bg);
+    }
+
+    /* ---------- Sidebar / Topbar / Layout ---------- */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 30px rgba(2, 6, 23, 0.06);
+      color: var(--text-dark);
+    }
+
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100%;
+      padding: 24px;
+      background: var(--card-bg);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      border-right: 1px solid rgba(0, 0, 0, 0.06);
+      transform: translateX(-100%);
+      transition: transform 0.28s ease;
+      z-index: 60;
+      overflow-y: auto;
+      backdrop-filter: blur(8px);
+    }
+
+    #sidebar.active {
+      transform: translateX(0);
+    }
+
+    /* single overlay used by sidebar and other UI */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(4px);
+      z-index: 55;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.28s ease;
+    }
+
+    #overlay.show {
+      display: block;
+      opacity: 1;
+    }
+
+    .btn-gradient {
+      background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+    }
+
+    .btn-gradient {
+      background: linear-gradient(to right, #9a22f6, #f96fdc);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: bold;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 6px 18px rgba(154, 34, 246, 0.4);
+    }
+
+    .btn-gradient:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 24px rgba(249, 111, 220, 0.6);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: bold;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.6);
+      color: #000;
+    }
+
+
+    .kpi-positive {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      transition: background 0.35s ease, transform 0.35s ease;
+    }
+
+    .kpi-negative {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: white;
+      transition: background 0.35s ease, transform 0.35s ease;
+    }
+
+    .kpi-positive:hover,
+    .kpi-negative:hover {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Fade in */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .glass-card h4 {
+      text-align: center;
+    }
+
+    header.appbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: white;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+    }
+
+    #openSidebar {
+      padding: 10px;
+      background-color: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+
+    #openSidebar {
+      transition: all 0.2s ease;
+      transform-origin: center;
+    }
+
+    #openSidebar:hover {
+      transform: scale(1.1);
+    }
+
+    .main-wrap {
+      display: flex;
+      gap: 18px;
+      padding: 20px;
+      transition: margin-left .28s ease;
+      margin-top: 12px;
+    }
+
+    .main-wrap.shifted {
+      margin-left: 320px;
+    }
+
+    /* push when sidebar open */
+
+    .col-left {
+      flex: 1;
+    }
+
+    .col-right {
+      flex: 0 0 450px;
+      /* was likely ~250px before */
+    }
+
+    /* ---------- Buttons / Inputs / Tables ---------- */
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.18s;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .tab-btn:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .tab-btn.active,
+    .report-toggle-btn.active {
+      background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+    }
+
+    .small-btn {
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 0;
+      background: #f3f4f6;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    input[type=text],
+    input[type=number],
+    input[type=date],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      background: #fff;
+      color: var(--text-dark);
+    }
+
+    .btn {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 0;
+      cursor: pointer;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      color: white;
+      border-radius: 30px;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      color: var(--muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: transparent;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+      text-align: left;
+      color: var(--text-dark);
+    }
+
+    th {
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .summary-card {
+      padding: 14px;
+      border-radius: 12px;
+      text-align: center;
+      transition: background 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+      animation: fadeInSlide 0.8s ease forwards;
+      color: white;
+      opacity: 0;
+      /* start hidden for fadeInSlide */
+    }
+
+    .summary-card:hover {
+      transform: translateY(-4px) scale(1.06);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    .summary-card .num {
+      font-weight: 700;
+      margin-top: 6px;
+      font-size: 16px;
+    }
+
+
+
+    #toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(154, 34, 246, 0.18);
+      display: none;
+      z-index: 9999;
+    }
+
+    /* Loader overlay */
+    #loaderOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .col-left.full-width {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #eee;
+      border-radius: 4px;
+      margin-top: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar div {
+      height: 100%;
+      width: 0%;
+      background: green;
+      position: absolute;
+      transition: width 0.4s ease, background 0.4s ease, left 0.4s ease, right 0.4s ease;
+    }
+
+    #txTable tbody tr:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    #txTable tbody tr:nth-child(even) {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .action-btn {
+      border-radius: 8px;
+      padding: 6px;
+      min-width: 34px;
+    }
+
+    select {
+      min-height: 38px;
+      padding: 6px 8px;
+      font-size: 14px;
+    }
+
+    button.edit-btn {
+      background-color: #3b82f6;
+      /* blue */
+      color: white;
+    }
+
+    button.edit-btn:hover {
+      background-color: #2563eb;
+    }
+
+    button.delete-btn {
+      background-color: #ef4444;
+      /* red */
+      color: white;
+    }
+
+    button.delete-btn:hover {
+      background-color: #dc2626;
+    }
+
+    .kpi-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 18px;
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      color: white;
+      min-width: 140px;
+      text-align: center;
+    }
+
+
+    .kpi-income {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.6), rgba(5, 150, 105, 0.9));
+    }
+
+
+    .kpi-expense {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.6), rgba(220, 38, 38, 0.9));
+    }
+
+    .kpi-balance-positive {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.6), rgba(5, 150, 105, 0.9));
+    }
+
+
+    .kpi-balance-negative {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.6), rgba(220, 38, 38, 0.9));
+    }
+
+
+    .kpi-icon {
+      font-size: 1.8rem;
+      margin-bottom: 4px;
+    }
+
+    .kpi-label {
+      font-size: 0.9rem;
+      opacity: 0.85;
+    }
+
+    .kpi-value {
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    @keyframes fadeInSlide {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+
+
+    @media (max-width: 768px) {
+      select {
+        min-height: 44px;
+        font-size: 15px;
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width:980px) {
+      .col-right {
+        width: 100%;
+      }
+
+      .main-wrap.shifted {
+        margin-left: 0;
+      }
+
+      #sidebar {
+        left: -320px;
+        transform: none;
+      }
+    }
+
+    @keyframes fadeUp {
+      0% {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-up {
+      animation: fadeUp 0.6s ease-out forwards;
+    }
+
+    /* Staggered animation for each form field */
+    .fade-item {
+      opacity: 0;
+      animation: fadeUp 0.5s ease-out forwards;
+    }
+
+    /* Pulse Animation */
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+
+      50% {
+        transform: scale(1.03);
+        box-shadow: 0 4px 20px rgba(154, 34, 246, 0.2);
+      }
+    }
+
+    /* Apply to heading & buttons */
+    h3:hover,
+    button:hover {
+      animation: pulse 0.6s ease-in-out;
+    }
+
+    tr:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+
+    /* Table header theme */
+    table thead {
+      background: linear-gradient(to right, #9a22f6, #f96fdc) !important;
+      color: white !important;
+    }
+
+    table thead th,
+    table thead span,
+    table thead .text-sm,
+    table thead .font-semibold {
+      color: white !important;
+      font-weight: bold !important;
+      text-align: center !important;
+    }
+
+    /* New zebra striping (soft modern) */
+    .strip-even {
+      background-color: #fdf4ff;
+    }
+
+    /* light lavender */
+    .strip-odd {
+      background-color: #ffffff;
+    }
+
+    .strip-even:hover,
+    .strip-odd:hover {
+      background-color: #f5d0fe;
+      transition: background 0.25s ease;
+    }
+
+    /* Total row with pulse */
+    .total-row {
+      background: #ede9fe;
+      font-weight: bold;
+      animation: pulseTotal 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseTotal {
+      0% {
+        background-color: #ede9fe;
+      }
+
+      100% {
+        background-color: #e9d5ff;
+      }
+    }
+
+    /* Row fade-in animation */
+    @keyframes fadeInRow {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in-row {
+      animation: fadeInRow 0.4s ease forwards;
+    }
+
+    /* ===== Modern Progress Bars ===== */
+    /* Progress bar container */
+    /* progress bar track + fill */
+    .bar-container {
+      position: relative;
+      width: 100%;
+      height: 16px;
+      border-radius: 9999px;
+      background: #f3f4f6;
+      /* neutral track */
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width .45s ease, background .3s ease;
+    }
+
+
+    /* Income bar gradient */
+    .bar-income {
+      background: linear-gradient(90deg, #bbf7d0, #10b981);
+    }
+
+    /* Expense bar gradient */
+    .bar-expense {
+      background: linear-gradient(90deg, #fecaca, #ef4444);
+    }
+
+    /* Optional subtle hover animation */
+    .bar-container:hover .bar-fill {
+      filter: brightness(1.05);
+    }
+
+    /* Zebra striping for table rows */
+    .strip-even {
+      background-color: #fdf4ff;
+      /* light lavender */
+    }
+
+    .strip-odd {
+      background-color: #ffffff;
+    }
+
+    .strip-even:hover,
+    .strip-odd:hover {
+      background-color: #f3e8ff;
+      transition: background 0.25s ease;
+    }
+
+    /* Total row styling */
+    .total-row {
+      background: #ede9fe;
+      font-weight: bold;
+      animation: pulseTotal 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseTotal {
+      0% {
+        background-color: #ede9fe;
+      }
+
+      100% {
+        background-color: #e9d5ff;
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .bar-container {
+        height: 12px;
+      }
+
+      td,
+      th {
+        font-size: 12px;
+      }
+    }
+
+    .summary-cards {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .summary-card {
+      flex: 1;
+      min-width: 100px;
+      padding: 10px;
+      border-radius: 8px;
+      color: white;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .summary-card.income {
+      background-color: #10b981;
+    }
+
+    .summary-card.expense {
+      background-color: #ef4444;
+    }
+
+    .summary-card.savings {
+      background-color: #3b82f6;
+    }
+
+    .summary-card h4 {
+      margin: 0 0 5px;
+      font-size: 0.9rem;
+    }
+
+    .summary-card p {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    /* Category badges */
+    .cat-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: white;
+    }
+
+    .report-subtab.active {
+      background: linear-gradient(to right, #9a22f6, #f96fdc);
+      color: white !important;
+      border-radius: 30px;
+      padding: 6px 16px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .report-subtab {
+      background: transparent;
+      color: #555;
+      border-radius: 30px;
+      padding: 6px 16px;
+      transition: all 0.3s ease;
+    }
+
+    .report-subtab:hover:not(.active) {
+      background: linear-gradient(to right, #42e695, #3bb2b8);
+      color: white !important;
+    }
+
+    /* Target month/year dropdowns inside the monthly dashboard */
+    #monthlyDashboard select {
+      width: auto !important;
+      /* Let it size to content */
+      min-width: 80px;
+      /* Prevent from being too small */
+      padding: 4px 8px;
+      /* Compact padding */
+      font-size: 14px;
+      /* Slightly smaller text */
+      border-radius: 6px;
+      /* Keep rounded look */
+    }
+
+    /* Specific example if you have IDs */
+    #monthSelect {
+      min-width: 100px;
+      /* For month dropdown */
+    }
+
+    #yearSelect {
+      min-width: 70px;
+      /* For year dropdown */
+    }
+
+    /* Pulse glow for value change */
+    .kpi-pulse {
+      animation: pulseGlow 0.6s ease-out;
+    }
+
+    @keyframes pulseGlow {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+      }
+
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      }
+    }
+
+    /* Soft glow on hover */
+    .metric-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .metric-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+    }
+
+
+    /* Wrapper style for gradient border */
+    /* Gradient select wrapper */
+    .gradient-select {
+      position: relative;
+      display: inline-block;
+      border-radius: 9999px;
+      padding: 2px;
+      background: linear-gradient(90deg, #9a22f6, #f96fdc, #9a22f6);
+      background-size: 300% 300%;
+    }
+
+    .gradient-select select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      border: none;
+      outline: none;
+      border-radius: 9999px;
+      background-color: #fff;
+      padding: 8px 35px 8px 15px;
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Arrow */
+    .gradient-select::after {
+      content: "";
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      width: 8px;
+      height: 8px;
+      border: solid #22c55e;
+      border-width: 0 2px 2px 0;
+      transform: translateY(-50%) rotate(45deg);
+      pointer-events: none;
+    }
+
+    /* Option hover and selected */
+    .gradient-select select option:hover,
+    .gradient-select select option:checked {
+      background: linear-gradient(90deg, #9a22f6, #f96fdc) !important;
+      color: white !important;
+    }
+
+    /* For Firefox, which treats :hover differently inside selects */
+    @-moz-document url-prefix() {
+
+      .gradient-select select option:hover,
+      .gradient-select select option:checked {
+        background: linear-gradient(90deg, #9a22f6, #f96fdc) !important;
+        color: white !important;
+      }
+    }
+
+    /* Remove native date picker icon (Chrome, Edge, Safari) */
+    /* Remove Chrome/Safari/Edge default date icon */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      opacity: 0;
+      position: absolute;
+      right: 0;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    /* Hide IE/Edge legacy icon */
+    input[type="date"]::-ms-clear,
+    input[type="date"]::-ms-expand {
+      display: none;
+    }
+
+    /* Flatpickr Gradient Theme */
+    /* Flatpickr theme override for purple-pink gradient */
+    .flatpickr-calendar {
+      font-family: inherit;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      background-clip: padding-box, border-box;
+      background-image: linear-gradient(#fff, #fff),
+        linear-gradient(90deg, #9a22f6, #f96fdc);
+    }
+
+    .flatpickr-day.selected,
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange {
+      background: linear-gradient(90deg, #9a22f6, #f96fdc) !important;
+      color: #fff !important;
+    }
+
+    .flatpickr-day:hover {
+      background: linear-gradient(90deg, #9a22f6, #f96fdc) !important;
+      color: #fff !important;
+    }
+
+    .flatpickr-current-month .flatpickr-monthDropdown-months,
+    .flatpickr-current-month input.cur-year {
+      background: transparent;
+      font-weight: bold;
+    }
+
+    /* Compact mode reduces paddings & font sizes */
+    body.compact-mode table td,
+    body.compact-mode table th {
+      padding: 4px 6px;
+      font-size: 12px;
+    }
+
+    body.compact-mode input,
+    body.compact-mode select,
+    body.compact-mode textarea,
+    body.compact-mode button {
+      padding: 4px 8px !important;
+      font-size: 13px !important;
+    }
+
+    body.compact-mode .glass-card,
+    body.compact-mode .metric-card {
+      padding: 8px !important;
+    }
+  </style>
+  <style>
+    /* --- Top Navbar (replaces sidebar tabs) --- */
+    .top-nav .tab-btn {
+      width: auto;
+      text-align: center;
+      padding: 8px 12px;
+      background: transparent;
+    }
+
+    .top-nav .tab-btn.active {
+      background: rgba(0, 0, 0, 0.06);
+    }
+  </style>
+  <style>
+    /* === Glassy Navbar Buttons (corrected) === */
+    .top-nav {
+      display: flex;
+      gap: 10px;
+      margin-left: 20px;
+    }
+
+    .top-nav .btn {
+      border: 1px solid transparent;
+      color: #dbe7ff;
+      background: rgba(255, 255, 255, .05);
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-size: .95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all .28s cubic-bezier(.2, .8, .2, 1);
+      position: relative;
+      white-space: nowrap;
+      backdrop-filter: blur(10px);
+    }
+
+    .top-nav .btn:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent),
+        0 8px 26px color-mix(in srgb, var(--accent) 35%, transparent);
+      background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04));
+      transform: translateY(-1px);
+    }
+
+    .top-nav .btn.is-active {
+      border-color: var(--accent);
+      color: #fff;
+      background:
+        radial-gradient(120% 120% at 50% -20%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 46%),
+        rgba(255, 255, 255, .08);
+      box-shadow:
+        0 0 0 1px var(--accent),
+        0 10px 30px color-mix(in srgb, var(--accent) 38%, transparent),
+        inset 0 0 22px color-mix(in srgb, var(--accent) 22%, transparent);
+    }
+
+    .top-nav .btn.is-active::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      height: 3px;
+      width: 46%;
+      border-radius: 999px;
+      background: linear-gradient(90deg,
+          color-mix(in srgb, var(--accent) 30%, transparent), var(--accent));
+      transform: translateX(-50%);
+      animation: underline .28s ease-out forwards;
+    }
+
+    @keyframes underline {
+      from {
+        width: 0;
+        opacity: .2
+      }
+
+      to {
+        width: 46%;
+        opacity: 1
+      }
+    }
+
+    /* Per-button accents (override fallback) */
+    .btn-transactions {
+      --accent: #38bdf8
+    }
+
+    .btn-setup {
+      --accent: #a78bfa
+    }
+
+    .btn-reports {
+      --accent: #34d399
+    }
+
+
+    /* === Navbar Glass + Neon Outline Theme (accent text always visible) === */
+    header.appbar .top-nav .btn,
+    header.appbar .top-nav .tab-btn {
+      position: relative;
+      border: 1.5px solid transparent;
+      border-radius: 12px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      /* dark glass pill */
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: all .25s ease;
+      color: var(--accent);
+      /* 👈 default text = accent */
+    }
+
+    /* Hover: border + glow + keep accent text */
+    header.appbar .top-nav .btn:hover,
+    header.appbar .top-nav .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 0 8px var(--accent), 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Accent mapping */
+    .btn-transactions {
+      --accent: #06b6d4;
+    }
+
+    /* cyan */
+    .btn-setup {
+      --accent: #22c55e;
+    }
+
+    /* green */
+    .btn-reports {
+      --accent: #3b82f6;
+    }
+
+    /* blue */
+
+    /* Active = strong border + underline + accent text */
+    header.appbar .top-nav .btn.is-active,
+    header.appbar .top-nav .tab-btn.is-active,
+    header.appbar .top-nav .btn.active,
+    header.appbar .top-nav .tab-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 0 12px var(--accent), 0 0 25px rgba(0, 0, 0, 0.25);
+    }
+
+    header.appbar .top-nav .btn.is-active::after,
+    header.appbar .top-nav .tab-btn.is-active::after,
+    header.appbar .top-nav .btn.active::after,
+    header.appbar .top-nav .tab-btn.active::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      transform: translateX(-50%);
+      height: 3px;
+      width: 0;
+      border-radius: 999px;
+      background: var(--accent);
+      animation: navUnderlineGrow .25s ease-out forwards;
+    }
+
+    @keyframes navUnderlineGrow {
+      from {
+        width: 0;
+        opacity: 0.2;
+      }
+
+      to {
+        width: 60%;
+        opacity: 1;
+      }
+    }
+  </style>
+
+
+
+</head>
+
+<body>
+
+
+
+  <!-- Sidebar -->
+
+
+  <!-- overlay -->
+  <!-- Header -->
+  <header class="appbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <h2 style="font-size:18px;margin:0">Finance Admin</h2>
+      <nav class="top-nav"><button class="btn btn-transactions is-active tab-btn" data-tab="transactions">🧾
+          Transactions</button>
+        <button class="btn btn-setup tab-btn" data-tab="setup">🛠 Setup</button>
+        <button class="btn btn-reports tab-btn" data-tab="reports">📊 Reports</button>
+      </nav>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center">
+      <div class="glass-card" style="padding:8px 12px">Currency: <span id="currencyDisplay">₹</span></div>
+      <button id="refreshBtn" class="btn ghost">Refresh</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-wrap" id="mainContent">
+    <div class="col-left">
+      <!-- Transactions -->
+      <section id="transactions" class="tab-content" style="display:block">
+
+        <div class="glass-card p-4 animate-fade-up">
+          <!-- Heading -->
+          <h3 class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+            Add Transaction
+          </h3>
+
+          <!-- Dashboard Summary -->
+          <div id="dashboardSummary" class="summary-cards grid grid-cols-3 gap-6">
+            <div id="summaryIncomeCard" class="metric-card"></div>
+            <div id="summaryExpenseCard" class="metric-card"></div>
+            <div id="summarySavingsCard" class="metric-card"></div>
+          </div>
+
+
+
+          <div class="grid grid-cols-3 gap-4">
+            <!-- Type -->
+            <label class="fade-item" style="animation-delay:0.1s">
+              <span class="block mb-1 text-sm font-semibold text-gray-700">Type</span>
+
+              <div class="gradient-select w-full">
+                <select id="txType">
+                  <option value="income">Income</option>
+                  <option value="expense">Expense</option>
+                </select>
+              </div>
+            </label>
+
+            <!-- Date Field -->
+            <label class="fade-item" style="animation-delay:0.2s">
+              <span class="block mb-1 text-sm font-semibold text-gray-700">Date</span>
+              <div
+                class="p-[3px] rounded-full bg-gradient-to-r from-[#9a22f6] via-[#f96fdc] to-[#9a22f6] w-full overflow-visible">
+                <div class="relative">
+                  <input type="text" id="txDate" placeholder="dd-mm-yyyy"
+                    class="w-full rounded-full bg-white px-4 py-2 text-gray-800 text-sm focus:outline-none focus:ring-0" />
+                  <!-- Calendar Icon -->
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="#9a22f6" class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M6.75 3v2.25M17.25 3v2.25M3.75 8.25h16.5M4.5 21h15a1.5 1.5 0 001.5-1.5v-12a1.5 1.5 0 00-1.5-1.5h-15a1.5 1.5 0 00-1.5 1.5v12A1.5 1.5 0 004.5 21z" />
+                  </svg>
+                </div>
+              </div>
+            </label>
+
+            <!-- Category -->
+            <label class="fade-item" style="animation-delay:0.3s">
+              <span class="block mb-1 text-sm font-semibold text-gray-700">Category</span>
+              <div class="gradient-select w-full">
+                <select id="txCategory" class="w-full">
+                  <!-- Options will be loaded dynamically -->
+                </select>
+              </div>
+            </label>
+
+            <!-- Account -->
+            <label class="fade-item" style="animation-delay:0.4s">
+              <span class="block mb-1 text-sm font-semibold text-gray-700">Account</span>
+              <div class="gradient-select w-full">
+                <select id="txAccount" class="w-full">
+                  <!-- Options will be loaded dynamically -->
+                </select>
+              </div>
+            </label>
+
+            <!-- Amount -->
+            <label class="fade-item" style="animation-delay:0.5s">
+              <span class="block mb-1 text-sm font-semibold text-gray-700">Amount</span>
+              <input type="number" id="txAmount" step="0.01"
+                class="w-full border border-gray-300 rounded-md shadow-sm px-2 py-1 bg-white text-gray-800 focus:border-[#9a22f6] focus:ring-[#9a22f6]" />
+            </label>
+
+            <!-- Description -->
+            <label class="fade-item col-span-2" style="animation-delay:0.6s">
+              <span class="block mb-1 text-sm font-semibold text-gray-700">Description</span>
+              <input type="text" id="txDesc"
+                class="w-full border border-gray-300 rounded-md shadow-sm px-2 py-1 bg-white text-gray-800 focus:border-[#9a22f6] focus:ring-[#9a22f6]" />
+            </label>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex gap-4 mt-4 fade-item" style="animation-delay:0.7s">
+            <button id="saveTx"
+              class="flex-1 bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] hover:opacity-90 text-white py-2 px-4 rounded-full shadow transition text-sm">
+              💾 Save
+            </button>
+            <button id="resetForm"
+              class="flex-1 bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] hover:opacity-90 text-white py-2 px-4 rounded-full shadow transition text-sm">
+              🔄 Reset
+            </button>
+
+            
+
+        </div>
+
+<div class="flex gap-2 mt-3">
+  <button type="button" id="addLocalTx" class="btn bg-green-500 text-white">➕ Add</button>
+  <button type="button" id="clearLocalTx" class="btn bg-yellow-500 text-white">🧹 Clear</button>
+  <button type="button" id="saveAllTx" class="btn bg-blue-500 text-white">💾 Save All</button>
+</div>
+
+<!-- Pending transactions list -->
+<div id="pendingTxList" class="mt-4 space-y-2"></div>
+
+        <br>
+
+        <div class="glass-card" style="margin-bottom:12px">
+          <h3 class="text-lg font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+            Transactions List</h3>
+          <div style="max-height:420px; overflow:auto">
+            <table id="txTable">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Category</th>
+                  <th>Account</th>
+                  <th>Amount</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- <iframe src="test3.html" style="width:100%; height:800px; border:none;"></iframe>
+
+      <div id="quickSummaryContainer"></div>
+      <script>
+        fetch('quick_summary.html')
+          .then(res => res.text())
+          .then(html => {
+            document.getElementById('quickSummaryContainer').innerHTML = html;
+          });
+      </script> -->
+
+      <!-- Setup -->
+      <section id="setup" class="tab-content" style="display:none" style="display:none">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+          <!-- Currency -->
+          <div class="glass-card">
+            <h3 style="margin:0 0 8px 0">Currency</h3>
+            <label><input type="text" id="setupCurrency" placeholder="₹" /></label>
+            <div style="margin-top:10px">
+              <button id="saveCurrency" class="btn" style="border-radius:30px;">Save Currency</button>
+            </div>
+
+            <div id="accountBalancesContainer"></div>
+
+          </div>
+
+
+
+
+          <!-- Accounts -->
+          <div class="glass-card">
+            <h3 style="margin:0 0 8px 0">Accounts</h3>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input id="newAccount" placeholder="New account" />
+              <button id="addAccount" class="btn" style="border-radius:30px;">Add</button>
+            </div>
+            <ul id="accountList" style="list-style:none;padding:0;margin:0"></ul>
+          </div>
+        </div>
+
+        <!-- Income & Expense Categories in two-column layout -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <!-- Income Categories -->
+          <div class="glass-card">
+            <h3 style="margin:0 0 8px 0">Income Categories</h3>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input id="newIncomeCat" placeholder="New income category" />
+              <button id="addIncomeCat" class="btn" style="border-radius:30px;">Add</button>
+            </div>
+            <ul id="incomeCatList" style="list-style:none;padding:0;margin:0"></ul>
+          </div>
+
+          <!-- Expense Categories -->
+          <div class="glass-card">
+            <h3 style="margin:0 0 8px 0">Expense Categories</h3>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <input id="newExpenseCat" placeholder="New expense category" />
+              <button id="addExpenseCat" class="btn" style="border-radius:30px;">Add</button>
+            </div>
+            <ul id="expenseCatList" style="list-style:none;padding:0;margin:0"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reports -->
+      <section id="reports" class="tab-content" style="display:none" style="display:none">
+        <div class="glass-card">
+          <h3 class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+            Reports</h3>
+
+          <!-- Sub-tabs -->
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <button class="small-btn report-subtab active" data-subtab="monthly">Monthly Dashboard</button>
+            <button class="small-btn report-subtab" data-subtab="annual">Annual Dashboard</button>
+
+          </div>
+
+          <!-- Monthly Dashboard -->
+          <div id="monthlyDashboard">
+            <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+              <select id="reportMonth"></select>
+              <select id="reportYear"></select>
+              <button id="genReport" class="btn">Generate</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:36px;margin-bottom:12px">
+              <div id="kpiTotalIncome"></div>
+              <div id="kpiTotalExpense"></div>
+              <div id="kpiTotalBalance"></div>
+            </div>
+
+            <!-- Row 2: Bar Chart, Doughnut Chart, Saving Rate -->
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:12px">
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Income vs Expenses</h4>
+                <canvas id="chartIncomeVsExpense" height="180"></canvas>
+              </div>
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Expense % of Income</h4>
+                <canvas id="chartExpensePctIncome" height="180"></canvas>
+              </div>
+              <div class="glass-card" id="savingRateCard">
+                <div class="muted">Saving Rate</div>
+                <div id="kpiSavingRate" style="font-size:20px;font-weight:700">0%</div>
+                <div id="savingRateIcon" style="font-size:14px;margin-top:4px"></div>
+                <div class="progress-bar">
+                  <div id="savingRateProgress"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 3: Income & Expense Distribution + Top 20 tables -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Income Distribution</h4>
+                <canvas id="chartIncomeDistribution" height="200"></canvas>
+
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Expense Distribution</h4>
+                <canvas id="chartExpenseDistribution" height="200"></canvas>
+
+
+              </div>
+
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Top 20 Income Sources</h4>
+                <table id="tableTopIncome" style="width:100%;font-size:12px">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Amount</th>
+                      <th>%</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Top 20 Expense Sources</h4>
+                <table id="tableTopExpense" style="width:100%;font-size:12px">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Amount</th>
+                      <th>%</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Row 4: Income & Expense Summary Tables -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Income Summary</h4>
+                <table id="tableIncomeSummary" style="width:100%;font-size:12px">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Total</th>
+                      <th>% of Income</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Expense Summary</h4>
+                <table id="tableExpenseSummary" style="width:100%;font-size:12px">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Total</th>
+                      <th>% of Expense</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Annual Dashboard -->
+          <div id="annualDashboard" style="display:none">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <select id="annualReportYear"
+                style="width: 120px; padding: 4px; font-size: 14px; border-radius: 6px; border: 1px solid #ccc;">
+                <!-- Year options will be populated dynamically -->
+              </select>
+
+              <button id="genAnnual" style="
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            background: linear-gradient(to right, #9a22f6, #f96fdc);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+          " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 15px rgba(0,0,0,0.2)';"
+                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.15)';">
+                Generate Annual Report
+              </button>
+            </div>
+
+            <!-- Row 1: KPI minicards -->
+            <!-- Row 1 KPI (3 separate elements — updated per your request) -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:36px;margin-bottom:12px">
+              <div id="annualKpiIncome"></div>
+              <div id="annualKpiExpense"></div>
+              <div id="annualKpiBalance"></div>
+              <div class="glass-card" id="annualSavingRateCard">
+                <div class="muted">Saving Rate</div>
+                <div id="annualKpiSavingRate" style="font-size:20px;font-weight:700">0%</div>
+                <div id="annualSavingRateIcon" style="font-size:14px;margin-top:4px"></div>
+                <div class="progress-bar">
+                  <div id="annualSavingRateProgress"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 2: charts (use div.chart-holder) -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Expense % of Income</h4>
+                <div id="annual_expense_pct" class="chart-holder"></div>
+              </div>
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Income Growth</h4>
+                <div id="annual_income_growth" class="chart-holder"></div>
+              </div>
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Income vs Expenses</h4>
+                <div id="annual_income_vs_expense" class="chart-holder"></div>
+              </div>
+            </div>
+
+            <!-- Row 3 -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Saving Trend</h4>
+                <div id="annual_saving_trend" class="chart-holder"></div>
+              </div>
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Monthly Overview</h4>
+                <div id="annual_monthly_overview" class="table-holder">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Month</th>
+                        <th>Income</th>
+                        <th>Expense</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Monthly Income & Expenses</h4>
+                <div id="annual_monthly_income_expenses" class="chart-holder"></div>
+              </div>
+            </div>
+
+            <!-- Row 4 -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Income Breakdown</h4>
+                <div id="annual_income_breakdown" class="chart-holder"></div>
+                <h4 style="margin-top:12px">Expense Breakdown</h4>
+                <div id="annual_expense_breakdown" class="chart-holder"></div>
+              </div>
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Top 20 Income Sources</h4>
+                <div id="annual_top_income" class="table-holder">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>%</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="glass-card">
+                <h4
+                  class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                  Top 20 Expense Sources</h4>
+                <div id="annual_top_expense" class="table-holder">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>%</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 5 Cashflow -->
+            <div class="glass-card">
+              <h4
+                class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                Cashflow Summary</h4>
+              <div id="annual_cashflow_summary" class="table-holder">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Total</th>
+                      <th>Average</th>
+                      <th>Jan</th>
+                      <th>Feb</th>
+                      <th>Mar</th>
+                      <th>Apr</th>
+                      <th>May</th>
+                      <th>Jun</th>
+                      <th>Jul</th>
+                      <th>Aug</th>
+                      <th>Sep</th>
+                      <th>Oct</th>
+                      <th>Nov</th>
+                      <th>Dec</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Row 6 Income Summary -->
+            <div class="glass-card">
+              <h4
+                class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                Income Summary</h4>
+              <div id="annual_income_summary" class="table-holder">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Total</th>
+                      <th>Average</th>
+                      <th>Jan</th>
+                      <th>Feb</th>
+                      <th>Mar</th>
+                      <th>Apr</th>
+                      <th>May</th>
+                      <th>Jun</th>
+                      <th>Jul</th>
+                      <th>Aug</th>
+                      <th>Sep</th>
+                      <th>Oct</th>
+                      <th>Nov</th>
+                      <th>Dec</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Row 7 Expense Summary -->
+            <div class="glass-card">
+              <h4
+                class="text-lg font-bold bg-gradient-to-r from-[#9a22f6] to-[#f96fdc] bg-clip-text text-transparent mb-4">
+                Expense Summary</h4>
+              <div id="annual_expense_summary" class="table-holder">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Total</th>
+                      <th>Average</th>
+                      <th>Jan</th>
+                      <th>Feb</th>
+                      <th>Mar</th>
+                      <th>Apr</th>
+                      <th>May</th>
+                      <th>Jun</th>
+                      <th>Jul</th>
+                      <th>Aug</th>
+                      <th>Sep</th>
+                      <th>Oct</th>
+                      <th>Nov</th>
+                      <th>Dec</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+
+      </section>
+    </div>
+
+
+
+
+    <div class="col-right">
+      <!-- Quick Summary + Actions (only in Transactions tab) -->
+      <div id="quickSummary" style="display:none">
+        <div class="glass-card">
+          <h3 class="text-lg font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Quick
+            Summary</h3>
+          <br>
+          <div class="summary-grid">
+            <div id="sumIncomeCard">
+              <div id="sumIncome"></div>
+            </div>
+            <div id="sumExpenseCard">
+              <div id="sumExpense"></div>
+            </div>
+            <div id="sumBalanceCard">
+              <div id="sumBalance"></div>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <canvas id="miniChart" height="140"></canvas>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="glass-card">
+          <h4 style="margin:0 0 8px 0">Actions</h4>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button id="refreshBtnRight" class="btn ghost">Refresh Data</button>
+            <button id="exportCsv" class="btn">Export CSV (client)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- toast -->
+  <div id="toast">✅ Action successful</div>
+
+  <!-- Loader overlay -->
+  <div id="loaderOverlay">
+    <div
+      style="width:96px;height:96px;border-radius:12px;background:white;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(0,0,0,0.2)">
+      <div
+        style="width:36px;height:36px;border:4px solid rgba(0,0,0,0.12);border-top-color:var(--accent1);border-radius:50%;animation:spin 1s linear infinite">
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // Enable Enter to move to next field
+    document.querySelectorAll("#txType, #txDate, #txCategory, #txAccount, #txAmount, #txDesc").forEach((el, index, fields) => {
+      el.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const next = fields[index + 1];
+          if (next) {
+            next.focus();
+          } else {
+            // If it's the last field, trigger Save
+            document.getElementById("saveTx").click();
+          }
+        }
+      });
+    });
+
+
+
+
+  </script>
+
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      flatpickr("#txDate", {
+        dateFormat: "d-m-Y",
+        allowInput: true,
+        defaultDate: new Date(),
+        disableMobile: true,
+        appendTo: document.body, // Prevent clipping inside rounded div
+        position: "auto center"
+      });
+    });
+  </script>
+
+  <script id="nav-active-toggle">
+    document.addEventListener('click', function (e) {
+      const topBtn = e.target.closest('.top-nav .btn, .top-nav .tab-btn');
+      if (topBtn) {
+        // remove active state from other top-nav buttons
+        document.querySelectorAll('.top-nav .btn, .top-nav .tab-btn').forEach(b => {
+          b.classList.remove('is-active', 'active');
+        });
+        topBtn.classList.add('is-active');
+        // Note: this script does not hide/show sections — keep your existing logic for that.
+      }
+
+      const subBtn = e.target.closest('.report-subtab');
+      if (subBtn) {
+        const wrap = subBtn.parentElement;
+        if (wrap) wrap.querySelectorAll('.report-subtab').forEach(b => b.classList.remove('is-active', 'active'));
+        subBtn.classList.add('is-active');
+      }
+    });
+  </script>
+
+</body>
+
+</html>

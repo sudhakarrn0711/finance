@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Personal Finance — Dashboard Shell</title>
+<style>
+  :root{
+    --bg1:#0a0f1f; --bg2:#0b1322;
+    --glass:rgba(255,255,255,.06);
+    --glass-2:rgba(255,255,255,.08);
+    --text:#eaf2ff; --dim:#9fb3c4;
+    --shadow:0 10px 35px rgba(0,0,0,.45);
+    --radius:14px; --blur:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    background:
+      radial-gradient(900px 400px at 85% -10%, rgba(6,182,212,.05), transparent 30%),
+      radial-gradient(700px 300px at 10% 110%, rgba(124,58,237,.05), transparent 30%),
+      linear-gradient(180deg, var(--bg1), var(--bg2));
+    color:var(--text); display:flex; flex-direction:column;
+  }
+
+  /* ---------- Top Bar (glass) ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:1000;
+    background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+    backdrop-filter:blur(var(--blur)) saturate(160%);
+    -webkit-backdrop-filter:blur(var(--blur)) saturate(160%);
+    border-bottom:1px solid rgba(255,255,255,.06);
+    box-shadow:var(--shadow);
+  }
+  .bar-inner{display:flex; align-items:center; gap:8px; padding:10px 10px 14px 10px}
+
+  /* ---------- Scrollable nav with arrows ---------- */
+  .nav-wrap{position:relative; flex:1; display:flex; align-items:center}
+  .nav-list{
+    display:flex; gap:10px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;
+    padding:6px 40px; scroll-behavior:smooth;
+  }
+  .nav-list::-webkit-scrollbar{display:none}
+  .nav-arrow{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:34px; height:34px; border:none; border-radius:10px;
+    background:rgba(0,0,0,.35); color:#c7d2fe; cursor:pointer;
+    display:grid; place-items:center; backdrop-filter:blur(8px);
+  }
+  .nav-arrow.left{left:6px}
+  .nav-arrow.right{right:6px}
+  .nav-arrow:hover{filter:brightness(1.1)}
+
+  /* ---------- Buttons use --accent for all effects ---------- */
+  .btn{
+    --accent:#7c3aed;  /* default fallback */
+    border:1px solid transparent;
+    color:#dbe7ff; background:rgba(255,255,255,.05);
+    border-radius:12px; padding:10px 16px; font-size:.95rem; font-weight:600;
+    display:flex; align-items:center; gap:8px; cursor:pointer;
+    transition:all .28s cubic-bezier(.2,.8,.2,1);
+    position:relative; white-space:nowrap; backdrop-filter:blur(10px);
+  }
+  .btn .ic{font-size:1.1rem; opacity:.85}
+  .btn:hover{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent), 0 8px 26px color-mix(in srgb, var(--accent) 35%, transparent);
+    background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+    transform:translateY(-1px);
+  }
+  .btn.is-active{
+    border-color:var(--accent);
+    color:#eef4ff;
+    background:
+      radial-gradient(120% 120% at 50% -20%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 46%),
+      rgba(255,255,255,.08);
+    box-shadow:
+      0 0 0 1px var(--accent),
+      0 10px 30px color-mix(in srgb, var(--accent) 38%, transparent),
+      inset 0 0 22px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  .btn.is-active::after{
+    content:""; position:absolute; left:50%; bottom:-6px; height:3px; width:46%;
+    border-radius:999px; background:linear-gradient(90deg,
+      color-mix(in srgb, var(--accent) 30%, transparent), var(--accent));
+    transform:translateX(-50%); animation:underline .28s ease-out forwards;
+  }
+  @keyframes underline{from{width:0; opacity:.2} to{width:46%; opacity:1}}
+
+  /* ---------- Dropdown (More) ---------- */
+  .more{ margin-left:auto; position:relative }
+  .menu{
+    position:absolute; right:0; top:48px; min-width:220px;
+    background:rgba(13,18,30,.92); backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.06); border-radius:14px;
+    box-shadow:var(--shadow); padding:8px 6px; display:none; z-index:30;
+  }
+  .menu.open{ display:block }
+  .menu-item{
+    --accent:#06b6d4;
+    width:100%; text-align:left; border:1px solid transparent;
+    background:transparent; color:#e5edff; border-radius:10px;
+    padding:10px 12px; font-size:.95rem; cursor:pointer; transition:all .25s ease;
+    display:flex; align-items:center; gap:10px;
+  }
+  .menu-item:hover{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent), 0 8px 22px color-mix(in srgb, var(--accent) 35%, transparent);
+    background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+    transform:translateX(3px);
+  }
+  .menu-item.is-active{
+    border-color:var(--accent);
+    box-shadow:
+      0 0 0 1px var(--accent),
+      0 10px 26px color-mix(in srgb, var(--accent) 38%, transparent),
+      inset 0 0 16px color-mix(in srgb, var(--accent) 24%, transparent);
+    background:rgba(255,255,255,.08);
+  }
+
+  /* ---------- Iframe ---------- */
+  .stage{flex:1; min-height:0}
+  iframe{width:100%; height:100%; border:0; background:rgba(255,255,255,.02)}
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="bar-inner">
+      <div class="nav-wrap">
+        <button class="nav-arrow left" aria-label="scroll left">❮</button>
+        <div class="nav-list" id="navList"></div>
+        <button class="nav-arrow right" aria-label="scroll right">❯</button>
+      </div>
+
+      <div class="more">
+        <button class="btn more-toggle"><span class="ic">⋯</span>More</button>
+        <div class="menu" id="moreMenu"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <iframe id="frame" src="" title="Report"></iframe>
+  </div>
+  
+  <!-- Inline JSON now as JS variable -->
+<script>
+window.reportsConfig = [
+  { "name":"Finance",   "file":"finance_tracker_new.html",   "icon":"💲", "accent":"#38bdf8", "group":"main" },
+  { "name":"Networth",  "file":"networth_tracker.html",  "icon":"📊", "accent":"#a78bfa", "group":"main" },
+  { "name":"Budget",    "file":"budget.html",            "icon":"📈", "accent":"#34d399", "group":"main" },
+  { "name":"Budget+",   "file":"budget_additional.html", "icon":"🗂", "accent":"#fbbf24", "group":"main" },
+  { "name":"Category",  "file":"catagory_insight.html",  "icon":"🗃", "accent":"#f43f5e", "group":"main" },
+  { "name":"Goals",     "file":"Goals.html",             "icon":"🎯", "accent":"#38bdf8", "group":"main" },
+  { "name":"ToDo",  "file":"todo.html",  "icon":"📝", "accent":"#a78bfa", "group":"main" },
+
+  { "name":"Report 6",  "file":"report6.html",           "icon":"🗂", "accent":"#06b6d4", "group":"more" },
+  { "name":"Report 7",  "file":"report7.html",           "icon":"📄", "accent":"#ec4899", "group":"more" },
+  { "name":"Report 8",  "file":"report8.html",           "icon":"📄", "accent":"#f97316", "group":"more" },
+  { "name":"Report 9",  "file":"report9.html",           "icon":"📄", "accent":"#84cc16", "group":"more" },
+  { "name":"Report 10", "file":"report10.html",          "icon":"📄", "accent":"#0ea5e9", "group":"more" }
+];
+</script>
+
+<script>
+  const frame = document.getElementById('frame');
+  const navList = document.getElementById('navList');
+  const moreBtn = document.querySelector('.more-toggle');
+  const moreMenu = document.getElementById('moreMenu');
+
+  let topButtons = [];
+  let ddButtons  = [];
+
+  function activateButton(btn){
+    [...document.querySelectorAll('.btn'), ...document.querySelectorAll('.menu-item')]
+      .forEach(b=>b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    const file = btn.getAttribute('data-file');
+    if(file) frame.src = file;
+    if(btn.parentElement === navList){
+      btn.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+    }
+  }
+
+  function buildFromConfig(config){
+    navList.innerHTML = '';
+    moreMenu.innerHTML = '';
+    config.forEach((r, idx)=>{
+      const el = document.createElement('button');
+      const isMain = (r.group === 'main');
+      el.className = isMain ? 'btn' : 'menu-item';
+      if(r.className) el.className += ' ' + r.className;
+      el.dataset.file = r.file;
+      if(r.accent) el.style.setProperty('--accent', r.accent);
+      el.innerHTML = `<span class="ic">${r.icon || '📄'}</span>${r.name}`;
+      el.addEventListener('click', ()=>{ activateButton(el); if(!isMain) moreMenu.classList.remove('open'); });
+      (isMain ? navList : moreMenu).appendChild(el);
+      if(idx === 0){ el.classList.add('is-active'); frame.src = r.file; }
+    });
+    topButtons = [...navList.querySelectorAll('.btn')];
+    ddButtons  = [...moreMenu.querySelectorAll('.menu-item')];
+  }
+
+  async function fetchReportsJson(){
+    if (location.protocol === 'file:') return null;
+    try{
+      const res = await fetch('reports.json', { cache:'no-cache' });
+      if(!res.ok) return null;
+      const data = await res.json();
+      if(Array.isArray(data) && data.length) return data;
+      return null;
+    }catch{ return null; }
+  }
+
+  (async function initNav(){
+    // 1. Try JS inline variable
+    if (window.reportsConfig && Array.isArray(window.reportsConfig) && window.reportsConfig.length){
+      buildFromConfig(window.reportsConfig);
+      setupCommonWiring();
+      return;
+    }
+
+    // 2. Try external JSON (works if hosted, not file://)
+    const jsonCfg = await fetchReportsJson();
+    if (jsonCfg){
+      buildFromConfig(jsonCfg);
+      setupCommonWiring();
+      return;
+    }
+
+    console.warn("⚠️ No JSON config found; nav is empty.");
+    setupCommonWiring();
+  })();
+
+  function setupCommonWiring(){
+    moreBtn.addEventListener('click', (e)=>{ e.stopPropagation(); moreMenu.classList.toggle('open'); });
+    document.addEventListener('click', (e)=>{ if(!moreMenu.contains(e.target) && !moreBtn.contains(e.target)){ moreMenu.classList.remove('open'); }});
+    const left = document.querySelector('.nav-arrow.left');
+    const right = document.querySelector('.nav-arrow.right');
+    const step = 260;
+    left.addEventListener('click', ()=> navList.scrollBy({left:-step, behavior:'smooth'}));
+    right.addEventListener('click', ()=> navList.scrollBy({left: step, behavior:'smooth'}));
+  }
+</script>
+
+
+
+</body>
+</html>

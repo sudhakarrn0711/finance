@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Category Insights – Glass UI (Scoped)</title>
+<script src="asset/tracker/config.js"></script>
+<style>
+  /* ===== SCOPE EVERYTHING UNDER #ciApp ===== */
+  :root {
+    --ci-glass: rgba(255,255,255,0.08);
+    --ci-glass-soft: rgba(255,255,255,0.06);
+    --ci-border: rgba(255,255,255,0.16);
+    --ci-border-strong: rgba(255,255,255,0.22);
+    --ci-text: rgba(255,255,255,0.92);
+    --ci-muted: rgba(255,255,255,0.70);
+    --ci-muted-2: rgba(255,255,255,0.60);
+    --ci-hover: rgba(154,34,246,0.20);
+    --ci-row-1: rgba(255,255,255,0.05);
+    --ci-row-2: rgba(255,255,255,0.08);
+    --ci-head-grad-1:#a3e635; /* lime-400 */
+    --ci-head-grad-2:#3b82f6; /* blue-500 */
+    --ci-chip-grad-1:#9a22f6; /* purple */
+    --ci-chip-grad-2:#f96fdc; /* pink */
+    --ci-ok-1:#22c55e;  /* green-500 */
+    --ci-ok-2:#84cc16;  /* lime-500 */
+    --ci-warn-1:#f97316;/* orange-500 */
+    --ci-warn-2:#f43f5e;/* rose-500 */
+    --ci-shadow: 0 18px 40px rgba(0,0,0,0.35);
+    --ci-radius-xl: 18px;
+    --ci-radius-lg: 14px;
+    --ci-radius-pill: 9999px;
+  }
+
+  /* Page backdrop (for demo) */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 800px at 10% -10%, rgba(153, 102, 255, .25), transparent 60%),
+      radial-gradient(900px 700px at 110% 0%, rgba(59, 130, 246, .20), transparent 60%),
+      #0b1020;
+    font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+  }
+
+  /* ===== WRAPPER ===== */
+  #ciApp {
+    color: var(--ci-text);
+    padding: 32px min(6vw, 48px);
+	    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 800px at 10% -10%, rgba(153, 102, 255, .25), transparent 60%),
+      radial-gradient(900px 700px at 110% 0%, rgba(59, 130, 246, .20), transparent 60%),
+      #0b1020;
+    font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+  }
+  #ciApp .ci-shell {
+    border-radius: var(--ci-radius-xl);
+    border: 1px solid var(--ci-border);
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    backdrop-filter: blur(14px);
+    box-shadow: var(--ci-shadow);
+    padding: 20px;
+  }
+
+  /* ===== HEADER ===== */
+  #ciApp .ci-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: end;
+  }
+  #ciApp .ci-title {
+    margin: 0 0 4px 0;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    font-size: clamp(20px, 2.5vw, 26px);
+    background: linear-gradient(90deg, var(--ci-head-grad-1), var(--ci-head-grad-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  #ciApp .ci-sub {
+    margin: 0;
+    color: var(--ci-muted);
+    font-size: 14px;
+  }
+
+  /* ===== FILTERS (gradient-pill controls) ===== */
+  #ciApp .ci-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-self: end;
+  }
+  #ciApp .ci-select {
+    position: relative;
+    display: inline-flex;
+    border-radius: var(--ci-radius-pill);
+    padding: 2px;
+    background: linear-gradient(90deg, var(--ci-chip-grad-1), var(--ci-chip-grad-2), var(--ci-chip-grad-1));
+    background-size: 300% 300%;
+    animation: ci-anim 12s ease infinite;
+  }
+  @keyframes ci-anim { 
+    0%{background-position:0% 50%} 
+    50%{background-position:100% 50%} 
+    100%{background-position:0% 50%}
+  }
+
+  /* Match your “gradient-select”, but scoped and transparent */
+  #ciApp .ci-select select,
+  #ciApp .ci-select input {
+  border: none;
+  outline: none;
+  border-radius: var(--ci-radius-pill);
+  background-color: rgba(0,0,0,0.35); 
+  padding: 10px 36px 10px 14px;
+  font-size: 14px;
+  color: var(--ci-text);
+  min-width: 160px;
+  backdrop-filter: blur(6px);
+}
+
+#ciApp .ci-select select {
+  appearance: none;
+  -webkit-appearance: none; /* Safari / Chrome */
+  -moz-appearance: none;    /* Firefox */
+  background: transparent;
+  padding-right: 28px; /* space for our custom arrow */
+}
+
+#ciApp .ci-select option {
+  background: #0b1020;       /* dark dropdown menu background */
+  color: var(--ci-text);     /* visible text inside dropdown */
+}
+  
+  #ciApp .ci-select input::placeholder { color: var(--ci-muted-2); }
+  /* caret */
+  #ciApp .ci-select::after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 8px; height: 8px;
+    border: solid #a7f3d0;
+    border-width: 0 2px 2px 0;
+    transform: translateY(-50%) rotate(45deg);
+    pointer-events: none;
+    opacity: .85;
+  }
+  /* remove arrow for “Back” chip only (not a select) */
+  #ciApp .ci-select--no-caret::after { display: none; }
+
+  /* ===== PATH/CHIPS ===== */
+  #ciApp .ci-path {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 2px 0;
+  }
+  #ciApp .ci-chip {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: var(--ci-radius-pill);
+    color: var(--ci-text);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--ci-border);
+    backdrop-filter: blur(6px);
+  }
+  #ciApp .ci-back {
+    cursor: pointer;
+    transition: .2s ease;
+  }
+  #ciApp .ci-back:hover {
+    background: rgba(255,255,255,0.16);
+    border-color: var(--ci-border-strong);
+  }
+
+  /* ===== TABLE ===== */
+  #ciApp .ci-table-wrap { margin-top: 16px; overflow-x: auto; }
+  #ciApp .ci-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+  }
+  
+  
+#ciApp .ci-table thead tr {
+  background: linear-gradient(to right, #9a22f6, #f96fdc);
+}
+
+#ciApp .ci-table thead th {
+  text-align: Right;
+  font-weight: 700;
+  font-size: 16px;
+  color: white;              /* keep text visible */
+  padding: 10px 12px;
+  border-radius: 0;          /* reset individual th rounding */
+}
+
+/* Full-width bar under category name */
+#ciApp .ci-bar-wrap {
+  margin-top: 6px;
+  height: 8px;
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#ciApp .ci-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width .4s ease;
+}
+
+#ciApp .ci-bar-expense {
+  background: linear-gradient(90deg, var(--ci-warn-1), var(--ci-warn-2));
+}
+
+#ciApp .ci-bar-income {
+  background: linear-gradient(90deg, var(--ci-ok-1), var(--ci-ok-2));
+}
+
+  
+  #ciApp .ci-table tbody tr {
+    background: var(--ci-row-1);
+    transition: background .15s ease, transform .15s ease;
+  }
+  #ciApp .ci-table tbody tr:nth-child(even) {
+    background: var(--ci-row-2);
+  }
+  #ciApp .ci-table tbody tr:hover {
+    background: var(--ci-hover);
+  }
+  #ciApp .ci-table td {
+    padding: 12px 12px;
+    color: var(--ci-text);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  #ciApp .ci-cell-name {
+    white-space: nowrap;
+  }
+  
+  /* tiny inline bar next to name */
+  #ciApp .ci-bar {
+    display: inline-block;
+    height: 4px;
+    border-radius: 4px;
+    margin-left: 10px;
+    vertical-align: middle;
+    background: linear-gradient(90deg, var(--ci-warn-2), var(--ci-warn-1)); /* default Expense */
+  }
+  #ciApp .ci-bar--income {
+    background: linear-gradient(90deg, var(--ci-ok-1), var(--ci-ok-2));
+  }
+
+  /* Drill header */
+  #ciApp .ci-subtitle {
+    margin: 18px 4px 8px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #fb923c, #f43f5e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Utils */
+  #ciApp .hidden { display: none !important; }
+  #ciApp .right { text-align: right; }
+  #ciApp .click { cursor: pointer; text-decoration: underline dotted; }
+  
+  /* Category label with distinct background colors */
+#ciApp .ci-cat-label {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--ci-radius-pill);
+  color: white;
+  margin-right: 6px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+#ciApp .ci-cat-expense {
+  background: linear-gradient(135deg, #9a22f6, #f96fdc);  /* purple → pink */
+}
+
+#ciApp .ci-cat-income {
+  background: linear-gradient(135deg, #3b82f6, #06b6d4);  /* blue → cyan */
+}
+  
+  
+</style>
+</head>
+<body>
+  <div id="ciApp">
+    <div class="ci-shell">
+      <!-- Header + Filters (same row on wide, wrap on small) -->
+      <div class="ci-header">
+        <div>
+          <h2 class="ci-title">Category Insights</h2>
+          <p class="ci-sub">Filter by type, then drill into a category to see sub-totals by Description.</p>
+        </div>
+        <div class="ci-filters">
+          <div class="ci-select">
+            <select id="ciType">
+              <option value="expense" selected>Expenses</option>
+              <option value="income">Income</option>
+            </select>
+          </div>
+          <div class="ci-select">
+            <select id="ciTime">
+              <option value="this-month" selected>This Month</option>
+              <option value="last-month">Last Month</option>
+              <option value="this-year">This Year</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <div class="ci-select ci-select--no-caret">
+            <input id="ciSearch" placeholder="Search category…" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Path / Chips -->
+      <div class="ci-path">
+        <span class="ci-chip">Level: <strong id="ciLevel">Category</strong></span>
+        <span class="ci-chip">Type: <strong id="ciTypeChip">expense</strong></span>
+        <span class="ci-chip">Range: <strong id="ciTimeChip">This Month</strong></span>
+        <button id="ciBack" class="ci-chip ci-back hidden">Back</button>
+      </div>
+
+      <!-- Table -->
+      <div class="ci-table-wrap">
+        <table class="ci-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Name</th>
+              <th class="right">Total</th>
+              <th class="right">% of Total</th>
+              <th class="right">Count</th>
+            </tr>
+          </thead>
+          <tbody id="ciBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Drill Transactions -->
+      <h3 id="ciDrillHdr" class="ci-subtitle hidden">Transactions (selected)</h3>
+      <div id="ciDrillWrap" class="ci-table-wrap hidden">
+        <table class="ci-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Date</th>
+              <th style="text-align:left">Account</th>
+              <th style="text-align:left">Category</th>
+              <th style="text-align:left">Description</th>
+              <th class="right">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="ciTxBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ========= STANDALONE LOGIC (scoped to #ciApp) ========= */
+/* ========= STANDALONE LOGIC (scoped to #ciApp) ========= */
+(function(){
+  const ROOT = document.getElementById('ciApp');
+  const qs  = (sel, el=ROOT) => el.querySelector(sel);
+  const fmt = (n) => Number(n||0).toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:2});
+
+  // Period helpers
+  const firstDay = (y,m)=>new Date(y,m,1);
+  const lastDay  = (y,m)=>new Date(y,m+1,0);
+  function periodRangeKey(range) {
+    const now = new Date();
+    if (range === 'this-month') {
+      const d = new Date();
+      return [firstDay(d.getFullYear(), d.getMonth()), lastDay(d.getFullYear(), d.getMonth())];
+    }
+    if (range === 'last-month') {
+      const d = new Date();
+      d.setMonth(d.getMonth() - 1);
+      return [firstDay(d.getFullYear(), d.getMonth()), lastDay(d.getFullYear(), d.getMonth())];
+    }
+    if (range === 'this-year') {
+      const y = now.getFullYear();
+      return [new Date(y,0,1), new Date(y,11,31)];
+    }
+    return [new Date(2000,0,1), new Date(2100,11,31)];
+  }
+
+  // State
+  let allTx = [];
+  let level = 'category';
+  let selectedCategory = '';
+
+  // ✅ Live Google Apps Script fetch
+  async function fetchTransactions() {
+    try {
+      //const res = await fetch("https://script.google.com/macros/s/AKfycbwS8g0p9qf6nN8c-xb05cDQR-cbCI7VWvrkB_s9ido7yBdIZmwjQPfCSmH0UF9jho6vVw/exec?action=listTransactions");
+      const res = await fetch(window.getScriptURL("category_insight"));
+      const data = await res.json();
+      console.log("Live API response:", data);
+      return (data && data.rows) ? data.rows : [];
+    } catch (err) {
+      console.error("Fetch failed, fallback to demo data", err);
+      return [];
+    }
+  }
+
+  // Main loader
+  async function loadCategoryInsights() {
+    // Update chips
+    const typeVal  = qs('#ciType').value || '';
+    const rangeVal = qs('#ciTime').value || 'this-month';
+    qs('#ciTypeChip').textContent = typeVal;
+    qs('#ciTimeChip').textContent = qs('#ciTime').selectedOptions[0].textContent;
+
+    // Fetch once if empty
+    if (!allTx.length) {
+      const rows = await fetchTransactions();
+      allTx = rows.map(r => ({...r, dateObj: new Date(r.date)}));
+    }
+
+    // Filter by period and type
+    const [from, to] = periodRangeKey(rangeVal);
+    const filtered = allTx.filter(r => {
+      const t = (r.type||'').toLowerCase();
+      if (typeVal && t !== typeVal) return false;
+      return r.dateObj >= from && r.dateObj <= to;
+    });
+
+    // Aggregate by category
+    const totals = {};
+    const counts = {};
+    for (const r of filtered) {
+      const key = (r.category || 'Uncategorized').trim();
+      totals[key] = (totals[key] || 0) + Number(r.amount||0);
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    const grand = Object.values(totals).reduce((s,v)=>s+v,0) || 1;
+
+    const search = (qs('#ciSearch').value || '').toLowerCase().trim();
+    const rows = Object.keys(totals)
+      .filter(name => !search || name.toLowerCase().includes(search))
+      .map(name => {
+        const total = totals[name];
+        return { name, total, pct: (total/grand)*100, count: counts[name] };
+      })
+      .sort((a,b)=> Math.abs(b.total) - Math.abs(a.total));
+
+    level = 'category';
+    selectedCategory = '';
+    qs('#ciLevel').textContent = 'Category';
+    qs('#ciBack').classList.add('hidden');
+    qs('#ciDrillHdr').classList.add('hidden');
+    qs('#ciDrillWrap').classList.add('hidden');
+
+    renderTable(rows, typeVal);
+  }
+
+  function renderTable(rows, typeVal) {
+  const body = qs('#ciBody');
+  body.innerHTML = '';
+
+  rows.forEach((r,i)=>{
+    const tr = document.createElement('tr');
+
+    const tdName = document.createElement('td');
+    tdName.className = 'ci-cell-name';
+// clickable name with label
+const btn = document.createElement('button');
+btn.className = 'click ci-cat-label ' + (typeVal === 'income' ? 'ci-cat-income' : 'ci-cat-expense');
+btn.textContent = r.name;
+btn.setAttribute('data-ci-drill', r.name);
+tdName.appendChild(btn);
+
+    // full bar container below name
+    const barWrap = document.createElement('div');
+    barWrap.className = 'ci-bar-wrap';
+    const barFill = document.createElement('div');
+    barFill.className = 'ci-bar-fill ' + (typeVal === 'income' ? 'ci-bar-income' : 'ci-bar-expense');
+    barFill.style.width = Math.max(4, r.pct) + '%';
+    barWrap.appendChild(barFill);
+    tdName.appendChild(barWrap);
+
+    const tdTotal = document.createElement('td');
+    tdTotal.className = 'right';
+    tdTotal.textContent = fmt(r.total);
+
+    const tdPct = document.createElement('td');
+    tdPct.className = 'right';
+    tdPct.textContent = r.pct.toFixed(1) + '%';
+
+    const tdCount = document.createElement('td');
+    tdCount.className = 'right';
+    tdCount.textContent = r.count;
+
+    tr.appendChild(tdName);
+    tr.appendChild(tdTotal);
+    tr.appendChild(tdPct);
+    tr.appendChild(tdCount);
+    body.appendChild(tr);
+  });
+
+  // attach drill
+  body.querySelectorAll('[data-ci-drill]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      selectedCategory = el.getAttribute('data-ci-drill') || '';
+      drillDescriptions();
+    });
+  });
+}
+
+  function drillDescriptions() {
+    if (!selectedCategory) return;
+
+    const typeVal  = qs('#ciType').value || '';
+    const rangeVal = qs('#ciTime').value || 'this-month';
+    const [from,to] = periodRangeKey(rangeVal);
+
+    const filtered = allTx.filter(r=>{
+      const t = (r.type||'').toLowerCase();
+      if (typeVal && t !== typeVal) return false;
+      if ((r.category||'').trim().toLowerCase() !== selectedCategory.trim().toLowerCase()) return false;
+      return r.dateObj >= from && r.dateObj <= to;
+    });
+
+    // agg by description
+    const totals = {};
+    const counts = {};
+    for (const r of filtered) {
+      const k = (r.desc || '—').trim();
+      totals[k] = (totals[k] || 0) + Number(r.amount||0);
+      counts[k] = (counts[k] || 0) + 1;
+    }
+    const grand = Object.values(totals).reduce((s,v)=>s+v,0) || 1;
+    const rows = Object.keys(totals).map(name => ({
+      name, total: totals[name], pct:(totals[name]/grand)*100, count: counts[name]
+    })).sort((a,b)=> Math.abs(b.total) - Math.abs(a.total));
+
+    level = 'description';
+    qs('#ciLevel').textContent = 'Description (within ' + selectedCategory + ')';
+    qs('#ciBack').classList.remove('hidden');
+
+    renderTable(rows, typeVal);
+
+    // clicking a description row shows transactions
+    qs('#ciBody').querySelectorAll('tr').forEach(tr=>{
+      tr.addEventListener('click', ()=>{
+        const name = tr.querySelector('[data-ci-drill]')?.getAttribute('data-ci-drill') || '';
+        showTransactions(typeVal, selectedCategory, name);
+      });
+    });
+  }
+
+  function showTransactions(typeVal, category, desc) {
+    const rangeVal = qs('#ciTime').value || 'this-month';
+    const [from,to] = periodRangeKey(rangeVal);
+    const rows = allTx
+      .filter(r=>{
+        const t = (r.type||'').toLowerCase();
+        if (typeVal && t !== typeVal) return false;
+        if ((r.category||'').trim().toLowerCase() !== category.trim().toLowerCase()) return false;
+        if ((r.desc||'').trim() !== (desc||'').trim()) return false;
+        return r.dateObj >= from && r.dateObj <= to;
+      })
+      .sort((a,b)=> new Date(b.date) - new Date(a.date));
+
+    qs('#ciDrillHdr').classList.remove('hidden');
+    qs('#ciDrillWrap').classList.remove('hidden');
+
+    const body = qs('#ciTxBody');
+    body.innerHTML = '';
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${r.date}</td>
+        <td>${r.account || ''}</td>
+        <td>${r.category || ''}</td>
+        <td>${r.desc || ''}</td>
+        <td class="right">${fmt(r.amount)}</td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+
+  // Events
+  qs('#ciType').addEventListener('change', ()=>{ allTx = []; loadCategoryInsights(); });
+  qs('#ciTime').addEventListener('change', ()=> loadCategoryInsights());
+  qs('#ciSearch').addEventListener('input',  ()=> loadCategoryInsights());
+  qs('#ciBack').addEventListener('click',    ()=> loadCategoryInsights());
+
+  // Initial
+  loadCategoryInsights();
+})();
+</script>
+</body>
+</html>

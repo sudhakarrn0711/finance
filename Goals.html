@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Goals + Analytics — Standalone</title>
+<script src="asset/tracker/config.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --glass-bg: rgba(255,255,255,0.07);
+      --glass-border: rgba(255,255,255,0.25);
+      --glass-text: rgba(255,255,255,0.92);
+      --muted-text: rgba(255,255,255,0.75);
+    }
+    body{background:linear-gradient(180deg,#0f172a 0%,#0b1220 100%);min-height:100vh;color:var(--glass-text);padding:2rem;}
+    .glass{background:var(--glass-bg);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:1rem;box-shadow:0 10px 30px rgba(0,0,0,.25);}
+    .text-soft{color:var(--muted-text);}
+    .bar{height:10px;border-radius:9999px;background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));overflow:hidden;}
+    .bar>span{display:block;height:100%;width:0%;transition:width 1s ease-out;}
+    .g-pos{background-image:linear-gradient(90deg,#22c55e,#84cc16,#22c55e);}
+    .g-neg{background-image:linear-gradient(90deg,#ef4444,#f59e0b,#ef4444);}
+    .goal-card{transition:transform .35s ease,box-shadow .35s ease;cursor:pointer;position:relative;}
+    .goal-card.pos:hover{transform:scale(1.06) rotateX(3deg) rotateY(-3deg);box-shadow:0 25px 60px rgba(34,197,94,.6);}
+    .goal-card.neg:hover{transform:scale(1.06) rotateX(3deg) rotateY(-3deg);box-shadow:0 25px 60px rgba(239,68,68,.6);}
+    #goalsTable tbody tr:hover{background:rgba(255,255,255,0.08);box-shadow:inset 0 0 10px rgba(0,0,0,.4);}
+    .chips{display:flex;flex-wrap:wrap;gap:.4rem;}
+    .chip{padding:.2rem .6rem;border-radius:9999px;font-size:.75rem;font-weight:500;box-shadow:0 2px 6px rgba(0,0,0,.3);white-space:nowrap;}
+    .chip-green{background:#22c55e;color:white;}
+    .chip-rose{background:#ef4444;color:white;}
+    .chip-slate{background:#64748b;color:white;}
+    .chip-yellow{background:#eab308;color:black;}
+    .chip-orange{background:#f97316;color:white;}
+    .chip-darkred{background:#7f1d1d;color:white;}
+    @keyframes pulseRedFast{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.8);}50%{box-shadow:0 0 10px 6px rgba(239,68,68,.5);}}
+    @keyframes pulseRed{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.7);}50%{box-shadow:0 0 10px 4px rgba(239,68,68,.4);}}
+    @keyframes pulseRedSlow{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6);}50%{box-shadow:0 0 6px 3px rgba(239,68,68,.3);}}
+    .pulse-red-fast{animation:pulseRedFast 1s infinite;}
+    .pulse-red{animation:pulseRed 1.5s infinite;}
+    .pulse-red-slow{animation:pulseRedSlow 2s infinite;}
+    .ribbon{position:absolute;top:0;right:0;background:#22c55e;color:white;font-size:.7rem;font-weight:bold;padding:.2rem .6rem;border-bottom-left-radius:.5rem;}
+    .zebra:nth-child(odd){background-color:rgba(255,255,255,.05);}
+    .highlight{outline:2px solid #f472b6;border-radius:8px;}
+
+    /* Analytics extras (no style conflicts with your section) */
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;}
+    .cal-cell{height:32px;display:flex;align-items:center;justify-content:center;border-radius:.4rem;cursor:pointer;border:1px solid rgba(255,255,255,.15);}
+    .cal0{background:rgba(255,255,255,.06)}
+    .cal1{background:rgba(34,197,94,.25)}
+    .cal2{background:rgba(34,197,94,.45)}
+    .cal3{background:rgba(34,197,94,.65)}
+    .cal4{background:rgba(34,197,94,.85)}
+    .flag{outline:2px solid #f472b6}
+    .grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;}
+    .gauge{height:10px;border-radius:9999px;background:rgba(255,255,255,.15);overflow:hidden}
+    .gauge>span{display:block;height:100%;width:0%;}
+  </style>
+</head>
+<body>
+
+<!-- ========================= -->
+<!-- Section 1: Your Project  -->
+<!-- ========================= -->
+<section id="tab-goals" class="glass p-6 space-y-6">
+  <div class="flex justify-between items-center">
+    <h2 class="text-xl font-semibold">📊 Goals Analytics Dashboard</h2>
+	
+    <button id="toggleView" class="glass px-4 py-2 rounded-lg text-sm">Switch to Table View</button>
+  </div>
+  <p class="text-soft">Live data from your API. If no history is provided, the trend uses a short synthetic history for preview.</p>
+  <div class="glass p-4">
+    <h3 class="font-medium mb-2">⏳ Upcoming Deadlines</h3>
+    <div id="timeline" class="flex gap-6 overflow-x-auto text-xs"></div>
+  </div>
+  
+  <div class="glass p-5">
+    <h2 class="font-semibold mb-3">🚦 Status Buckets</h2>
+    <div id="buckets" class="grid-auto"></div>    
+  </div>
+
+
+  
+
+  <div id="goalsWrap" class="grid md:grid-cols-3 gap-4"></div>
+  <div id="goalsTable" class="hidden overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="text-soft"><tr><th class="px-3 py-2 text-left">Goal</th><th class="px-3 py-2 text-left">Type</th><th class="px-3 py-2 text-right">Target</th><th class="px-3 py-2 text-right">Current</th><th class="px-3 py-2 text-left w-64">Progress</th><th class="px-3 py-2 text-left">Days Left</th><th class="px-3 py-2 text-left">Badges</th></tr></thead>
+      <tbody id="goalsTableBody"></tbody>
+    </table>
+  </div>  
+</section>
+
+<!-- ========================= -->
+<!-- Section 2: Analytics     -->
+<!-- ========================= -->
+<section class="space-y-6 mt-8">
+
+
+
+
+  <!-- Trend + Breakdown -->
+  <section class="grid md:grid-cols-3 gap-4">
+    <div class="glass p-5 md:col-span-2">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="font-semibold">📈 Trend (Multi-goal)</h2>
+        <div class="text-xs text-soft">Actual progress by date</div>
+      </div>
+      <canvas id="trendChart" height="140"></canvas>
+    </div>
+    <div class="glass p-5">
+      <h2 class="font-semibold mb-2">⚖️ Goal Type Breakdown</h2>
+      <canvas id="typeBreakdown" height="140"></canvas>
+      <div class="mt-3 text-xs text-soft" id="velocityBox"></div>
+      <div class="mt-2 gauge"><span id="consistencyBar"></span></div>
+      <div class="text-xs mt-1"><span id="consistencyLabel"></span></div>
+    </div>
+  </section>
+
+  <!-- Burndown + Heatmap -->
+  <section class="grid md:grid-cols-2 gap-4">
+    <div class="glass p-5">
+      <h2 class="font-semibold mb-2" id="leaderboard">⏳ Burndown Forecast (Selected Goal)</h2>
+      <select id="goalPicker" class="glass px-2 py-1 rounded text-sm mb-3"></select>
+      <canvas id="burndownChart" height="140"></canvas>
+      <div id="forecastNote" class="text-xs text-soft mt-2"></div>
+    </div>
+    <div class="glass p-5">
+      <h2 class="font-semibold mb-2">📆 Milestone Heatmap</h2>
+      <div id="heatmapLegend" class="text-xs text-soft mb-2">Click a day → highlight the goal in the Trend chart</div>
+      <div id="calendar" class="calendar"></div>
+      <div id="heatmapInfo" class="text-xs mt-3"></div>
+    </div>
+  </section>
+
+  <!-- Recommendations + Analytics Timeline -->
+  <section class="grid md:grid-cols-2 gap-4">
+    <div class="glass p-5">
+      <h2 class="font-semibold mb-3">💡 Recommendations</h2>
+      <ul id="recoList" class="text-sm space-y-2"></ul>
+    </div>
+    <div class="glass p-5">
+      <h2 class="font-semibold mb-2">🧭 Analytics Timeline (Deadlines)</h2>
+      <div id="analyticsTimeline" class="flex gap-6 overflow-x-auto text-xs"></div>
+    </div>
+  </section>
+</section>
+
+<script>
+/* ===================== */
+/*  Your original logic  */
+/* ===================== */
+//const BASE_URL="https://script.google.com/macros/s/AKfycbzhFphQXTTa6FpyR38ISZH9F9bs1gHAjbIYkus7L5doXUlJN8F_tfcOOspk-s26MFau9A/exec";
+
+const BASE_URL= window.getScriptURL("goals");
+
+const $=s=>document.querySelector(s);
+let ICON_MAP = {}; 
+
+const FALLBACK_ICONS = {
+  travel:"✈️", vacation:"🌴", trip:"🧳", flight:"🛫",
+  home:"🏠", house:"🏡", car:"🚗", auto:"🚙", bike:"🏍️",
+  health:"💊", medical:"🏥", hospital:"🩺", fitness:"💪",
+  education:"🎓", school:"🏫", college:"📚", study:"📝",
+  wedding:"💍", marriage:"👰", honeymoon:"❤️", baby:"🍼",
+  child:"👶", retirement:"👴", pension:"💼",
+  electronics:"💻", laptop:"🖥️", phone:"📱", gadget:"⌚",
+  party:"🥳", celebration:"🎉", birthday:"🎂"
+};
+
+// Load icons JSON with multi-level fallback
+async function loadIconMap(){
+  try {
+    const res = await fetch("./assets/tracker/goal-icons.json");
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    ICON_MAP = await res.json();
+    console.log("✅ Loaded external goal-icons.json", ICON_MAP);
+  } catch(e) {
+    console.warn("⚠️ Could not load goal-icons.json, falling back", e);
+    const embedded = document.getElementById("localIcons");
+    if(embedded){
+      try { ICON_MAP = JSON.parse(embedded.textContent); return; }
+      catch(err){ console.error("❌ Failed to parse embedded JSON", err); }
+    }
+    ICON_MAP = FALLBACK_ICONS;
+  }
+}
+
+function fmt(n){return Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2});}
+async function api(action,params={}){const usp=new URLSearchParams({action,...params});const res=await fetch(`${BASE_URL}?${usp.toString()}`);return await res.json();}
+function barHtml(pct,state='pos'){const cls=state==='neg'?'g-neg':'g-pos';return `<div class="bar mt-1"><span class="${cls}" data-pct="${Math.max(0,Math.min(100,pct))}"></span></div>`;}
+function daysUntil(d){const now=new Date();now.setHours(0,0,0,0);const date=new Date(d);return Math.ceil((date-now)/86400000);}
+function formatDate(d){if(!d)return"";return new Date(d).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});}
+function escapeHtml(s=''){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+
+// get icon
+function goalIcon(name="",type=""){
+  const lower=(name||"").toLowerCase();
+  for(const key in ICON_MAP){
+    if(lower.includes(key)) return ICON_MAP[key];
+  }
+  if(lower.includes("debt")||(type||"").toLowerCase()==="debt") return "💸";
+  return (type||"").toLowerCase()==="saving"?"💰":"📊";
+}
+
+// urgency chip
+function urgencyChip(days,g){
+  if(g.pct>=100) return `<span class="chip chip-green">🏁 Completed</span>`;
+  if(days<0) return `<span class="chip chip-darkred pulse-red-fast">❌ Overdue (${Math.abs(days)}d)</span>`;
+  if(days===0) return `<span class="chip chip-darkred pulse-red-fast">🔥 Due Today</span>`;
+  if(days<=3) return `<span class="chip chip-rose pulse-red">🔥 ${days}d left</span>`;
+  if(days<=7) return `<span class="chip chip-orange pulse-red-slow">⏳ ${days}d left</span>`;
+  if(days<=30) return `<span class="chip chip-yellow">⏳ ${days}d left</span>`;
+  return `<span class="chip chip-slate">🧭 ${days}d left</span>`;
+}
+
+// badges
+function badgeChips(g){
+  const chips=[];
+  if(g.pct>=100){
+    chips.push(`<span class="chip chip-green">✅ Done</span>`);
+    const dateTxt=g.completion?formatDate(g.completion):formatDate(new Date());
+    chips.push(`<span class="chip chip-green">🎉 Achieved on ${dateTxt}</span>`);
+  } else if(g.pct>=50){
+    chips.push(`<span class="chip chip-yellow">🏆 50%+</span>`);
+  }
+  if(g.daysLeft!=null && g.pct<100) chips.push(urgencyChip(g.daysLeft,g));
+  chips.push(`<span class="chip chip-slate">🎯 ${fmt(g.target)}</span>`);
+  chips.push(`<span class="chip chip-green">💰 ${fmt(g.current)}</span>`);
+  chips.push(`<span class="chip chip-yellow">📊 ${g.pct.toFixed(1)}%</span>`);
+  return `<div class="chips mt-2">${chips.join("")}</div>`;
+}
+
+// card
+function goalTile(g){
+  const cardCls=g.tone==='neg'
+    ?`goal-card neg bg-gradient-to-br from-orange-100/20 to-rose-200/20 text-orange-200 backdrop-blur-md rounded-xl p-4 border border-white/20`
+    :`goal-card pos bg-gradient-to-br from-lime-200/20 to-green-200/20 text-green-200 backdrop-blur-md rounded-xl p-4 border border-white/20`;
+  const icon=goalIcon(g.name,g.type);
+  const state=g.tone==='neg'?'neg':'pos';
+  return `<div id="goal-${g.id}" class="${cardCls}">
+    ${g.pct>=100?`<div class="ribbon">✅ Completed</div>`:""}
+    <div class="flex items-center gap-2 mb-2"><span class="p-2 rounded-full bg-white/20">${icon}</span><div class="font-medium">${escapeHtml(g.name)}</div></div>
+    <div class="text-sm text-soft">Target: <b>${fmt(g.target)}</b> • Current: <b>${fmt(g.current)}</b></div>
+    <div class="mt-2 text-sm text-soft">${g.pct.toFixed(1)}% complete</div>
+    ${barHtml(g.pct,state)}
+    ${badgeChips(g)}
+  </div>`;
+}
+
+// table row
+function goalRow(g){
+  const state=g.tone==='neg'?'neg':'pos';
+  const icon=goalIcon(g.name,g.type);
+  return `<tr id="goal-row-${g.id}" class="zebra">
+    <td class="px-3 py-3">${icon} ${escapeHtml(g.name)}</td>
+    <td class="px-3 py-3 capitalize">${escapeHtml(g.type)}</td>
+    <td class="px-3 py-3 text-right">${fmt(g.target)}</td>
+    <td class="px-3 py-3 text-right">${fmt(g.current)}</td>
+    <td class="px-3 py-3">${barHtml(g.pct,state)} <div class="text-xs text-soft">${g.pct.toFixed(1)}%</div></td>
+    <td class="px-3 py-3">${g.pct>=100?`<span class="chip chip-green">✅ Completed</span>`:(g.daysLeft!=null?urgencyChip(g.daysLeft,g):"")}</td>
+    <td class="px-3 py-3">${badgeChips(g)}</td>
+  </tr>`;
+}
+
+function deriveStatus(g) {
+  if (String(g.name).toLowerCase().includes("completed")) return "Done";
+  if (g.pct >= 100) return "Done";
+  if (g.daysLeft !== null && g.daysLeft <= 0 && g.pct < 100) return "Critical";
+  if (g.pct < 50 && g.daysLeft !== null && g.daysLeft <= 7) return "At Risk";
+  if (g.pct >= 50 && (g.daysLeft == null || g.daysLeft > 7)) return "On Track";
+  return "On Track";
+}
+
+let donutChart,goals=[];
+async function loadGoals(){
+  await loadIconMap();
+  const wrap=$('#goalsWrap'),tableBody=$('#goalsTableBody'),leader=$('#leaderboard'),timeline=$('#timeline');
+  wrap.innerHTML=`<div class="glass p-6 rounded-xl text-soft animate-pulse">Loading…</div>`;
+  const res=await api('getGoals');
+  
+goals = (res.goals || []).map((g,i) => {
+  const t = +g.target || 0,
+        c = +g.current || 0;
+  const p = t ? Math.min(100, c/t*100) : 0;
+  const d = g.deadline ? daysUntil(g.deadline) : null;
+  const tone = (g.type || 'saving').toLowerCase() === 'debt' ? 'neg' : 'pos';
+
+  return {
+    ...g,
+    id: i,
+    target: t,
+    current: c,
+    pct: p,
+    daysLeft: d,
+    tone,
+    status: deriveStatus({ ...g, pct: p, daysLeft: d }) // 👈 add status here
+  };
+});
+  
+  wrap.innerHTML='';goals.forEach(g=>wrap.insertAdjacentHTML('beforeend',goalTile(g)));
+  tableBody.innerHTML='';goals.forEach(g=>tableBody.insertAdjacentHTML('beforeend',goalRow(g)));
+  requestAnimationFrame(()=>{document.querySelectorAll(".bar > span").forEach(el=>{el.style.width=el.dataset.pct+"%";});});
+  let tt=goals.reduce((a,g)=>a+g.target,0),tc=goals.reduce((a,g)=>a+g.current,0);
+  
+  
+  
+  leader.innerHTML='';goals.slice().sort((a,b)=>b.pct-a.pct).slice(0,3).forEach((g,i)=>leader.insertAdjacentHTML('beforeend',`<li>${i+1}. ${escapeHtml(g.name)} — ${g.pct.toFixed(1)}%</li>`));
+  timeline.innerHTML='';goals.filter(g=>g.deadline).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline)).forEach(g=>{
+    const item=document.createElement("div");
+    item.className="flex flex-col items-center cursor-pointer";
+    item.innerHTML=`<div class="w-2 h-2 bg-pink-400 rounded-full mb-1"></div><span>${g.deadline||''}</span><span class="text-soft">${escapeHtml(g.name)}</span>`;
+    item.addEventListener("click",()=>{
+      const el=document.getElementById("goal-"+g.id)||document.getElementById("goal-row-"+g.id);
+      if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.add("highlight");setTimeout(()=>el.classList.remove("highlight"),2000);}
+    });
+    timeline.appendChild(item);
+  });
+
+  // 👉 AFTER your section renders, feed same live data into Analytics
+  initAnalytics(goals);
+}
+$('#toggleView').addEventListener('click',()=>{
+  $('#goalsWrap').classList.toggle('hidden');
+  $('#goalsTable').classList.toggle('hidden');
+  $('#toggleView').textContent=$('#goalsWrap').classList.contains('hidden')?'Switch to Card View':'Switch to Table View';
+});
+loadGoals();
+
+/* ===================== */
+/*   Analytics Section   */
+/*   (uses live goals)   */
+/* ===================== */
+let trendChart,typeChart,burndownChart;
+
+/** Helpers used by analytics (non-destructive to your original code) **/
+function a_fmt(n){return Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0});}
+function a_fmtDate(s){return new Date(s).toLocaleDateString(undefined,{month:'short',day:'numeric'});}
+function a_daysLeft(deadline){
+  const now=new Date(); now.setHours(0,0,0,0);
+  if(!deadline) return Infinity;
+  return Math.ceil((new Date(deadline)-now)/86400000);
+}
+function a_lastVal(hist){return hist?.length?hist[hist.length-1][1]:0;}
+function a_pct(g){return Math.min(100, (a_lastVal(g.history)/ (g.target||1))*100);}
+
+/** If API doesn't return history, build a tiny synthetic one so charts show something **/
+function ensureHistory(g){
+  if (Array.isArray(g.history) && g.history.length) return g;
+  const today = new Date();
+  const d2 = today.toISOString().slice(0,10);
+  const d1 = new Date(today); d1.setDate(today.getDate()-30);
+  const d1s = d1.toISOString().slice(0,10);
+  const cur = +g.current||0;
+  const seed = Math.max(0, Math.floor(cur*0.5));
+  return {...g, history: [[d1s, seed],[d2, cur]]};
+}
+
+/** Classification for Status Buckets **/
+function classify(g){
+  // Prefer g.pct from your live goals array
+  const p = g.pct !== undefined ? g.pct : a_pct(g);
+  const d = a_daysLeft(g.deadline);
+
+  if(p >= 100) return 'Done';
+  if(d <= 0 && p < 100) return 'Critical';
+  if(p >= 50 && d > 7) return 'On Track';
+  if(p < 50 && d <= 7 && d > 0) return 'At Risk';
+  return 'On Track';
+}
+	
+/** Status Buckets **/
+function renderBuckets_analytics(goals){
+  const buckets={Done:[], 'On Track':[], 'At Risk':[], 'Critical':[]};
+  goals.forEach(g=>buckets[classify(g)].push(g));
+  const el=document.getElementById('buckets'); el.innerHTML='';
+  const items = [
+    ['✅ Done','chip-green','Done'],
+    ['🟡 On Track','chip-yellow','On Track'],
+    ['🔴 At Risk','chip-orange','At Risk'],
+    ['❌ Critical','chip-rose','Critical'],
+  ];
+  items.forEach(([label,chip,key])=>{
+    const count=buckets[key].length;
+    const wrap=document.createElement('div');
+    wrap.className='glass p-4';
+    wrap.innerHTML=`
+      <div class="flex items-center justify-between">
+        <div class="font-medium">${label}</div>
+        <span class="chip ${chip}">${count}</span>
+      </div>
+      <div class="text-xs text-soft mt-2">${buckets[key].map(g=>escapeHtml(g.name)).join(', ')||'—'}</div>
+    `;
+    el.appendChild(wrap);
+  });
+}
+
+/** Trend (multi-series) **/
+function renderTrend_analytics(goals){
+  const withHist = goals.map(ensureHistory);
+  const dateSet=new Set();
+  withHist.forEach(g=>g.history.forEach(row=>dateSet.add(row[0])));
+  const labels=[...dateSet].sort((a,b)=>new Date(a)-new Date(b));
+  const ds = withHist.map(g=>{
+    const map=new Map(g.history.map(([d,v])=>[d,v]));
+    return {label:g.name, data:labels.map(d=>map.get(d)??null), borderWidth:2, spanGaps:true};
+  });
+  if(trendChart) trendChart.destroy();
+  trendChart=new Chart(document.getElementById('trendChart'),{
+    type:'line',
+    data:{labels:labels.map(a_fmtDate),datasets:ds},
+    options:{
+      plugins:{legend:{labels:{color:'#fff'}}},
+      scales:{x:{ticks:{color:'#fff'}},y:{ticks:{color:'#fff'}}},
+      interaction:{mode:'nearest',intersect:false}
+    }
+  });
+}
+
+/** Breakdown + Consistency **/
+function renderBreakdown_analytics(goals){
+  const counts={saving:0,debt:0,other:0};
+  goals.forEach(g=>{
+    const t=(g.type||'').toLowerCase();
+    if(t==='saving') counts.saving++;
+    else if(t==='debt') counts.debt++;
+    else counts.other++;
+  });
+  if(typeChart) typeChart.destroy();
+  typeChart=new Chart(document.getElementById('typeBreakdown'),{
+    type:'doughnut',
+    data:{
+      labels:['Saving','Debt','Other'],
+      datasets:[{data:[counts.saving,counts.debt,counts.other]}]
+    },
+    options:{plugins:{legend:{labels:{color:'#fff'}}}}
+  });
+
+  // Velocity (avg weekly change using last two points per goal)
+  let totalWeekly=0, n=0, contributions=0, activeDays=0;
+  goals.map(ensureHistory).forEach(g=>{
+    const h=g.history;
+    if(h.length>=2){
+      const [d1,v1]=h[h.length-2], [d2,v2]=h[h.length-1];
+      const days=(new Date(d2)-new Date(d1))/86400000;
+      if(days>0){ totalWeekly += (v2-v1)/days*7; n++; }
+    }
+    contributions += h.length;
+    if(h.length){
+      const spanDays=Math.max(1,(new Date(h[h.length-1][0])-new Date(h[0][0]))/86400000);
+      activeDays += Math.min(spanDays, 120);
+    }
+  });
+  const avgWeekly = n? totalWeekly/n : 0;
+  const consistency = Math.min(100, Math.round((contributions/Math.max(1,activeDays))*100));
+  document.getElementById('velocityBox').textContent = `Avg velocity: ₹${a_fmt(avgWeekly)} / week`;
+  const bar=document.getElementById('consistencyBar');
+  bar.style.width = consistency+'%';
+  bar.style.background = 'linear-gradient(90deg,#22c55e,#84cc16)';
+  document.getElementById('consistencyLabel').textContent = `Consistency: ${consistency}%`;
+}
+
+/** Burndown **/
+function idealSeries(g){
+  const h=(g.history||[]);
+  if(!h.length) return {labels:[],data:[]};
+  const startDate=h[0][0];
+  const labels=[], ideal=[];
+  const start=new Date(startDate), end=new Date(g.deadline||startDate);
+  const days=Math.max(1, Math.ceil((end-start)/86400000));
+  for(let i=0;i<=days;i++){
+    const d=new Date(start); d.setDate(d.getDate()+i);
+    labels.push(d.toISOString().slice(0,10));
+    ideal.push((g.target||0)*i/days);
+  }
+  return {labels, data:ideal};
+}
+function forecast(g){
+  const h=(g.history||[]); if(h.length<2) return {hit:false,text:'Not enough data'};
+  const t0=new Date(h[0][0]).getTime();
+  const xs=h.map(([d])=>(new Date(d).getTime()-t0)/86400000);
+  const ys=h.map(([,v])=>v);
+  const n=h.length;
+  const sumX=xs.reduce((a,b)=>a+b,0), sumY=ys.reduce((a,b)=>a+b,0);
+  const sumXY=xs.reduce((a,x,i)=>a+x*ys[i],0);
+  const sumXX=xs.reduce((a,x)=>a+x*x,0);
+  const denom=(n*sumXX - sumX*sumX) || 1;
+  const slope=(n*sumXY - sumX*sumY)/denom;
+  const intercept=(sumY - slope*sumX)/n;
+  if(slope<=0) return {hit:false,text:'Trend flat/negative — unlikely to hit by deadline'};
+  const daysToTarget=((g.target||0) - intercept)/slope;
+  const predicted=new Date(t0 + daysToTarget*86400000);
+  const onTime = g.deadline ? (predicted <= new Date(g.deadline)) : false;
+  return {hit:onTime, text:`Projected completion: ${predicted.toLocaleDateString()}`};
+}
+function renderBurndown_analytics(goals, selectedId){
+  const arr = goals.map(ensureHistory);
+  const g=arr.find(x=>String(x.id)===String(selectedId)) || arr[0];
+  const ideal=idealSeries(g);
+  const labels=[...new Set([...ideal.labels, ...g.history.map(h=>h[0])])].sort((a,b)=>new Date(a)-new Date(b));
+  const histMap=new Map(g.history.map(([d,v])=>[d,v]));
+  const actual=labels.map(d=>histMap.get(d)??null);
+  if(burndownChart) burndownChart.destroy();
+  burndownChart=new Chart(document.getElementById('burndownChart'),{
+    type:'line',
+    data:{
+      labels:labels.map(a_fmtDate),
+      datasets:[
+        {label:'Ideal', data:labels.map(d=>ideal.data[ideal.labels.indexOf(d)] ?? null), borderDash:[6,6], borderWidth:2},
+        {label:'Actual', data:actual, borderWidth:2, spanGaps:true}
+      ]
+    },
+    options:{
+      plugins:{legend:{labels:{color:'#fff'}}},
+      scales:{x:{ticks:{color:'#fff'}},y:{ticks:{color:'#fff'}}},
+      interaction:{mode:'nearest',intersect:false}
+    }
+  });
+  const f=forecast(g);
+  document.getElementById('forecastNote').textContent =
+    `${f.text} • Deadline: ${g.deadline ? new Date(g.deadline).toLocaleDateString() : '—'} • Progress: ${Math.round(a_pct(g))}%`;
+}
+function initPicker_analytics(goals){
+  const sel=document.getElementById('goalPicker');
+  sel.innerHTML = goals.map(g=>`<option value="${g.id}">${escapeHtml(g.name||('Goal '+g.id))}</option>`).join('');
+  sel.addEventListener('change', e=>renderBurndown_analytics(goals, e.target.value));
+}
+
+/** Heatmap **/
+function milestoneDays(g){
+  const out={};
+  const t=(g.target||0);
+  const ths=[[t*0.5,'50%'],[t*0.75,'75%'],[t,'100%']];
+  ths.forEach(([th,label])=>{
+    const hit = (g.history||[]).find(([d,v])=>v>=th);
+    if(hit){ out[hit[0]] = {goalId:g.id, name:g.name, milestone:label}; }
+  });
+  return out;
+}
+function buildCalendarRange(){
+  const today=new Date();
+  const labels=[];
+  for(let i=41;i>=0;i--){
+    const d=new Date(today); d.setDate(today.getDate()-i);
+    labels.push(d.toISOString().slice(0,10));
+  }
+  return labels;
+}
+let heatClickFlag=null;
+function highlightTrend(goals, goalNames){
+  const subset = goals.filter(g=>goalNames.has(g.name)).map(ensureHistory);
+  const labelsSet=new Set();
+  subset.forEach(g=>g.history.forEach(([d])=>labelsSet.add(d)));
+  const labels=[...labelsSet].sort((a,b)=>new Date(a)-new Date(b));
+  const ds = subset.map(g=>{
+    const map=new Map(g.history.map(([d,v])=>[d,v]));
+    return {label:g.name, data:labels.map(d=>map.get(d)??null), borderWidth:3, spanGaps:true};
+  });
+  if(trendChart) trendChart.destroy();
+  trendChart=new Chart(document.getElementById('trendChart'),{
+    type:'line',
+    data:{labels:labels.map(a_fmtDate), datasets:ds},
+    options:{
+      plugins:{legend:{labels:{color:'#fff'}}},
+      scales:{x:{ticks:{color:'#fff'}},y:{ticks:{color:'#fff'}}},
+      interaction:{mode:'nearest',intersect:false}
+    }
+  });
+}
+function renderHeatmap_analytics(goals){
+  const withHist = goals.map(ensureHistory);
+  const days=buildCalendarRange();
+  const cellData = days.map(d=>({date:d, hits:[]}));
+  withHist.forEach(g=>{
+    const ms=milestoneDays(g);
+    cellData.forEach(c=>{ if(ms[c.date]) c.hits.push(ms[c.date]); });
+  });
+  const wrap=document.getElementById('calendar'); wrap.innerHTML='';
+  cellData.forEach(c=>{
+    const level=Math.min(4, c.hits.length);
+    const div=document.createElement('div');
+    div.className='cal-cell ' + (level?('cal'+level):'cal0');
+    div.textContent = new Date(c.date).getDate();
+    div.title = c.hits.map(h=>`${h.name} • ${h.milestone}`).join('\n') || c.date;
+    div.addEventListener('click', ()=>{
+      document.querySelectorAll('.cal-cell').forEach(el=>el.classList.remove('flag'));
+      div.classList.add('flag');
+      heatClickFlag = c;
+      const info = c.hits.length
+        ? `🎯 ${c.hits.map(h=>`<b>${escapeHtml(h.name)}</b> → ${h.milestone}`).join(', ')}`
+        : `No milestones on ${c.date}`;
+      document.getElementById('heatmapInfo').innerHTML = info;
+      if(c.hits.length){
+        const goalNames = new Set(c.hits.map(h=>h.name));
+        highlightTrend(withHist, goalNames);
+        setTimeout(()=>renderTrend_analytics(withHist), 2500);
+      }
+    });
+    wrap.appendChild(div);
+  });
+}
+
+/** Recommendations **/
+function renderRecommendations_analytics(goals){
+  const recos = goals.map(ensureHistory).map(g=>{
+    const p=a_pct(g), d=a_daysLeft(g.deadline), left=Math.max(0,(g.target||0)-a_lastVal(g.history));
+    const urgency = d<=3 ? '🔥' : d<=7 ? '⚠️' : p>=100 ? '🎉' : '🟢';
+    const score = (100-p) + Math.max(0, (14 - d))*5;
+    const text = p>=100
+      ? `${urgency} ${escapeHtml(g.name)} completed!`
+      : `${urgency} Focus on <b>${escapeHtml(g.name)}</b> (${Math.round(p)}% • ${isFinite(d)?d:'∞'}d left • ₹${a_fmt(left)} to go)`;
+    return {score, text};
+  }).sort((a,b)=>b.score-a.score).slice(0,5);
+  const ul=document.getElementById('recoList'); ul.innerHTML='';
+  recos.forEach(r=>{
+    const li=document.createElement('li');
+    li.innerHTML = r.text;
+    ul.appendChild(li);
+  });
+}
+
+/** Analytics timeline (separate from your top timeline) **/
+function renderTimeline_analytics(goals){
+  const tl=document.getElementById('analyticsTimeline'); tl.innerHTML='';
+  goals.slice().sort((a,b)=>new Date(a.deadline||'2099-12-31')-new Date(b.deadline||'2099-12-31')).forEach(g=>{
+    const item=document.createElement('div');
+    item.className='flex flex-col items-center cursor-pointer';
+    item.innerHTML=`
+      <div class="w-2 h-2 bg-pink-400 rounded-full mb-1"></div>
+      <span>${g.deadline? new Date(g.deadline).toLocaleDateString() : '—'}</span>
+      <span class="text-soft">${escapeHtml(g.name)}</span>`;
+    item.addEventListener('click', ()=>{
+      document.getElementById('goalPicker').value = g.id;
+      renderBurndown_analytics(goals, g.id);
+    });
+    tl.appendChild(item);
+  });
+}
+
+/** Bootstrap analytics with live goals from your section **/
+function initAnalytics(liveGoals){
+  // Normalize: keep only fields we need and ensure history exists for charts
+const normalized = (liveGoals||[]).map(g=>({
+  id: g.id,
+  name: g.name || `Goal ${g.id}`,
+  type: (g.type||'').toLowerCase(),
+  target: +g.target||0,
+  current: +g.current||0,
+  deadline: g.deadline || null,
+  pct: g.pct,          // 👈 add
+  daysLeft: g.daysLeft // 👈 add
+}));
+
+  renderBuckets_analytics(normalized);
+  renderTrend_analytics(normalized);
+  renderBreakdown_analytics(normalized);
+  initPicker_analytics(normalized);
+  renderBurndown_analytics(normalized, normalized[0]?.id);
+  renderHeatmap_analytics(normalized);
+  renderRecommendations_analytics(normalized);
+  renderTimeline_analytics(normalized);
+}
+</script>
+</body>
+</html>
