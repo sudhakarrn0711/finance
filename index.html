@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Finance — Dashboard Shell</title>
+  <style>
+    :root {
+      --bg1: #0a0f1f;
+      --bg2: #0b1322;
+      --glass: rgba(255, 255, 255, .06);
+      --glass-2: rgba(255, 255, 255, .08);
+      --text: #eaf2ff;
+      --dim: #9fb3c4;
+      --shadow: 0 10px 35px rgba(0, 0, 0, .45);
+      --radius: 14px;
+      --blur: 14px;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background:
+        radial-gradient(900px 400px at 85% -10%, rgba(6, 182, 212, .05), transparent 30%),
+        radial-gradient(700px 300px at 10% 110%, rgba(124, 58, 237, .05), transparent 30%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---------- Top Bar (glass) ---------- */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .05));
+      backdrop-filter: blur(var(--blur)) saturate(160%);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(160%);
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+      box-shadow: var(--shadow);
+    }
+
+    .bar-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 10px 14px 10px
+    }
+
+    /* ---------- Scrollable nav with arrows ---------- */
+    .nav-wrap {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center
+    }
+
+    .nav-list {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding: 6px 40px;
+      scroll-behavior: smooth;
+    }
+
+    .nav-list::-webkit-scrollbar {
+      display: none
+    }
+
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, .35);
+      color: #c7d2fe;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-arrow.left {
+      left: 6px
+    }
+
+    .nav-arrow.right {
+      right: 6px
+    }
+
+    .nav-arrow:hover {
+      filter: brightness(1.1)
+    }
+
+    /* ---------- Buttons use --accent for all effects ---------- */
+    .btn {
+      --accent: #7c3aed;
+      /* default fallback */
+      border: 1px solid transparent;
+      color: #dbe7ff;
+      background: rgba(255, 255, 255, .05);
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-size: .95rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all .28s cubic-bezier(.2, .8, .2, 1);
+      position: relative;
+      white-space: nowrap;
+      backdrop-filter: blur(10px);
+    }
+
+    .btn .ic {
+      font-size: 1.1rem;
+      opacity: .85
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), 0 8px 26px color-mix(in srgb, var(--accent) 35%, transparent);
+      background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04));
+      transform: translateY(-1px);
+    }
+
+    .btn.is-active {
+      border-color: var(--accent);
+      color: #eef4ff;
+      background:
+        radial-gradient(120% 120% at 50% -20%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 46%),
+        rgba(255, 255, 255, .08);
+      box-shadow:
+        0 0 0 1px var(--accent),
+        0 10px 30px color-mix(in srgb, var(--accent) 38%, transparent),
+        inset 0 0 22px color-mix(in srgb, var(--accent) 22%, transparent);
+    }
+
+    .btn.is-active::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      height: 3px;
+      width: 46%;
+      border-radius: 999px;
+      background: linear-gradient(90deg,
+          color-mix(in srgb, var(--accent) 30%, transparent), var(--accent));
+      transform: translateX(-50%);
+      animation: underline .28s ease-out forwards;
+    }
+
+    @keyframes underline {
+      from {
+        width: 0;
+        opacity: .2
+      }
+
+      to {
+        width: 46%;
+        opacity: 1
+      }
+    }
+
+    /* ---------- Dropdown (More) ---------- */
+    .more {
+      margin-left: auto;
+      position: relative
+    }
+
+    .menu {
+      position: absolute;
+      right: 0;
+      top: 48px;
+      min-width: 220px;
+      background: rgba(13, 18, 30, .92);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, .06);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 8px 6px;
+      display: none;
+      z-index: 30;
+    }
+
+    .menu.open {
+      display: block
+    }
+
+    .menu-item {
+      --accent: #06b6d4;
+      width: 100%;
+      text-align: left;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #e5edff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: .95rem;
+      cursor: pointer;
+      transition: all .25s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .menu-item:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), 0 8px 22px color-mix(in srgb, var(--accent) 35%, transparent);
+      background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04));
+      transform: translateX(3px);
+    }
+
+    .menu-item.is-active {
+      border-color: var(--accent);
+      box-shadow:
+        0 0 0 1px var(--accent),
+        0 10px 26px color-mix(in srgb, var(--accent) 38%, transparent),
+        inset 0 0 16px color-mix(in srgb, var(--accent) 24%, transparent);
+      background: rgba(255, 255, 255, .08);
+    }
+
+    /* ---------- Iframe ---------- */
+    .stage {
+      flex: 1;
+      min-height: 0
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: rgba(255, 255, 255, .02)
+    }
+
+    @media (max-width: 480px) {
+      .login-box {
+        width: 90%;
+        padding: 20px;
+      }
+
+      input,
+      button {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="bar-inner">
+      <div class="nav-wrap">
+        <button class="nav-arrow left" aria-label="scroll left">❮</button>
+        <div class="nav-list" id="navList"></div>
+        <button class="nav-arrow right" aria-label="scroll right">❯</button>
+      </div>
+
+      <div class="more">
+        <button class="btn more-toggle"><span class="ic">⋯</span>More</button>
+        <div class="menu" id="moreMenu"></div>
+      </div>
+      <div id="welcomeUser" style="margin-left:auto; margin-right:10px; font-weight:600;"></div>
+      <!-- ✅ ADD THIS -->
+      <button class="btn" onclick="logout()" style="margin-left:10px;">
+        <span class="ic">🚪</span>Logout
+      </button>
+
+    </div>
+  </div>
+
+  <div class="stage">
+    <iframe id="frame" src="" title="Report"></iframe>
+  </div>
+
+  <!-- Inline JSON now as JS variable -->
+  <script>
+
+
+
+    window.reportsConfig = [
+      { "name": "Finance", "file": "finance_tracker_new.html", "icon": "💲", "accent": "#38bdf8", "group": "main" },
+      { "name": "Networth", "file": "networth_tracker.html", "icon": "📊", "accent": "#a78bfa", "group": "main" },
+      { "name": "Budget", "file": "budget.html", "icon": "📈", "accent": "#34d399", "group": "main" },
+      { "name": "Budget+", "file": "budget_additional.html", "icon": "🗂", "accent": "#fbbf24", "group": "main" },
+      { "name": "Category", "file": "catagory_insight.html", "icon": "🗃", "accent": "#f43f5e", "group": "main" },
+      { "name": "Goals", "file": "Goals.html", "icon": "🎯", "accent": "#38bdf8", "group": "main" },
+      { "name": "ToDo", "file": "todo.html", "icon": "📝", "accent": "#a78bfa", "group": "main" },
+
+      { "name": "Report 6", "file": "report6.html", "icon": "🗂", "accent": "#06b6d4", "group": "more" },
+      { "name": "Report 7", "file": "report7.html", "icon": "📄", "accent": "#ec4899", "group": "more" },
+      { "name": "Report 8", "file": "report8.html", "icon": "📄", "accent": "#f97316", "group": "more" },
+      { "name": "Report 9", "file": "report9.html", "icon": "📄", "accent": "#84cc16", "group": "more" },
+      { "name": "Report 10", "file": "report10.html", "icon": "📄", "accent": "#0ea5e9", "group": "more" }
+    ];
+  </script>
+
+  <script>
+    const frame = document.getElementById('frame');
+    const navList = document.getElementById('navList');
+    const moreBtn = document.querySelector('.more-toggle');
+    const moreMenu = document.getElementById('moreMenu');
+
+    let topButtons = [];
+    let ddButtons = [];
+
+    function activateButton(btn) {
+      [...document.querySelectorAll('.btn'), ...document.querySelectorAll('.menu-item')]
+        .forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      const file = btn.getAttribute('data-file');
+      if (file) frame.src = file;
+      if (btn.parentElement === navList) {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+
+    function buildFromConfig(config) {
+      navList.innerHTML = '';
+      moreMenu.innerHTML = '';
+      config.forEach((r, idx) => {
+        const el = document.createElement('button');
+        const isMain = (r.group === 'main');
+        el.className = isMain ? 'btn' : 'menu-item';
+        if (r.className) el.className += ' ' + r.className;
+        el.dataset.file = r.file;
+        if (r.accent) el.style.setProperty('--accent', r.accent);
+        el.innerHTML = `<span class="ic">${r.icon || '📄'}</span>${r.name}`;
+        el.addEventListener('click', () => { activateButton(el); if (!isMain) moreMenu.classList.remove('open'); });
+        (isMain ? navList : moreMenu).appendChild(el);
+        if (idx === 0) { el.classList.add('is-active'); frame.src = r.file; }
+      });
+      topButtons = [...navList.querySelectorAll('.btn')];
+      ddButtons = [...moreMenu.querySelectorAll('.menu-item')];
+    }
+
+    async function fetchReportsJson() {
+      if (location.protocol === 'file:') return null;
+      try {
+        const res = await fetch('reports.json', { cache: 'no-cache' });
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (Array.isArray(data) && data.length) return data;
+        return null;
+      } catch { return null; }
+    }
+
+    (async function initNav() {
+      // 1. Try JS inline variable
+      if (window.reportsConfig && Array.isArray(window.reportsConfig) && window.reportsConfig.length) {
+        buildFromConfig(window.reportsConfig);
+        setupCommonWiring();
+        return;
+      }
+
+      // 2. Try external JSON (works if hosted, not file://)
+      const jsonCfg = await fetchReportsJson();
+      if (jsonCfg) {
+        buildFromConfig(jsonCfg);
+        setupCommonWiring();
+        return;
+      }
+
+      console.warn("⚠️ No JSON config found; nav is empty.");
+      setupCommonWiring();
+    })();
+
+    function setupCommonWiring() {
+      moreBtn.addEventListener('click', (e) => { e.stopPropagation(); moreMenu.classList.toggle('open'); });
+      document.addEventListener('click', (e) => { if (!moreMenu.contains(e.target) && !moreBtn.contains(e.target)) { moreMenu.classList.remove('open'); } });
+      const left = document.querySelector('.nav-arrow.left');
+      const right = document.querySelector('.nav-arrow.right');
+      const step = 260;
+      left.addEventListener('click', () => navList.scrollBy({ left: -step, behavior: 'smooth' }));
+      right.addEventListener('click', () => navList.scrollBy({ left: step, behavior: 'smooth' }));
+    }
+
+
+
+  </script>
+
+<script>
+/* ===============================
+   🔐 AUTH CONFIG
+================================ */
+const SESSION_KEY = "isLoggedIn";
+const USER_KEY = "user";
+const TIMEOUT = 15 * 60 * 1000;
+
+/* ===============================
+   🚪 LOGOUT FUNCTION (FIXED)
+================================ */
+function logout() {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(USER_KEY);
+  window.location.replace("login.html");
+}
+
+/* ===============================
+   ✅ AUTH CHECK (RUN FIRST)
+================================ */
+(function checkAuth() {
+
+  const isLoggedIn = localStorage.getItem("isLoggedIn");
+
+  console.log("LOGIN STATUS:", isLoggedIn);
+
+  // ❌ If not logged in → go login
+  if (isLoggedIn !== "true") {
+    window.location.replace("login.html");
+    return;
+  }
+
+  // ✅ If logged in → show PIN AFTER UI loads
+  window.addEventListener("load", () => {
+    lockApp();
+  });
+
+})();
+
+/* ===============================
+   👤 SHOW USER
+================================ */
+(function showUser() {
+  const el = document.getElementById("welcomeUser");
+  const user = localStorage.getItem(USER_KEY);
+  if (el && user) {
+    el.innerText = "Hi, " + user + " 👋";
+  }
+})();
+
+/* ===============================
+   🔐 PIN FETCH
+================================ */
+async function getPinFromSheet() {
+  try {
+    const res = await fetch("https://opensheet.elk.sh/1w1oYIh_GTWmCn3u9PD7lj3w1NnFdDEbU32EeezDc22g/Setup");
+    const data = await res.json();
+
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].Key && data[i].Key.trim().toUpperCase() === "PIN") {
+        return data[i].Value;
+      }
+    }
+
+    throw new Error("PIN not found");
+
+  } catch (e) {
+    console.log("PIN ERROR:", e);
+    alert("Unable to fetch PIN");
+    return null;
+  }
+}
+
+/* ===============================
+   🔐 LOCK SYSTEM
+================================ */
+function lockApp() {
+  document.getElementById("lockScreen").style.display = "flex";
+}
+
+async function unlock() {
+  const inputPin = document.getElementById("pinInput").value;
+  const sheetPin = await getPinFromSheet();
+
+  if (!sheetPin) return;
+
+  if (inputPin === sheetPin) {
+    document.getElementById("lockScreen").style.display = "none";
+    document.getElementById("pinInput").value = "";
+  } else {
+    document.getElementById("pinInput").style.border = "1px solid red";
+  }
+}
+
+/* ===============================
+   ⏱ AUTO LOCK (NOT LOGOUT)
+================================ */
+let timer;
+
+function resetTimer() {
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    lockApp(); // ✅ ONLY LOCK, NOT LOGOUT
+  }, TIMEOUT);
+}
+
+["click","mousemove","keydown","scroll"].forEach(evt => {
+  document.addEventListener(evt, resetTimer);
+});
+
+resetTimer();
+
+/* ===============================
+   🔙 BACK BUTTON LOCK
+================================ */
+window.history.pushState(null, "", window.location.href);
+window.onpopstate = function () {
+  lockApp();
+};
+
+/* ===============================
+   ⏱ SESSION COUNTDOWN
+================================ */
+let timeLeft = 15 * 60;
+
+setInterval(() => {
+  timeLeft--;
+
+  const min = Math.floor(timeLeft / 60);
+  const sec = timeLeft % 60;
+
+  const el = document.getElementById("sessionTimer");
+  if (el) {
+    el.innerText = `Session: ${min}:${sec.toString().padStart(2,"0")}`;
+  }
+
+  if (timeLeft <= 0) {
+    lockApp();
+    timeLeft = 15 * 60;
+  }
+
+}, 1000);
+
+/* ===============================
+   🔢 CHANGE PIN UI
+================================ */
+function showChangePin(){
+  document.getElementById("changePinBox").style.display = "block";
+}
+
+function changePin() {
+  const newPin = document.getElementById("newPin").value;
+
+  if (newPin.length < 4) {
+    alert("PIN must be at least 4 digits");
+    return;
+  }
+
+  localStorage.setItem("appPin", newPin);
+  alert("PIN saved locally ✅");
+
+  document.getElementById("changePinBox").style.display = "none";
+  document.getElementById("newPin").value = "";
+}
+</script>
+
+
+
+  <div id="lockScreen" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:
+    radial-gradient(800px 300px at 80% -10%, rgba(6,182,212,.08), transparent),
+    radial-gradient(600px 300px at 10% 110%, rgba(124,58,237,.08), transparent),
+    #0b1322;
+">
+
+    <div style="
+    width:300px;
+    padding:25px;
+    border-radius:16px;
+    background:rgba(255,255,255,.06);
+    backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.08);
+    text-align:center;
+    color:white;
+  ">
+
+      <h2>🔐 Locked</h2>
+
+      <input id="pinInput" type="password" placeholder="Enter PIN"
+        style="width:100%; padding:10px; margin:15px 0; border-radius:8px; border:none;">
+
+      <button onclick="unlock()" style="width:100%; padding:10px; border-radius:10px;">
+        Unlock
+      </button>
+
+      <div style="margin-top:10px;">
+        <button onclick="showChangePin()" style="font-size:12px;">
+          Change PIN
+        </button>
+      </div>
+
+      <!-- Swipe area -->
+      <div id="swipeArea" style="
+      margin-top:20px;
+      padding:10px;
+      border-radius:10px;
+      background:rgba(255,255,255,.05);
+      font-size:12px;
+      opacity:.7;
+    ">
+        👉 Swipe right to unlock
+      </div>
+
+      <!-- Change PIN UI -->
+      <div id="changePinBox" style="display:none; margin-top:15px;">
+        <input id="newPin" placeholder="New PIN" style="width:100%; padding:8px; margin:5px 0;">
+        <button onclick="changePin()" style="width:100%;">Save PIN</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="sessionTimer" style="
+  position:fixed;
+  bottom:10px;
+  right:10px;
+  font-size:12px;
+  opacity:0.7;
+">
+  </div>
+
+</body>
+
+</html>
