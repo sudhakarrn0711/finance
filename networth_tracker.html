@@ -4,19 +4,16 @@
 <head>
 
 <script>
-const isIframe = window.top !== window.self;
-const isLoggedIn = localStorage.getItem("isLoggedIn");
-
-// ✅ Allow inside iframe
-if (isIframe) {
-  console.log("Iframe access allowed");
-} 
-// 🔒 Direct open → require login
-else {
-  if (isLoggedIn !== "true") {
-    window.location.replace("login.html");
-  } else {
-    console.warn("Direct open (logged in) allowed");
+if (window.top === window.self) {
+  window.location.replace("login.html");
+} else {
+  // prevent iframe hijacking
+  try {
+    if (window.top.location.hostname !== window.location.hostname) {
+      window.top.location.href = window.location.href;
+    }
+  } catch (e) {
+    console.warn("Cross-origin iframe blocked");
   }
 }
 </script>
