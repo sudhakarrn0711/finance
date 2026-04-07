@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+
+  <style>
+    :root {
+      --bg1: #0a0f1f;
+      --bg2: #0b1322;
+      --accent: #7c3aed;
+      --glass: rgba(255, 255, 255, .06);
+      --text: #eaf2ff;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Inter, system-ui;
+      color: var(--text);
+      background:
+        radial-gradient(900px 400px at 85% -10%, rgba(6, 182, 212, .05), transparent 30%),
+        radial-gradient(700px 300px at 10% 110%, rgba(124, 58, 237, .05), transparent 30%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+    }
+
+    .login-box {
+      width: 340px;
+      padding: 28px;
+      border-radius: 16px;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, .08);
+      box-shadow: 0 10px 35px rgba(0, 0, 0, .45);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .05);
+      color: #fff;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      opacity: .7;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, .3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #error {
+      text-align: center;
+      color: #f87171;
+      margin-top: 12px;
+    }
+  </style>
+
+
+  <script>
+if (window.top !== window.self) {
+  console.warn("Login opened inside iframe — blocked");
+  throw new Error("Stop iframe execution");
+}
+  </script>
+
+</head>
+
+<body>
+
+  <div class="login-box">
+    <h2>Welcome Back 👋</h2>
+
+    <div class="input-group">
+      <input id="username" placeholder="Username" autocomplete="off">
+    </div>
+
+    <div class="input-group">
+      <input id="password" type="password" placeholder="Password">
+      <span class="toggle" onclick="togglePassword()">👁</span>
+    </div>
+
+    <button id="loginBtn" onclick="login()">
+      <span id="btnText">Login</span>
+    </button>
+
+    <div id="error"></div>
+  </div>
+
+  <script>
+
+    function togglePassword() {
+      const p = document.getElementById("password");
+      p.type = p.type === "password" ? "text" : "password";
+    }
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        login();
+      }
+    });
+
+async function login() {
+  const user = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  const errorEl = document.getElementById("error");
+  const btn = document.getElementById("loginBtn");
+  const btnText = document.getElementById("btnText");
+
+  if (!user || !pass) {
+    errorEl.innerText = "Enter username & password";
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span> Checking...';
+  errorEl.innerText = "";
+
+  try {
+    const res = await fetch("https://opensheet.elk.sh/1w1oYIh_GTWmCn3u9PD7lj3w1NnFdDEbU32EeezDc22g/Setup");
+    const data = await res.json();
+
+    let correctUser = null;
+    let correctPass = null;
+
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].Key?.trim().toUpperCase() === "USERNAME") {
+        correctUser = data[i].Value;
+      }
+      if (data[i].Key?.trim().toUpperCase() === "PASSWORD") {
+        correctPass = data[i].Value;
+      }
+    }
+
+    if (user === correctUser && pass === correctPass) {
+
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("user", user);
+
+      // ✅ Force sync
+      await new Promise(r => setTimeout(r, 80));
+
+      window.location.replace("index.html");
+
+    } else {
+      errorEl.innerText = "Invalid username or password";
+    }
+
+  } catch (e) {
+    console.log(e);
+    errorEl.innerText = "Connection error";
+  }
+
+  btn.disabled = false;
+  btnText.innerText = "Login";
+}
+
+  </script>
+
+</body>
+
+</html>
