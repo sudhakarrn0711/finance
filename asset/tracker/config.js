@@ -12,7 +12,7 @@ const CONFIG = {
     goals:               "https://script.google.com/macros/s/AKfycbyPM-sCaNDogGAqltlTSYOSvVWdQI9XXrAaUT_oDwYHcIWDCn1xFkFX4MGYKjVdzUqf/exec",
     networth_tracker:    "https://script.google.com/macros/s/AKfycbyPM-sCaNDogGAqltlTSYOSvVWdQI9XXrAaUT_oDwYHcIWDCn1xFkFX4MGYKjVdzUqf/exec?action=getNetWorth",
     networth_tracker_liability:    "https://script.google.com/macros/s/AKfycbyPM-sCaNDogGAqltlTSYOSvVWdQI9XXrAaUT_oDwYHcIWDCn1xFkFX4MGYKjVdzUqf/exec?action=getLiabilities",
-    todo: "https://script.google.com/macros/s/AKfycbzPoYLBgUvCmtNp-l4kTOCJ1kEqYyu7LjgbvgeFFvmSfm5tW7rTDNTSVyPdBMXyBFkFaw/exec"
+    todo: "https://script.google.com/macros/s/AKfycbxXTH2BrfKbvTI9EqLCJAuYqIQyIYqjxJ3w1esBx_IYReTMZv1ac0NZ5XwSnIC1XIhhcA/exec"
   },  
   
   test: {
@@ -24,7 +24,7 @@ const CONFIG = {
     goals:               "https://script.google.com/macros/s/AKfycbyLxDfYb54dQsu0KcP6XsJK0GyBf4FodbJzB8tC0DlPlC3nYyB8eEiIk8fT6_WLChuE3g/exec",
     networth_tracker:    "https://script.google.com/macros/s/AKfycbyLxDfYb54dQsu0KcP6XsJK0GyBf4FodbJzB8tC0DlPlC3nYyB8eEiIk8fT6_WLChuE3g/exec?action=getNetWorth",
     networth_tracker_liability:    "https://script.google.com/macros/s/AKfycbyLxDfYb54dQsu0KcP6XsJK0GyBf4FodbJzB8tC0DlPlC3nYyB8eEiIk8fT6_WLChuE3g/exec?action=getLiabilities",
-    todo: "https://script.google.com/macros/s/AKfycbw9pnvAwMTHffK8RK7FYyQXbhODIvY8-K76KZ7TaKGMVsamMNzL3Jj-hrc42tzCON3grA/exec"
+    todo: "https://script.google.com/macros/s/AKfycbyhP5KscfvCnph5F8WAibOJo2repQs5NZK4w_txHZ1ohmK4McSy2BiXRAslZY2frmVGKQ/exec"
   }
 };
 
