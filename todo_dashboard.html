@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Todo Dashboard</title>
+
+<style>
+body {
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top, #0f172a, #020617);
+  color: #e2e8f0;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* LOGIN */
+.login-box {
+  max-width: 260px;
+  margin: 100px auto;
+  text-align: center;
+  background: rgba(255,255,255,0.08);
+  padding: 20px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+/* INPUT */
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  margin: 10px 0;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+/* BUTTON */
+button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+/* CARD */
+.card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 10px;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* LOADER */
+.loader {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  width: 25px;
+  height: 25px;
+  border: 3px solid #333;
+  border-top: 3px solid #00c6ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: none;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+</style>
+</head>
+
+<body>
+
+<div class="loader" id="loader"></div>
+
+<div class="container">
+
+  <!-- ✅ FIXED ID -->
+  <div class="login-box" id="loginBox">
+    <h2>🔐</h2>
+    <input type="password" id="pin" placeholder="Enter PIN">
+    <button onclick="login()">Unlock</button>
+  </div>
+
+  <!-- APP -->
+  <div id="app" style="display:none;">
+    <h2>📋 Tasks</h2>
+    <div id="tasks"></div>
+  </div>
+
+</div>
+
+<script>
+
+const API = "https://script.google.com/macros/s/AKfycbzHjjBC_wvnBTo2A_jXEZhNqdEbSQoH6OP7GlfeXM1CxXoZE5xnSEucs42a519L-f-O/exec";
+
+/* LOADER */
+function showLoader(){ document.getElementById("loader").style.display="block"; }
+function hideLoader(){ document.getElementById("loader").style.display="none"; }
+
+/* DATE */
+function formatDate(d){
+  if (!d) return "";
+  return new Date(d).toISOString().split("T")[0];
+}
+
+/* LOGIN */
+function login(){
+  const pin = document.getElementById("pin").value;
+
+  showLoader();
+
+  fetch(API + "?action=verifyPin&pin=" + encodeURIComponent(pin))
+    .then(r => r.json())
+    .then(res => {
+      if(res.success){
+        document.getElementById("loginBox").style.display="none"; // ✅ FIXED
+        document.getElementById("app").style.display="block";
+        loadTasks();
+      } else {
+        alert("Wrong PIN");
+      }
+    })
+    .finally(hideLoader);
+}
+
+/* LOAD TASKS */
+function loadTasks() {
+  showLoader();
+
+  fetch(API + "?action=listTasks")
+    .then(r => r.json())
+    .then(res => {
+
+      var now = new Date();
+      now.setHours(0,0,0,0);
+
+      var overdue = [];
+      var today = [];
+      var tomorrow = [];
+      var upcoming = [];
+
+      var total = 0;
+      var completed = 0;
+
+      res.tasks.forEach(function(t){
+
+        total++;
+
+        if (String(t.Done).toLowerCase() === "true") {
+          completed++;
+          return;
+        }
+
+        if (!t.Due) return;
+
+        var due = new Date(t.Due);
+        due.setHours(0,0,0,0);
+
+        var diff = Math.floor((due - now) / 86400000);
+
+        if (diff < 0) overdue.push(t);
+        else if (diff === 0) today.push(t);
+        else if (diff === 1) tomorrow.push(t);
+        else upcoming.push(t);
+      });
+
+      var container = document.getElementById("tasks");
+      container.innerHTML = "";
+
+      // ✅ Progress Bar
+      renderProgress(total, completed);
+
+      renderSection("Overdue", overdue);
+      renderSection("Today", today);
+      renderSection("Tomorrow", tomorrow);
+      renderSection("Upcoming", upcoming);
+
+    })
+    .finally(hideLoader);
+}
+
+/* RENDER */
+function renderSection(title, tasks) {
+  var el = document.getElementById("tasks");
+
+  var icon = "📌";
+  var color = "#94a3b8";
+
+  if (title === "Overdue") {
+    icon = "🔴";
+    color = "#ef4444";
+  } else if (title === "Today") {
+    icon = "📅";
+    color = "#22c55e";
+  } else if (title === "Tomorrow") {
+    icon = "⏰";
+    color = "#f59e0b";
+  } else if (title === "Upcoming") {
+    icon = "📌";
+    color = "#3b82f6";
+  }
+
+  var count = tasks.length;
+
+  var html = `
+    <h3 style="color:${color}; margin-top:20px;">
+      ${icon} ${title} (${count})
+    </h3>
+  `;
+
+  if (!tasks.length) {
+    html += '<p style="opacity:0.6;">No tasks</p>';
+    el.innerHTML += html;
+    return;
+  }
+
+  html += '<div class="grid">';
+
+  tasks.forEach(function(t){
+
+    // ✅ Priority Badge
+    var p = (t.Priority || "Medium").toLowerCase();
+    var pColor = "#fbbf24";
+
+    if (p === "high") pColor = "#ef4444";
+    else if (p === "low") pColor = "#22c55e";
+
+    html += `
+      <div class="card" id="task-${t.ID}">
+        <b>${t.Title}</b>
+
+        <small>${formatDate(t.Due)}</small>
+
+        <span style="
+          background:${pColor};
+          padding:2px 6px;
+          border-radius:6px;
+          font-size:10px;
+          width:fit-content;
+        ">
+          ${t.Priority || "Medium"}
+        </span>
+
+        <button onclick="complete('${t.ID}')">✔ Done</button>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+
+  el.innerHTML += html;
+}
+
+
+function renderProgress(total, completed) {
+  var el = document.getElementById("tasks");
+
+  var percent = total ? Math.round((completed / total) * 100) : 0;
+
+  var html = `
+    <div style="margin-bottom:15px;">
+      <div style="font-size:12px; margin-bottom:5px;">
+        ✅ ${completed} / ${total} completed
+      </div>
+      <div style="background:#1e293b; border-radius:10px; overflow:hidden;">
+        <div style="
+          width:${percent}%;
+          background:linear-gradient(90deg,#22c55e,#4ade80);
+          height:8px;
+        "></div>
+      </div>
+    </div>
+  `;
+
+  el.innerHTML += html;
+}
+
+/* COMPLETE */
+function complete(id){
+  showLoader();
+
+  fetch(API + "?action=completeTask&id=" + id)
+    .then(r => r.json())
+    .then(()=>{
+      setTimeout(()=>{
+        loadTasks(); // ✅ SIMPLE + RELIABLE
+      },300);
+    })
+    .finally(hideLoader);
+}
+
+/* AUTO REFRESH */
+setInterval(()=>{
+  if(document.getElementById("app").style.display==="block"){
+    loadTasks();
+  }
+},8000);
+
+</script>
+
+</body>
+</html>
