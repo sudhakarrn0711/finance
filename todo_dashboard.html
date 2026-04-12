@@ -114,7 +114,7 @@ button {
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycbxC5iDuErlWW185PosRmulc0k8JZQWNYi2qeCXUPSGjajgXreGLNU5hT0s9pRtg3HftqA/exec";
+const API = "https://script.google.com/macros/s/AKfycbyhP5KscfvCnph5F8WAibOJo2repQs5NZK4w_txHZ1ohmK4McSy2BiXRAslZY2frmVGKQ/exec";
 
 /* LOADER */
 function showLoader(){ document.getElementById("loader").style.display="block"; }
@@ -147,8 +147,9 @@ function login(){
 }
 
 /* LOAD TASKS */
-function loadTasks() {
-  showLoader();
+function loadTasks(show = true) {
+
+  if (show) showLoader();
 
   fetch(API + "?action=listTasks")
     .then(r => r.json())
@@ -190,7 +191,6 @@ function loadTasks() {
       var container = document.getElementById("tasks");
       container.innerHTML = "";
 
-      // ✅ Progress Bar
       renderProgress(total, completed);
 
       renderSection("Overdue", overdue);
@@ -199,7 +199,9 @@ function loadTasks() {
       renderSection("Upcoming", upcoming);
 
     })
-    .finally(hideLoader);
+    .finally(() => {
+      if (show) hideLoader();
+    });
 }
 
 /* RENDER */
@@ -264,7 +266,9 @@ function renderSection(title, tasks) {
           ${t.Priority || "Medium"}
         </span>
 
-        <button onclick="complete('${t.ID}')">✔ Done</button>
+<button id="btn-${t.ID}" onclick="complete('${t.ID}')">
+  ✔ Done
+</button>
       </div>
     `;
   });
@@ -300,22 +304,45 @@ function renderProgress(total, completed) {
 
 /* COMPLETE */
 function complete(id){
-  showLoader();
+
+  const btn = document.getElementById("btn-" + id);
+
+  // 🔒 prevent double click
+  btn.disabled = true;
+
+  // 🔄 button loader
+  btn.innerHTML = "⏳";
 
   fetch(API + "?action=completeTask&id=" + id)
     .then(r => r.json())
     .then(()=>{
+
+      // ✅ success state
+      btn.innerHTML = "✅";
+
+      // 🎯 smooth fade effect
+      const card = document.getElementById("task-" + id);
+      if (card) {
+        card.style.opacity = "0.4";
+        card.style.transform = "scale(0.95)";
+      }
+
+      // 🔁 refresh after short delay
       setTimeout(()=>{
-        loadTasks(); // ✅ SIMPLE + RELIABLE
-      },300);
+        loadTasks(false); // ❌ no global loader
+      },500);
     })
-    .finally(hideLoader);
+    .catch(()=>{
+      // ❌ error fallback
+      btn.innerHTML = "❌ Retry";
+      btn.disabled = false;
+    });
 }
 
 /* AUTO REFRESH */
 setInterval(()=>{
   if(document.getElementById("app").style.display==="block"){
-    loadTasks();
+    loadTasks(false); // 🔥 no flicker
   }
 },8000);
 
