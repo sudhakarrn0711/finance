@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-black text-white p-4">
+
+<h2 class="text-xl font-bold mb-4">Customer Statement</h2>
+
+<div id="summary"></div>
+
+<script>
+
+const API = "https://script.google.com/macros/s/AKfycby1evVUcrHJ1f2Byhr1EeyCq4tNBF3GDki_YBD4Chz0lWpva7d3x7sNh2CpRiayg4WJ/exec"; // same API
+
+const urlParams = new URLSearchParams(window.location.search);
+const customerId = urlParams.get("customer");
+const businessId = urlParams.get("bid");
+
+loadSummary();
+
+async function loadSummary(){
+
+  const res = await fetch(`${API}?action=getCustomerTransactions&bid=${businessId}&cid=${customerId}&env=test`);
+  const data = await res.json();
+
+  let html = "";
+
+  data.transactions.reverse().forEach(t => {
+
+    html += `
+    <div class="border-b py-3">
+
+      <div>${new Date(t.date).toLocaleDateString()}</div>
+
+      <div class="${t.type === 'gave' ? 'text-green-400' : 'text-red-400'}">
+        ${t.type === 'gave' ? '+' : '-'} ₹${t.amount}
+      </div>
+
+      <div class="text-xs text-gray-400">
+        Balance ₹${t.runningBalance}
+      </div>
+
+    </div>`;
+  });
+
+  document.getElementById("summary").innerHTML = html;
+}
+
+</script>
+
+</body>
+</html>
