@@ -8,22 +8,40 @@
 <body class="bg-gradient-to-br from-black via-gray-900 to-black text-white min-h-screen p-4">
 
 <!-- HEADER -->
-<div class="mb-6">
-  <h2 class="text-2xl font-bold">📊 Customer Dashboard</h2>
-  <p class="text-gray-400 text-sm">Live statement & balance</p>
+<div class="mb-6 flex justify-between items-center">
+  <div>
+    <h2 class="text-2xl font-bold">📊 Customer Dashboard</h2>
+    <p class="text-gray-400 text-sm">Live statement & balance</p>
+  </div>
+
+  <button onclick="downloadPDF()" class="bg-blue-600 px-4 py-2 rounded-xl text-sm">
+    ⬇️ PDF
+  </button>
 </div>
 
 <!-- SUMMARY CARDS -->
-<div id="summaryCards" class="grid grid-cols-3 gap-3 mb-6"></div>
+<div id="summaryCards" class="grid grid-cols-3 gap-3 mb-4"></div>
 
-<!-- TRANSACTION LIST -->
+<!-- PAY SECTION -->
+<div id="payBox" class="bg-white/5 backdrop-blur-lg rounded-2xl p-4 mb-6 hidden">
+  <h3 class="font-semibold mb-3">⚡ Pay Now</h3>
+
+  <a id="upiBtn" target="_blank"
+    class="block text-center bg-green-600 p-3 rounded-xl mb-3">
+    💰 Pay via UPI
+  </a>
+
+  <img id="qrImg" class="w-40 mx-auto rounded-xl" />
+</div>
+
+<!-- TRANSACTIONS -->
 <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-4 shadow-lg">
   <div class="flex justify-between mb-3">
     <h3 class="font-semibold">Transactions</h3>
     <span id="count" class="text-xs text-gray-400"></span>
   </div>
 
-  <div id="summary" class="space-y-3 max-h-[70vh] overflow-auto"></div>
+  <div id="summary" class="space-y-3 max-h-[65vh] overflow-auto"></div>
 </div>
 
 <script>
@@ -53,6 +71,7 @@ async function loadSummary(){
   const net = give - get;
 
   renderCards(give, get, net);
+  setupPayment(net);
 
   let html = "";
 
@@ -67,8 +86,8 @@ async function loadSummary(){
       </div>
 
       <div class="text-right">
-        <div class="font-bold ${t.type === 'gave' ? 'text-green-400' : 'text-red-400'}">
-          ${t.type === 'gave' ? '+' : '-'}₹${t.amount}
+        <div class="font-bold ${t.type === 'got' ? 'text-green-400' : 'text-red-400'}">
+          ${t.type === 'got' ? '+' : '-'}₹${t.amount}
         </div>
         <div class="text-xs text-gray-400">${t.note || ''}</div>
       </div>
@@ -82,28 +101,52 @@ async function loadSummary(){
 
 function renderCards(give, get, net){
 
-  const netColor = net >= 0 ? "text-green-400" : "text-red-400";
+  const netColor = net >= 0 ? "text-red-400" : "text-green-400";
 
   document.getElementById("summaryCards").innerHTML = `
 
-  <div class="bg-green-500/10 p-4 rounded-2xl text-center">
+  <div class="bg-red-500/10 p-4 rounded-2xl text-center">
     <div class="text-xs text-gray-400">You Gave</div>
-    <div class="text-lg font-bold text-green-400">₹${give}</div>
+    <div class="text-lg font-bold text-red-400">₹${give}</div>
   </div>
 
-  <div class="bg-red-500/10 p-4 rounded-2xl text-center">
+  <div class="bg-green-500/10 p-4 rounded-2xl text-center">
     <div class="text-xs text-gray-400">You Got</div>
-    <div class="text-lg font-bold text-red-400">₹${get}</div>
+    <div class="text-lg font-bold text-green-400">₹${get}</div>
   </div>
 
   <div class="bg-white/10 p-4 rounded-2xl text-center">
     <div class="text-xs text-gray-400">Net Balance</div>
     <div class="text-lg font-bold ${netColor}">
-      ${net >= 0 ? '₹' + net : '-₹' + Math.abs(net)}
+      ${net >= 0 ? 'You Gave ₹' + net : 'You Got ₹' + Math.abs(net)}
     </div>
   </div>
 
   `;
+}
+
+function setupPayment(net){
+
+  // show only if customer has to pay you (negative net)
+  if(net < 0){
+
+    const amount = Math.abs(net);
+
+    const upi = "sudhakarrn0711@okicici"; // replace dynamically later
+    const name = "Business";
+
+    const upiLink = `upi://pay?pa=${upi}&pn=${name}&am=${amount}&cu=INR`;
+
+    document.getElementById("upiBtn").href = upiLink;
+
+    document.getElementById("qrImg").src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+
+    document.getElementById("payBox").classList.remove("hidden");
+  }
+}
+
+function downloadPDF(){
+  window.print();
 }
 
 </script>
