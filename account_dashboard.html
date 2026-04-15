@@ -69,7 +69,7 @@ async function loadSummary(){
   const res = await fetch(`${API}?action=getCustomerTransactions&bid=${businessId}&cid=${customerId}&env=test`);
   const data = await res.json();
 
-  // ✅ CORRECT KPI LOGIC (Customer View)
+  // ✅ CUSTOMER VIEW KPI
   let received = 0; // gave → you received
   let paid = 0;     // got → you paid
 
@@ -112,18 +112,21 @@ async function loadSummary(){
   document.getElementById("count").innerText = data.transactions.length + " entries";
 }
 
+// ✅ UPDATED KPI WITH REVERSED BALANCE
 function renderCards(received, paid){
 
-  const net = received - paid;
+  // 🔥 REVERSED BALANCE (Customer View)
+  const net = paid - received;
 
   const isPositive = net >= 0;
 
-  const netColor = isPositive ? "text-green-400" : "text-red-400";
-  const label = isPositive ? "You Will Receive" : "You Need to Pay";
+  const netColor = isPositive ? "text-red-400" : "text-green-400";
+
+  const label = isPositive ? "You Need to Pay" : "You Will Get";
 
   const badge = isPositive
-    ? `<span class="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs">${label}</span>`
-    : `<span class="bg-red-500/20 text-red-400 px-2 py-1 rounded-full text-xs">${label}</span>`;
+    ? `<span class="bg-red-500/20 text-red-400 px-2 py-1 rounded-full text-xs">${label}</span>`
+    : `<span class="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs">${label}</span>`;
 
   document.getElementById("summaryCards").innerHTML = `
 
@@ -148,16 +151,17 @@ function renderCards(received, paid){
   `;
 }
 
+// ✅ PAYMENT BASED ON REVERSED BALANCE
 function setupPayment(received, paid){
 
-  const net = received - paid;
+  const net = paid - received;
 
   // show only if customer needs to pay
-  if(net < 0){
+  if(net > 0){
 
-    const amount = Math.abs(net);
+    const amount = net;
 
-    const upi = "sudhakarrn0711@okicici"; // change dynamic later
+    const upi = "sudhakarrn0711@okicici"; // change later dynamic
     const name = "Business";
 
     const upiLink = `upi://pay?pa=${upi}&pn=${name}&am=${amount}&cu=INR`;
