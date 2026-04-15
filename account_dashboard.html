@@ -5,15 +5,30 @@
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-black text-white p-4">
+<body class="bg-gradient-to-br from-black via-gray-900 to-black text-white min-h-screen p-4">
 
-<h2 class="text-xl font-bold mb-4">Customer Statement</h2>
+<!-- HEADER -->
+<div class="mb-6">
+  <h2 class="text-2xl font-bold">📊 Customer Dashboard</h2>
+  <p class="text-gray-400 text-sm">Live statement & balance</p>
+</div>
 
-<div id="summary"></div>
+<!-- SUMMARY CARDS -->
+<div id="summaryCards" class="grid grid-cols-3 gap-3 mb-6"></div>
+
+<!-- TRANSACTION LIST -->
+<div class="bg-white/5 backdrop-blur-lg rounded-2xl p-4 shadow-lg">
+  <div class="flex justify-between mb-3">
+    <h3 class="font-semibold">Transactions</h3>
+    <span id="count" class="text-xs text-gray-400"></span>
+  </div>
+
+  <div id="summary" class="space-y-3 max-h-[70vh] overflow-auto"></div>
+</div>
 
 <script>
 
-const API = "https://script.google.com/macros/s/AKfycby1evVUcrHJ1f2Byhr1EeyCq4tNBF3GDki_YBD4Chz0lWpva7d3x7sNh2CpRiayg4WJ/exec"; // same API
+const API = "https://script.google.com/macros/s/AKfycby1evVUcrHJ1f2Byhr1EeyCq4tNBF3GDki_YBD4Chz0lWpva7d3x7sNh2CpRiayg4WJ/exec";
 
 const urlParams = new URLSearchParams(window.location.search);
 const customerId = urlParams.get("customer");
@@ -23,30 +38,72 @@ loadSummary();
 
 async function loadSummary(){
 
+  document.getElementById("summary").innerHTML = "Loading...";
+
   const res = await fetch(`${API}?action=getCustomerTransactions&bid=${businessId}&cid=${customerId}&env=test`);
   const data = await res.json();
+
+  let give = 0, get = 0;
+
+  data.transactions.forEach(t => {
+    if(t.type === "gave") give += Number(t.amount);
+    else get += Number(t.amount);
+  });
+
+  const net = give - get;
+
+  renderCards(give, get, net);
 
   let html = "";
 
   data.transactions.reverse().forEach(t => {
 
     html += `
-    <div class="border-b py-3">
+    <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl hover:bg-white/10 transition">
 
-      <div>${new Date(t.date).toLocaleDateString()}</div>
-
-      <div class="${t.type === 'gave' ? 'text-green-400' : 'text-red-400'}">
-        ${t.type === 'gave' ? '+' : '-'} ₹${t.amount}
+      <div>
+        <div class="text-sm font-medium">${new Date(t.date).toLocaleDateString()}</div>
+        <div class="text-xs text-gray-400">Balance ₹${t.runningBalance}</div>
       </div>
 
-      <div class="text-xs text-gray-400">
-        Balance ₹${t.runningBalance}
+      <div class="text-right">
+        <div class="font-bold ${t.type === 'gave' ? 'text-green-400' : 'text-red-400'}">
+          ${t.type === 'gave' ? '+' : '-'}₹${t.amount}
+        </div>
+        <div class="text-xs text-gray-400">${t.note || ''}</div>
       </div>
 
     </div>`;
   });
 
-  document.getElementById("summary").innerHTML = html;
+  document.getElementById("summary").innerHTML = html || "No Transactions";
+  document.getElementById("count").innerText = data.transactions.length + " entries";
+}
+
+function renderCards(give, get, net){
+
+  const netColor = net >= 0 ? "text-green-400" : "text-red-400";
+
+  document.getElementById("summaryCards").innerHTML = `
+
+  <div class="bg-green-500/10 p-4 rounded-2xl text-center">
+    <div class="text-xs text-gray-400">You Gave</div>
+    <div class="text-lg font-bold text-green-400">₹${give}</div>
+  </div>
+
+  <div class="bg-red-500/10 p-4 rounded-2xl text-center">
+    <div class="text-xs text-gray-400">You Got</div>
+    <div class="text-lg font-bold text-red-400">₹${get}</div>
+  </div>
+
+  <div class="bg-white/10 p-4 rounded-2xl text-center">
+    <div class="text-xs text-gray-400">Net Balance</div>
+    <div class="text-lg font-bold ${netColor}">
+      ${net >= 0 ? '₹' + net : '-₹' + Math.abs(net)}
+    </div>
+  </div>
+
+  `;
 }
 
 </script>
