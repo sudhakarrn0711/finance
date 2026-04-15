@@ -26,12 +26,24 @@
 <div id="payBox" class="bg-white/5 backdrop-blur-lg rounded-2xl p-4 mb-6 hidden">
   <h3 class="font-semibold mb-3">⚡ Pay Now</h3>
 
-  <a id="upiBtn" target="_blank"
-    class="block text-center bg-green-600 p-3 rounded-xl mb-3">
+  <!-- MOBILE -->
+  <a id="upiBtn"
+    class="hidden block text-center bg-green-600 p-3 rounded-xl mb-3">
     💰 Pay via UPI
   </a>
 
-  <img id="qrImg" class="w-40 mx-auto rounded-xl" />
+  <!-- DESKTOP -->
+  <button id="qrBtn"
+    onclick="showQR()"
+    class="hidden w-full bg-blue-600 p-3 rounded-xl mb-3">
+    📷 Show QR Code
+  </button>
+
+  <!-- QR -->
+  <div id="qrBox" class="hidden text-center">
+    <img id="qrImg" class="w-40 mx-auto rounded-xl mb-2" />
+    <div class="text-xs text-gray-400">Scan to Pay</div>
+  </div>
 </div>
 
 <!-- TRANSACTIONS -->
@@ -98,16 +110,13 @@ async function loadSummary(){
   document.getElementById("count").innerText = data.transactions.length + " entries";
 }
 
-// ================= SUMMARY CARDS =================
+// ================= SUMMARY =================
 function renderCards(give, get){
 
-  // 🔥 CUSTOMER VIEW
   const net = get - give;
-
   const isPositive = net >= 0;
 
   const netColor = isPositive ? "text-green-400" : "text-red-400";
-
   const label = isPositive ? "You Will Receive" : "You Need to Pay";
 
   const badge = isPositive
@@ -117,13 +126,13 @@ function renderCards(give, get){
   document.getElementById("summaryCards").innerHTML = `
 
   <div class="bg-red-500/10 p-4 rounded-2xl text-center">
-    <div class="text-xs text-gray-400">You Paid</div>
-    <div class="text-lg font-bold text-red-400">₹${give}</div>
+    <div class="text-xs text-gray-400">You Received</div>
+    <div class="text-lg font-bold text-red-400">₹${get}</div>
   </div>
 
   <div class="bg-green-500/10 p-4 rounded-2xl text-center">
-    <div class="text-xs text-gray-400">You Received</div>
-    <div class="text-lg font-bold text-green-400">₹${get}</div>
+    <div class="text-xs text-gray-400">You Paid</div>
+    <div class="text-lg font-bold text-green-400">₹${give}</div>
   </div>
 
   <div class="bg-white/10 p-4 rounded-2xl text-center">
@@ -142,22 +151,44 @@ function setupPayment(give, get){
 
   const net = get - give;
 
-  // show if customer needs to pay
   if(net < 0){
 
     const amount = Math.abs(net);
 
-    const upi = "sudhakarrn0711@okicici"; // 🔥 make dynamic later
+    const upi = "sudhakarrn0711@okicici"; // change dynamically later
     const name = "Business";
 
     const upiLink = `upi://pay?pa=${upi}&pn=${name}&am=${amount}&cu=INR`;
 
-    document.getElementById("upiBtn").href = upiLink;
+    document.getElementById("payBox").classList.remove("hidden");
+
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if(isMobile){
+      const btn = document.getElementById("upiBtn");
+      btn.href = upiLink;
+      btn.classList.remove("hidden");
+    } else {
+      document.getElementById("qrBtn").classList.remove("hidden");
+      window.currentUPI = upiLink;
+    }
+  }
+}
+
+// ================= QR =================
+function showQR(){
+
+  const qrBox = document.getElementById("qrBox");
+
+  if(qrBox.classList.contains("hidden")){
 
     document.getElementById("qrImg").src =
-      `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+      `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.currentUPI)}`;
 
-    document.getElementById("payBox").classList.remove("hidden");
+    qrBox.classList.remove("hidden");
+
+  } else {
+    qrBox.classList.add("hidden");
   }
 }
 
