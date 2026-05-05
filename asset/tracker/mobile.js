@@ -1,37 +1,38 @@
 /* =====================================================
-   📱 MOBILE.JS (FULL FIXED VERSION)
-   Works with your existing index.html
-   Fixes:
-   ✅ Login / Lock screen centered
-   ✅ Full iframe mobile height
-   ✅ Mobile hamburger toggle
-   ✅ Sidebar menu for reports
-   ✅ Better topbar mobile UX
-   ✅ No effect on desktop
+   📱 MOBILE.JS (FINAL WORKING + ENHANCED)
+   Based on your ORIGINAL working version
+   Added:
+   ✅ Hamburger always visible
+   ✅ Screen fit fix
+   ✅ Login center perfect
+   ✅ Finance tracker mobile optimize
+   ✅ todo.html optimize
+   ✅ Better resize support
+   ✅ No desktop effect
 ===================================================== */
 
 (function () {
+  "use strict";
+
+  let initialized = false;
 
   /* =====================================
      INIT
   ===================================== */
-  document.addEventListener("DOMContentLoaded", () => {
-    if (window.innerWidth <= 768) {
-      initMobileUI();
-    }
-  });
+  document.addEventListener("DOMContentLoaded", boot);
+  window.addEventListener("resize", debounce(boot, 250));
+  window.addEventListener("orientationchange", boot);
 
-  window.addEventListener("resize", () => {
-    if (window.innerWidth <= 768) {
-      initMobileUI();
-    }
-  });
+  function boot() {
+    if (window.innerWidth > 768) return;
+    initMobileUI();
+  }
 
   /* =====================================
-     MAIN INIT
+     MAIN
   ===================================== */
   function initMobileUI() {
-
+    injectCSS();
     fixBody();
     fixTopbar();
     fixIframe();
@@ -39,63 +40,141 @@
     createMobileToggle();
     createMobileSidebar();
     syncButtons();
+    optimizeFinanceTracker();
+    optimizeTodo();
+
+    initialized = true;
+  }
+
+  /* =====================================
+     CSS
+  ===================================== */
+  function injectCSS() {
+    if (document.getElementById("mobileFixCSS")) return;
+
+    const style = document.createElement("style");
+    style.id = "mobileFixCSS";
+
+    style.innerHTML = `
+    @media(max-width:768px){
+
+      html,body{
+        margin:0 !important;
+        padding:0 !important;
+        width:100% !important;
+        height:100% !important;
+        overflow:hidden !important;
+      }
+
+      *{
+        box-sizing:border-box !important;
+      }
+
+      /* iframe pages */
+      iframe{
+        width:100% !important;
+        height:100% !important;
+      }
+
+      /* finance tracker */
+      .grid,
+      .summary-grid,
+      .summary-cards{
+        grid-template-columns:1fr !important;
+      }
+
+      table{
+        min-width:720px !important;
+      }
+
+      .glass-card,
+      .overflow-x-auto{
+        overflow-x:auto !important;
+        -webkit-overflow-scrolling:touch;
+      }
+
+      input,select,textarea,button{
+        font-size:16px !important;
+        min-height:44px !important;
+      }
+
+      /* todo page */
+      main{
+        padding:10px !important;
+      }
+
+      aside{
+        margin-bottom:12px !important;
+      }
+
+      #modalContent{
+        width:95% !important;
+        max-height:90vh !important;
+      }
+
+      canvas{
+        max-width:100% !important;
+        height:auto !important;
+      }
+
+    }`;
+
+    document.head.appendChild(style);
   }
 
   /* =====================================
      BODY FIX
   ===================================== */
   function fixBody() {
-    document.body.style.overflow = "hidden";
+    document.body.style.margin = "0";
     document.body.style.height = "100vh";
+    document.body.style.overflow = "hidden";
   }
 
   /* =====================================
      TOPBAR FIX
   ===================================== */
   function fixTopbar() {
-
     const topbar = document.querySelector(".topbar");
-    const navWrap = document.querySelector(".nav-wrap");
-    const more = document.querySelector(".more");
-
     if (!topbar) return;
 
-    topbar.style.height = "56px";
-    topbar.style.padding = "0";
     topbar.style.position = "fixed";
     topbar.style.top = "0";
     topbar.style.left = "0";
     topbar.style.right = "0";
+    topbar.style.height = "56px";
     topbar.style.zIndex = "999";
+    topbar.style.padding = "0";
 
     const inner = document.querySelector(".bar-inner");
-
     if (inner) {
       inner.style.height = "56px";
-      inner.style.padding = "0 12px";
       inner.style.display = "flex";
       inner.style.alignItems = "center";
+      inner.style.padding = "0 12px";
     }
+
+    const navWrap = document.querySelector(".nav-wrap");
+    const more = document.querySelector(".more");
 
     if (navWrap) navWrap.style.display = "none";
     if (more) more.style.display = "none";
 
     const user = document.getElementById("welcomeUser");
     if (user) {
+      user.style.marginLeft = "46px";
+      user.style.maxWidth = "140px";
       user.style.fontSize = "13px";
-      user.style.marginLeft = "45px";
       user.style.whiteSpace = "nowrap";
       user.style.overflow = "hidden";
       user.style.textOverflow = "ellipsis";
-      user.style.maxWidth = "130px";
     }
   }
 
   /* =====================================
-     IFRAME FULL HEIGHT
+     IFRAME FIX
   ===================================== */
   function fixIframe() {
-
     const stage = document.querySelector(".stage");
     const frame = document.getElementById("frame");
 
@@ -106,6 +185,7 @@
       stage.style.right = "0";
       stage.style.bottom = "0";
       stage.style.height = "calc(100vh - 56px)";
+      stage.style.width = "100%";
       stage.style.overflow = "hidden";
     }
 
@@ -117,151 +197,155 @@
   }
 
   /* =====================================
-     LOCK SCREEN CENTER FIX
+     LOGIN CENTER
   ===================================== */
   function fixLockScreen() {
-
     const lock = document.getElementById("lockScreen");
     if (!lock) return;
 
-    lock.style.display = "none";
+    const apply = () => {
+      const visible =
+        lock.style.display === "flex" ||
+        getComputedStyle(lock).display === "flex";
 
-    const observer = new MutationObserver(() => {
+      if (!visible) return;
 
-      if (lock.style.display === "flex") {
+      lock.style.position = "fixed";
+      lock.style.inset = "0";
+      lock.style.display = "flex";
+      lock.style.justifyContent = "center";
+      lock.style.alignItems = "center";
+      lock.style.padding = "16px";
+      lock.style.zIndex = "9999";
 
-        lock.style.justifyContent = "center";
-        lock.style.alignItems = "center";
-        lock.style.padding = "18px";
-
-        const box = lock.children[0];
-
-        if (box) {
-          box.style.width = "100%";
-          box.style.maxWidth = "340px";
-          box.style.margin = "0 auto";
-        }
+      const box = lock.firstElementChild;
+      if (box) {
+        box.style.width = "100%";
+        box.style.maxWidth = "340px";
+        box.style.margin = "0 auto";
       }
-    });
+    };
 
-    observer.observe(lock, {
+    apply();
+
+    new MutationObserver(apply).observe(lock, {
       attributes: true,
-      attributeFilter: ["style"]
+      attributeFilter: ["style", "class"]
     });
   }
 
   /* =====================================
-     MOBILE TOGGLE BUTTON
+     HAMBURGER
   ===================================== */
   function createMobileToggle() {
-
     if (document.getElementById("mobileMenuBtn")) return;
 
     const btn = document.createElement("button");
-
     btn.id = "mobileMenuBtn";
     btn.innerHTML = "☰";
 
-    btn.style.position = "fixed";
-    btn.style.top = "10px";
-    btn.style.left = "10px";
-    btn.style.zIndex = "1001";
-    btn.style.width = "36px";
-    btn.style.height = "36px";
-    btn.style.border = "0";
-    btn.style.borderRadius = "10px";
-    btn.style.background = "rgba(255,255,255,.08)";
-    btn.style.color = "white";
-    btn.style.fontSize = "18px";
-    btn.style.backdropFilter = "blur(10px)";
+    Object.assign(btn.style, {
+      position: "fixed",
+      top: "10px",
+      left: "10px",
+      width: "36px",
+      height: "36px",
+      border: "0",
+      borderRadius: "10px",
+      background: "rgba(255,255,255,.12)",
+      color: "#fff",
+      fontSize: "18px",
+      zIndex: "2001",
+      cursor: "pointer",
+      backdropFilter: "blur(10px)"
+    });
 
     btn.onclick = toggleSidebar;
-
     document.body.appendChild(btn);
   }
 
   /* =====================================
-     SIDEBAR MENU
+     SIDEBAR
   ===================================== */
   function createMobileSidebar() {
-
     if (document.getElementById("mobileSidebar")) return;
 
     const side = document.createElement("div");
     side.id = "mobileSidebar";
 
-    side.style.position = "fixed";
-    side.style.top = "0";
-    side.style.left = "-280px";
-    side.style.width = "260px";
-    side.style.height = "100vh";
-    side.style.background = "#0f172a";
-    side.style.zIndex = "1002";
-    side.style.transition = "0.3s";
-    side.style.padding = "16px";
-    side.style.overflowY = "auto";
-    side.style.boxShadow = "0 0 25px rgba(0,0,0,.4)";
+    Object.assign(side.style, {
+      position: "fixed",
+      top: "0",
+      left: "-280px",
+      width: "260px",
+      height: "100vh",
+      background: "#0f172a",
+      zIndex: "2002",
+      transition: ".3s",
+      padding: "16px",
+      overflowY: "auto",
+      boxShadow: "0 0 25px rgba(0,0,0,.4)"
+    });
 
     side.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <div style="font-size:18px;font-weight:700;color:white;">
-          📊 Reports
-        </div>
-        <button onclick="toggleSidebar()"
-          style="background:none;border:0;color:white;font-size:22px;">✕</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <div style="font-size:18px;font-weight:700;color:#fff;">📊 Menu</div>
+        <button onclick="toggleSidebar()" style="background:none;border:0;color:#fff;font-size:22px;">✕</button>
       </div>
-
       <div id="mobileMenuList"></div>
     `;
 
     document.body.appendChild(side);
 
-    /* Overlay */
     const ov = document.createElement("div");
     ov.id = "mobileOverlay";
 
-    ov.style.position = "fixed";
-    ov.style.inset = "0";
-    ov.style.background = "rgba(0,0,0,.45)";
-    ov.style.zIndex = "1001";
-    ov.style.display = "none";
+    Object.assign(ov.style, {
+      position: "fixed",
+      inset: "0",
+      background: "rgba(0,0,0,.45)",
+      display: "none",
+      zIndex: "2001"
+    });
 
     ov.onclick = toggleSidebar;
-
     document.body.appendChild(ov);
   }
 
   /* =====================================
-     SYNC REPORT BUTTONS
+     MENU BUTTONS
   ===================================== */
   function syncButtons() {
-
     const box = document.getElementById("mobileMenuList");
     if (!box) return;
 
     box.innerHTML = "";
 
-    const buttons = [
+    const items = [
       ...document.querySelectorAll(".btn"),
       ...document.querySelectorAll(".menu-item")
     ];
 
-    buttons.forEach(btn => {
+    items.forEach(btn => {
+      const txt = btn.innerText.trim();
+      if (!txt) return;
 
       const clone = document.createElement("button");
+      clone.innerText = txt;
 
-      clone.innerHTML = btn.innerHTML;
-      clone.style.width = "100%";
-      clone.style.padding = "12px";
-      clone.style.marginBottom = "10px";
-      clone.style.border = "0";
-      clone.style.borderRadius = "12px";
-      clone.style.background = "rgba(255,255,255,.06)";
-      clone.style.color = "white";
-      clone.style.textAlign = "left";
-      clone.style.fontSize = "15px";
+      Object.assign(clone.style, {
+        width: "100%",
+        padding: "12px",
+        marginBottom: "10px",
+        border: "0",
+        borderRadius: "12px",
+        background: "rgba(255,255,255,.06)",
+        color: "#fff",
+        textAlign: "left",
+        fontSize: "15px"
+      });
 
-      clone.onclick = () => {
+      clone.onclick = function () {
         btn.click();
         toggleSidebar();
       };
@@ -271,10 +355,27 @@
   }
 
   /* =====================================
+     FINANCE TRACKER
+  ===================================== */
+  function optimizeFinanceTracker() {
+    document.querySelectorAll("canvas").forEach(c => {
+      c.style.maxWidth = "100%";
+      c.style.height = "auto";
+    });
+  }
+
+  /* =====================================
+     TODO PAGE
+  ===================================== */
+  function optimizeTodo() {
+    const task = document.getElementById("taskList");
+    if (task) task.style.paddingBottom = "80px";
+  }
+
+  /* =====================================
      TOGGLE
   ===================================== */
   window.toggleSidebar = function () {
-
     const side = document.getElementById("mobileSidebar");
     const ov = document.getElementById("mobileOverlay");
 
@@ -286,9 +387,21 @@
       side.style.left = "-280px";
       ov.style.display = "none";
     } else {
+      syncButtons();
       side.style.left = "0";
       ov.style.display = "block";
     }
   };
+
+  /* =====================================
+     DEBOUNCE
+  ===================================== */
+  function debounce(fn, ms) {
+    let t;
+    return function () {
+      clearTimeout(t);
+      t = setTimeout(fn, ms);
+    };
+  }
 
 })();
