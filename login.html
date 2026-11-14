@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08090d">
+  <title>Sign in · RanSan Tracker</title>
+  <link rel="manifest" href="tracker.webmanifest">
+  <link rel="stylesheet" href="asset/tracker/entry-glass.css">
+  <script src="asset/tracker/tracker-feedback.js?v=loadfix13"></script>
+<script src="asset/tracker/tracker-navigation.js?v=loadfix13"></script>
+<script src="asset/tracker/app-shell.js"></script>
+<link rel="stylesheet" href="asset/tracker/report-polish.css?v=loadfix13">
+</head>
+<body>
+  <main class="entry-card">
+    <div class="entry-mark" aria-hidden="true">₹</div>
+    <p class="entry-brand">RANSAN TRACKER</p>
+    <h1>Welcome back</h1>
+    <p class="entry-copy">Sign in to manage your income, expenses, and goals.</p>
+    <form id="loginForm">
+      <label for="username">Username</label>
+      <input id="username" autocomplete="username" autocapitalize="none" required>
+      <label for="password">Password</label>
+      <div class="entry-password">
+        <input id="password" type="password" autocomplete="current-password" required>
+        <button id="togglePassword" type="button" aria-controls="password">Show</button>
+      </div>
+      <button class="entry-primary" id="loginBtn" type="submit"><span id="btnText">Sign in</span></button>
+      <p id="error" class="entry-message" role="status"></p>
+    </form>
+  </main>
+  <script>
+    const password = document.getElementById('password');
+    const toggle = document.getElementById('togglePassword');
+    toggle.addEventListener('click', () => {
+      const visible = password.type === 'password';
+      password.type = visible ? 'text' : 'password';
+      toggle.textContent = visible ? 'Hide' : 'Show';
+    });
+    document.getElementById('loginForm').addEventListener('submit', event => {
+      event.preventDefault();
+      login();
+    });
+async function login() {
+  const user = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  const errorEl = document.getElementById("error");
+  const btn = document.getElementById("loginBtn");
+  const btnText = document.getElementById("btnText");
+
+  if (btn.disabled) return;
+
+  if (!user || !pass) {
+    errorEl.innerText = "Enter username & password";
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span> Checking...';
+  errorEl.innerText = "";
+
+  try {
+    const res = await fetch("https://opensheet.elk.sh/1w1oYIh_GTWmCn3u9PD7lj3w1NnFdDEbU32EeezDc22g/Setup");
+    if (!res.ok) throw new Error("Login lookup failed");
+    const data = await res.json();
+
+    let correctUser = null;
+    let correctPass = null;
+
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].Key?.trim().toUpperCase() === "USERNAME") {
+        correctUser = data[i].Value;
+      }
+      if (data[i].Key?.trim().toUpperCase() === "PASSWORD") {
+        correctPass = data[i].Value;
+      }
+    }
+
+    if (user === correctUser && pass === correctPass) {
+
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("user", user);
+
+      sessionStorage.removeItem("ranSanLastUnlockedActivity");
+
+      window.location.replace("index.html");
+      return;
+
+    } else {
+      errorEl.innerText = "Invalid username or password";
+    }
+
+  } catch (e) {
+    console.log(e);
+    errorEl.innerText = "Connection error";
+  }
+
+  btn.disabled = false;
+  btnText.innerText = "Sign in";
+}
+  </script>
+</body>
+</html>

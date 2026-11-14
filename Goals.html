@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<script src="asset/tracker/tracker-feedback.js?v=20261114-v3"></script>
+<script src="asset/tracker/tracker-navigation.js?v=20261114-v3"></script>
+<script src="asset/tracker/app-shell.js?v=20261114-v3"></script>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Goals + Analytics — Standalone</title>
+<script src="asset/tracker/config.js?v=20261114-v3"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --glass-bg: rgba(255,255,255,0.07);
+      --glass-border: rgba(255,255,255,0.25);
+      --glass-text: rgba(255,255,255,0.92);
+      --muted-text: rgba(255,255,255,0.75);
+    }
+    body{background:linear-gradient(180deg,#0f172a 0%,#0b1220 100%);min-height:100vh;color:var(--glass-text);padding:2rem;}
+    .glass{background:var(--glass-bg);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:1rem;box-shadow:0 10px 30px rgba(0,0,0,.25);}
+    .text-soft{color:var(--muted-text);}
+    .bar{height:10px;border-radius:9999px;background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));overflow:hidden;}
+    .bar>span{display:block;height:100%;width:0%;transition:width 1s ease-out;}
+    .g-pos{background-image:linear-gradient(90deg,#22c55e,#84cc16,#22c55e);}
+    .g-neg{background-image:linear-gradient(90deg,#ef4444,#f59e0b,#ef4444);}
+    .goal-card{transition:transform .35s ease,box-shadow .35s ease;cursor:pointer;position:relative;}
+    .goal-card.pos:hover{transform:scale(1.06) rotateX(3deg) rotateY(-3deg);box-shadow:0 25px 60px rgba(34,197,94,.6);}
+    .goal-card.neg:hover{transform:scale(1.06) rotateX(3deg) rotateY(-3deg);box-shadow:0 25px 60px rgba(239,68,68,.6);}
+    #goalsTable tbody tr:hover{background:rgba(255,255,255,0.08);box-shadow:inset 0 0 10px rgba(0,0,0,.4);}
+    .chips{display:flex;flex-wrap:wrap;gap:.4rem;}
+    .chip{padding:.2rem .6rem;border-radius:9999px;font-size:.75rem;font-weight:500;box-shadow:0 2px 6px rgba(0,0,0,.3);white-space:nowrap;}
+    .chip-green{background:#22c55e;color:white;}
+    .chip-rose{background:#ef4444;color:white;}
+    .chip-slate{background:#64748b;color:white;}
+    .chip-yellow{background:#eab308;color:black;}
+    .chip-orange{background:#f97316;color:white;}
+    .chip-darkred{background:#7f1d1d;color:white;}
+    @keyframes pulseRedFast{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.8);}50%{box-shadow:0 0 10px 6px rgba(239,68,68,.5);}}
+    @keyframes pulseRed{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.7);}50%{box-shadow:0 0 10px 4px rgba(239,68,68,.4);}}
+    @keyframes pulseRedSlow{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6);}50%{box-shadow:0 0 6px 3px rgba(239,68,68,.3);}}
+    .pulse-red-fast{animation:pulseRedFast 1s infinite;}
+    .pulse-red{animation:pulseRed 1.5s infinite;}
+    .pulse-red-slow{animation:pulseRedSlow 2s infinite;}
+    .ribbon{position:absolute;top:0;right:0;background:#22c55e;color:white;font-size:.7rem;font-weight:bold;padding:.2rem .6rem;border-bottom-left-radius:.5rem;}
+    .zebra:nth-child(odd){background-color:rgba(255,255,255,.05);}
+    .highlight{outline:2px solid #f472b6;border-radius:8px;}
+
+    /* Analytics extras (no style conflicts with your section) */
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;}
+    .cal-cell{height:32px;display:flex;align-items:center;justify-content:center;border-radius:.4rem;cursor:pointer;border:1px solid rgba(255,255,255,.15);}
+    .cal0{background:rgba(255,255,255,.06)}
+    .cal1{background:rgba(34,197,94,.25)}
+    .cal2{background:rgba(34,197,94,.45)}
+    .cal3{background:rgba(34,197,94,.65)}
+    .cal4{background:rgba(34,197,94,.85)}
+    .flag{outline:2px solid #f472b6}
+    .grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;}
+    .gauge{height:10px;border-radius:9999px;background:rgba(255,255,255,.15);overflow:hidden}
+    .gauge>span{display:block;height:100%;width:0%;}
+  </style>
+  <link rel="stylesheet" href="asset/tracker/app-shell.css?v=20261114-v3">
+<link rel="stylesheet" href="asset/tracker/original-five-additions.css?v=20261114-v3">
+<script src="asset/tracker/original-five-loader.js?v=20261114-v3" defer></script>
+<link rel="stylesheet" href="asset/tracker/tracker-ui-v3.css?v=20261114-v3">
+<script src="asset/tracker/tracker-read-cache.js?v=20261114-v3"></script>
+<link rel="stylesheet" href="asset/tracker/goals-ui-corrections.css?v=goals-20261115-r1">
+<link rel="stylesheet" href="asset/tracker/workspace-progress-ring.css?v=goals-loader-20261115-r1">
+</head>
+<body class="goals-ui" data-ui-release="20261114-v3">
+
+<!-- ========================= -->
+<!-- Section 1: Your Project  -->
+<!-- ========================= -->
+<section id="tab-goals" class="glass p-6 space-y-6">
+  <div class="flex justify-between items-center">
+    <h2 class="text-xl font-semibold">📊 Goals Analytics Dashboard</h2>
+	
+    <button id="toggleView" class="glass px-4 py-2 rounded-lg text-sm">Switch to Table View</button>
+  </div>
+  <p class="text-soft">Recorded goals and contribution history. Missing history is shown explicitly.</p>
+  <div class="glass p-4">
+    <h3 class="font-medium mb-2">⏳ Upcoming Deadlines</h3>
+    <div id="timeline" class="flex gap-6 overflow-x-auto text-xs"></div>
+  </div>
+  
+  <div class="glass p-5">
+    <h2 class="font-semibold mb-3">🚦 Status Buckets</h2>
+    <div id="buckets" class="grid-auto"></div>    
+  </div>
+
+
+  
+
+  <div id="goalsWrap" class="grid md:grid-cols-3 gap-4"></div>
+  <div id="goalsTable" class="hidden overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="text-soft"><tr><th class="px-3 py-2 text-left">Goal</th><th class="px-3 py-2 text-left">Type</th><th class="px-3 py-2 text-right">Target</th><th class="px-3 py-2 text-right">Current</th><th class="px-3 py-2 text-left w-64">Progress</th><th class="px-3 py-2 text-left">Days Left</th><th class="px-3 py-2 text-left">Badges</th></tr></thead>
+      <tbody id="goalsTableBody"></tbody>
+    </table>
+  </div>  
+</section>
+
+<!-- ========================= -->
+<!-- Section 2: Analytics     -->
+<!-- ========================= -->
+<section class="space-y-6 mt-8">
+
+
+
+
+  <!-- Trend + Breakdown -->
+  <section class="grid md:grid-cols-3 gap-4 goals-trend-type-layout">
+    <div class="glass p-5 md:col-span-2">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="font-semibold">📈 Trend (Multi-goal)</h2>
+        <div class="text-xs text-soft">Actual progress by date</div>
+      </div>
+      <canvas id="trendChart" height="320"></canvas><div id="goals-trend-legend" class="goals-name-legend"></div>
+    </div>
+    <div class="glass p-5">
+      <h2 class="font-semibold mb-2">⚖️ Goal Type Breakdown</h2>
+      <canvas id="typeBreakdown" height="340"></canvas><div id="goals-type-legend" class="goals-name-legend"></div><p class="goals-note">Tap a segment or type badge to review its goals. Amount mode compares targets within the selected currency; it does not sum account balances.</p>
+      <div class="mt-3 text-xs text-soft" id="velocityBox"></div>
+      <div class="mt-2 gauge"><span id="consistencyBar"></span></div>
+      <div class="text-xs mt-1"><span id="consistencyLabel"></span></div>
+    </div>
+  </section>
+
+  <!-- Burndown + Heatmap -->
+  <section class="grid md:grid-cols-2 gap-4">
+    <div class="glass p-5">
+      <h2 class="font-semibold mb-2" id="leaderboard">⏳ Burndown Forecast (Selected Goal)</h2>
+      <select id="goalPicker" class="glass px-2 py-1 rounded text-sm mb-3"></select>
+      <div id="goals-burndown-legend" class="goals-name-legend"></div><canvas id="burndownChart" height="320"></canvas>
+      <div id="forecastNote" class="text-xs text-soft mt-2"></div>
+    </div>
+    <div class="glass p-5">
+      <h2 class="font-semibold mb-2">📆 Milestone Heatmap</h2>
+      <div id="heatmapLegend" class="text-xs text-soft mb-2">Recorded crossings: 0 · 1 · 2 · 3+ per day. Tap to review goals and dates.</div>
+      <div class="goals-heat-controls"><button type="button" data-mr-action="goal-heat-prev" aria-label="Previous heatmap month">‹</button><strong id="goals-heat-month"></strong><button type="button" data-mr-action="goal-heat-next" aria-label="Next heatmap month">›</button></div><div class="goals-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div id="calendar" class="calendar"></div>
+      <div id="heatmapInfo" class="text-xs mt-3"></div>
+    </div>
+  </section>
+
+  <!-- Recommendations + Analytics Timeline -->
+  <section class="grid md:grid-cols-2 gap-4">
+    <div class="glass p-5">
+      <h2 class="font-semibold mb-3">💡 Recommendations</h2>
+      <ul id="recoList" class="text-sm space-y-2"></ul>
+    </div>
+    <div class="glass p-5">
+      <h2 class="font-semibold mb-2">🧭 Analytics Timeline (Deadlines)</h2>
+      <div id="analyticsTimeline" class="flex gap-6 overflow-x-auto text-xs"></div>
+    </div>
+  </section>
+</section>
+
+
+
+
+
+<script src="asset/tracker/original-five-planner.js?v=20261114-v3"></script>
+<script src="asset/tracker/original-five-core.js?v=20261114-v3"></script>
+<script src="asset/tracker/goals-view-core.js?v=goals-20261115-r1"></script>
+<script src="asset/tracker/goals-report-common.js?v=goals-20261115-r1"></script>
+<script src="asset/tracker/original-five-goal-view.js?v=goals-20261115-r1"></script>
+<script src="asset/tracker/original-five-goal-reports.js?v=goals-20261115-r1"></script>
+<script src="asset/tracker/tracker-ui-v3.js?v=20261114-v3"></script>
+<script src="asset/tracker/goals-ui-corrections.js?v=goals-20261115-r1"></script>
+<script src="asset/tracker/workspace-progress-ring.js?v=goals-loader-20261115-r1"></script>
+</body>
+</html>

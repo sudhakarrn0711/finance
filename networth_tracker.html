@@ -1,0 +1,2214 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+<script src="asset/tracker/tracker-feedback.js?v=20261114-v3"></script>
+<script src="asset/tracker/tracker-navigation.js?v=20261114-v3"></script>
+<script src="asset/tracker/app-shell.js?v=20261114-v3"></script>
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Net Worth — Full Insights (Glassmorphism)</title>
+
+  <!-- Chart.js v3.x + Treemap -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+  
+  
+
+  <script src="asset/tracker/config.js?v=20261114-v3"></script>
+
+  <!-- flatpickr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+  
+
+  <!-- Lucide icons (optional) -->
+  
+
+  <style>
+    :root {
+      --bg: #06060a;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.06);
+      --accent: #8b5cf6;
+      --pos: #34d399;
+      --neg: #fb7185;
+      --muted: #97a0ac;
+      --glass-radius: 12px;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:
+        radial-gradient(800px 400px at 10% 10%, rgba(139, 92, 246, .035), transparent 8%),
+        linear-gradient(180deg, #05060a 0%, #0b0d12 100%);
+      color: #e6eef8;
+    }
+
+    .container {
+      max-width: 1250px;
+      margin: 18px auto;
+      padding: 16px
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px
+    }
+
+    .title {
+      font-size: 20px
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      padding: 8px 12px;
+      border-radius: 10px;
+      color: inherit;
+      cursor: pointer
+    }
+
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03)
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px
+    }
+
+    .tab {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+    }
+
+    .tab.active {
+      box-shadow: 0 8px 30px rgba(139, 92, 246, .12);
+      border-color: rgba(139, 92, 246, .18);
+      background: linear-gradient(180deg, rgba(139, 92, 246, .14), rgba(139, 92, 246, .06));
+      color: #fff
+    }
+
+    /* grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+      margin-top: 16px
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--glass-radius);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .6);
+      padding: 12px
+    }
+
+    .kpi {
+      grid-column: span 3
+    }
+
+    .kpi .label {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .kpi .value {
+      font-weight: 700;
+      font-size: 20px
+    }
+
+    .main-left {
+      grid-column: span 7;
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    .main-right {
+      grid-column: span 5;
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    .small {
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .legend {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    .list-compact>div {
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.03);
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .progress {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 999px;
+      overflow: hidden
+    }
+
+    .progress>i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--pos))
+    }
+
+    .stacked {
+      display: flex;
+      gap: 6px;
+      align-items: center
+    }
+
+    .stacked .seg {
+      height: 18px;
+      border-radius: 6px
+    }
+
+    /* responsiveness */
+    @media (max-width:900px) {
+      .grid {
+        grid-template-columns: repeat(6, 1fr)
+      }
+
+      .kpi {
+        grid-column: span 6
+      }
+
+      .main-left {
+        grid-column: span 6
+      }
+
+      .main-right {
+        grid-column: span 6
+      }
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Base KPI Card */
+    .card.kpi {
+      background: #0d0d0d;
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 1px solid transparent;
+    }
+
+    /* Label, Value, Small text */
+    .card.kpi .label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+    }
+
+    .card.kpi .value {
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    .card.kpi .small {
+      font-size: 0.8rem;
+      opacity: 0.75;
+    }
+
+    /* === THEMES === */
+    /* KPI Theme Classes */
+    .kpi--green {
+      border: 1px solid rgba(16, 185, 129, 0.6);
+      color: rgb(16, 185, 129);
+    }
+
+    .kpi--green:hover {
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.55);
+      border-color: rgba(16, 185, 129, 0.9);
+      color: rgb(20, 255, 170);
+    }
+
+    .kpi--red {
+      border: 1px solid rgba(244, 63, 94, 0.6);
+      color: rgb(244, 63, 94);
+    }
+
+    .kpi--red:hover {
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.55);
+      border-color: rgba(244, 63, 94, 0.9);
+      color: rgb(255, 120, 140);
+    }
+
+    .kpi--balance {
+      border: 1px solid rgba(139, 92, 246, 0.6);
+      color: rgb(139, 92, 246);
+    }
+
+    .kpi--balance:hover {
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.55);
+      border-color: rgba(139, 92, 246, 0.9);
+      color: rgb(180, 130, 255);
+    }
+
+    /* Fade-in / glow effect on hover */
+    .card.kpi {
+      transition: all 0.4s ease, transform 0.4s ease, opacity 0.4s ease;
+      opacity: 0.85;
+    }
+
+    .card.kpi:hover {
+      opacity: 1;
+      transform: translateY(-4px);
+      box-shadow: 0 0 18px rgba(255, 255, 255, 0.15);
+    }
+
+    /* All text inside card inherits theme */
+    .card.kpi .label,
+    .card.kpi .value,
+    .card.kpi .small {
+      color: inherit !important;
+    }
+
+
+    .metric-card:hover .label,
+    .metric-card:hover .value,
+    .metric-card:hover .small {
+      filter: brightness(1.2);
+    }
+
+    /* helper */
+    .center {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+
+    .liab-wrap {
+      max-width: 1200px;
+      margin: 18px auto;
+      padding: 8px
+    }
+
+    .liab-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px
+    }
+
+    .liab-header .liab-title {
+      font-size: 20px;
+      font-weight: 700
+    }
+
+    .liab-header .liab-sub {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .liab-grid {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 18px
+    }
+
+    .liab-card {
+      background: var(--card-bg);
+      border-radius: var(--glass-radius);
+      padding: 14px;
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px) saturate(140%);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6)
+    }
+
+    /* loan rows */
+    .liab-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, border .2s ease, background .2s ease;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.02);
+      /* slight base background */
+    }
+
+    .liab-row:hover {
+      transform: scale(1.02);
+      backdrop-filter: blur(4px) brightness(1.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Border colors stay same as before */
+    .liab-row.low:hover {
+      border: 1px solid rgba(239, 68, 68, 0.6);
+    }
+
+    .liab-row.mid:hover {
+      border: 1px solid rgba(245, 158, 11, 0.6);
+    }
+
+    .liab-row.high:hover {
+      border: 1px solid rgba(16, 185, 129, 0.6);
+    }
+
+    .liab-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .liab-name {
+      font-weight: 700
+    }
+
+    .liab-small {
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .liab-progress {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px
+    }
+
+    .liab-progress>i {
+      display: block;
+      height: 100%;
+      transition: width .6s ease
+    }
+
+    .liab-progress>i.low {
+      background: linear-gradient(90deg, #ef4444, #f97316)
+    }
+
+    .liab-progress>i.mid {
+      background: linear-gradient(90deg, #f59e0b, #fbbf24)
+    }
+
+    .liab-progress>i.high {
+      background: linear-gradient(90deg, #10b981, #34d399)
+    }
+
+    .liab-meta {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: right
+    }
+
+    /* modal */
+    .liab-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 120
+    }
+
+    .liab-modal-backdrop.show {
+      display: flex;
+      background: rgba(2, 6, 23, 0.6)
+    }
+
+
+    /* Keyframes for glow effect */
+    @keyframes liab-glow {
+      0% {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 255, 255, 0.1);
+      }
+
+      50% {
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(255, 255, 255, 0.15);
+      }
+
+      100% {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    /* Modal with glow */
+    .liab-modal {
+      width: 720px;
+      max-width: 94%;
+      background: rgba(17, 17, 17, 0.7);
+      backdrop-filter: blur(14px) saturate(180%);
+      -webkit-backdrop-filter: blur(14px) saturate(180%);
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      animation: liab-glow 3s ease-in-out infinite;
+      /* animated glow */
+    }
+
+    .liab-modal h3 {
+      margin: 0 0 8px 0;
+      color: #f9fafb
+    }
+
+    .liab-modal .liab-close {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #f9fafb;
+      transition: all .2s
+    }
+
+    .liab-modal .liab-close:hover {
+      background: rgba(255, 255, 255, 0.1)
+    }
+
+    /* modal text colors */
+    .val-principal {
+      color: #e5e7eb
+    }
+
+    .val-outstanding {
+      color: #f87171
+    }
+
+    .val-emi {
+      color: #facc15
+    }
+
+    .val-rate {
+      color: #60a5fa
+    }
+
+    .val-tenure,
+    .val-date {
+      color: #d1d5db
+    }
+
+    /* responsive */
+    @media (max-width:900px) {
+      .liab-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* layout */
+    .tac-wrap {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 16px
+    }
+
+    .tac-head {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 16px
+    }
+
+    .tac-title {
+      font-size: 22px;
+      font-weight: 800
+    }
+
+    .tac-sub {
+      color: var(--tac-muted);
+      font-size: 13px
+    }
+
+    .tac-spacer {
+      flex: 1
+    }
+
+    /* badges */
+    .tac-badges {
+      display: flex;
+      gap: 10px;
+      align-items: center
+    }
+
+    .tac-badge {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--tac-card-border);
+      font-size: 13px;
+    }
+
+    .tac-badge .tac-lbl {
+      color: #9fb0d1;
+      font-weight: 600;
+    }
+
+    .tac-badge .tac-val {
+      font-weight: 800;
+      background: linear-gradient(90deg, #7c3aed, #06b6d4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* grid & cards */
+    .tac-grid {
+      display: grid;
+      grid-template-columns: 56% 44%;
+      gap: 16px;
+    }
+
+    .tac-card {
+      background: var(--tac-card);
+      border: 1px solid var(--tac-card-border);
+      border-radius: var(--tac-radius);
+      padding: 14px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+      backdrop-filter: blur(12px) saturate(140%);
+    }
+
+    .tac-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .tac-small {
+      color: var(--tac-muted);
+      font-size: 12px;
+    }
+
+    /* legend chips */
+    .tac-legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* search + clear */
+    .tac-filters {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tac-search {
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .tac-input {
+      width: 90%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--tac-card-border);
+      color: var(--tac-text);
+    }
+
+    .tac-chip {
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--tac-card-border);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--tac-text);
+      cursor: pointer;
+    }
+
+    /* table */
+    .tac-table-wrap {
+      overflow: auto;
+    }
+
+    table.tac-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 12px;
+    }
+
+    table.tac-table thead th {
+      text-align: left;
+      color: #b7c1cf;
+      font-size: 12px;
+      padding: 6px 8px;
+    }
+
+    table.tac-table tbody td {
+      padding: 10px 12px;
+
+      background: rgba(255, 255, 255, 0.02);
+      vertical-align: middle;
+      color: var(--tac-text);
+    }
+
+    /* Row border, radius 8px — full border surrounding row (no bg change on hover) */
+    table.tac-table tbody tr {
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: var(--tac-row-radius);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    /* ensure first/last cell show rounded corners visually */
+    table.tac-table tbody tr td:first-child {
+      border-top-left-radius: var(--tac-row-radius);
+      border-bottom-left-radius: var(--tac-row-radius);
+    }
+
+    table.tac-table tbody tr td:last-child {
+      border-top-right-radius: var(--tac-row-radius);
+      border-bottom-right-radius: var(--tac-row-radius);
+    }
+
+    /* the pill */
+    .tac-pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.01);
+      font-weight: 600;
+    }
+
+    /* Hover: NO background change — only border (and glow) using CSS vars set inline by JS */
+    table.tac-table tbody tr:hover {
+      border-color: var(--tac-row-color);
+      box-shadow: 0 0 14px var(--tac-row-glow);
+      transform: translateY(-3px);
+    }
+
+    .tac-right {
+      text-align: right;
+    }
+
+    /* modal */
+    .tac-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 50;
+    }
+
+    .tac-modal {
+      width: min(1000px, 96vw);
+      background: linear-gradient(180deg, rgba(10, 10, 12, 0.96), rgba(10, 10, 12, 0.92));
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      box-shadow: 0 40px 120px rgba(0, 0, 0, .7);
+    }
+
+    .tac-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .tac-modal-kpis {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .tac-modal-kpi {
+      padding: 10px 12px;
+      border-radius: 10px;
+      min-width: 160px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      transition: box-shadow .18s ease, transform .18s ease;
+    }
+
+    .tac-modal-kpi:hover {
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.03);
+      transform: translateY(-3px);
+    }
+
+    .tac-modal-chart {
+      width: 100%;
+      height: 420px;
+    }
+
+    @media (max-width:980px) {
+      .tac-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table.tac-table tbody tr td:first-child,
+      table.tac-table tbody tr td:last-child {
+        border-radius: 8px;
+      }
+    }
+
+    :root {
+      --ru-bg: #0a0b10;
+      --ru-card: rgba(255, 255, 255, 0.04);
+      --ru-border: rgba(255, 255, 255, 0.08);
+      --ru-muted: #9da9bb;
+      --ru-text: #e8eef7;
+      --ru-radius: 14px;
+      --ru-row-radius: 8px;
+      --ru-good: #10b981;
+      /* income */
+      --ru-bad: #ef4444;
+      /* expense */
+      --ru-blue: #60a5fa;
+      /* other */
+      --ru-accent: #8b5cf6;
+    }
+
+    .ru-page {
+      max-width: 1200px;
+      margin: 28px auto;
+      padding: 18px
+    }
+
+    .ru-hdr {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px
+    }
+
+    .ru-title {
+      font-size: 20px;
+      font-weight: 700
+    }
+
+    .ru-sub {
+      color: var(--ru-muted);
+      font-size: 13px;
+      margin-top: 4px
+    }
+
+    .ru-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 16px
+    }
+
+    @media (max-width:1100px) {
+      .ru-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .ru-card {
+      background: var(--ru-card);
+      border: 1px solid var(--ru-border);
+      border-radius: var(--ru-radius);
+      padding: 14px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px) saturate(140%);
+    }
+
+    /* filters */
+    .ru-filters {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px
+    }
+
+    .ru-search {
+      flex: 1;
+      min-width: 180px
+    }
+
+    .ru-input,
+    .ru-select,
+    .ru-btn {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--ru-border);
+      color: var(--ru-text);
+      outline: none;
+      color-scheme: dark;
+    }
+
+    .ru-select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+
+    /* ensure native dropdown list is dark & readable */
+    .ru-select option {
+      background: var(--ru-bg);
+      color: var(--ru-text);
+    }
+
+    /* placeholder readability */
+    .ru-input::placeholder {
+      color: #c9d2df;
+      opacity: .75;
+    }
+
+    .ru-btn {
+      cursor: pointer
+    }
+
+    /* table */
+    .ru-table-wrap {
+      overflow: auto
+    }
+
+    table.ru-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 12px
+    }
+
+    table.ru-table thead th {
+      text-align: left;
+      color: #b7c1cf;
+      font-size: 12px;
+      padding: 8px 10px
+    }
+
+    table.ru-table tbody td {
+      padding: 12px 10px;
+      vertical-align: middle;
+      color: var(--ru-text)
+    }
+
+    table.ru-table tbody tr {
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: var(--ru-row-radius);
+      transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+      background: transparent;
+    }
+
+    table.ru-table tbody tr td:first-child {
+      border-top-left-radius: var(--ru-row-radius);
+      border-bottom-left-radius: var(--ru-row-radius)
+    }
+
+    table.ru-table tbody tr td:last-child {
+      border-top-right-radius: var(--ru-row-radius);
+      border-bottom-right-radius: var(--ru-row-radius)
+    }
+
+    table.ru-table tbody tr:hover {
+      border-color: var(--ru-row-color);
+      box-shadow: 0 12px 36px var(--ru-row-glow);
+      transform: translateY(-3px);
+    }
+
+    .ru-pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.01);
+      font-weight: 700
+    }
+
+    .ru-right {
+      text-align: right
+    }
+
+    /* type colors */
+    .ru-income {
+      color: var(--ru-good);
+      font-weight: 700
+    }
+
+    .ru-expense {
+      color: var(--ru-bad);
+      font-weight: 700
+    }
+
+    .ru-other {
+      color: var(--ru-blue);
+      font-weight: 700
+    }
+
+    /* KPI metric cards (gradient styles) */
+    .metric-card {
+      background: #0d0d0d;
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 1px solid transparent;
+    }
+
+    .metric-card .label {
+      font-size: 12px;
+      opacity: .9
+    }
+
+    .metric-card .value {
+      font-weight: 800;
+      font-size: 20px;
+      margin-top: 6px
+    }
+
+    .metric-card.income {
+      border: 1px solid rgba(16, 185, 129, 0.6);
+      color: rgb(16, 185, 129);
+
+    }
+
+    .metric-card.income:hover {
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.55);
+      border-color: rgba(16, 185, 129, 0.9);
+      color: rgb(20, 255, 170);
+    }
+
+    .metric-card.expense {
+      border: 1px solid rgba(244, 63, 94, 0.6);
+      color: rgb(244, 63, 94);
+    }
+
+    .metric-card.expense:hover {
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.55);
+      border-color: rgba(244, 63, 94, 0.9);
+      color: rgb(255, 120, 140);
+    }
+
+    .metric-card.balance {
+      border: 1px solid rgba(139, 92, 246, 0.6);
+      color: rgb(139, 92, 246);
+    }
+
+    .metric-card.balance:hover {
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.55);
+      border-color: rgba(139, 92, 246, 0.9);
+      color: rgb(180, 130, 255);
+    }
+
+    .metric-card {
+      transition: all 0.4s ease, transform 0.4s ease, opacity 0.4s ease;
+      opacity: 0.85;
+    }
+
+    .metric-card:hover {
+      opacity: 1;
+      transform: translateY(-4px);
+      box-shadow: 0 0 18px rgba(255, 255, 255, 0.15);
+    }
+
+    .ru-summary .ru-kpis {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px
+    }
+
+    /* modal */
+    /* modal */
+    .ru-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 999;
+    }
+
+    .ru-modal {
+      width: min(1000px, 96vw);
+      max-height: 90vh;
+      /* prevent modal from overflowing viewport */
+      display: flex;
+      flex-direction: column;
+      /* allow header fixed, body scroll */
+      border-radius: 12px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(10, 10, 12, 0.96), rgba(10, 10, 12, 0.92));
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+    }
+
+    .ru-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+      /* header never shrinks */
+    }
+
+    .ru-modal-body {
+      overflow-y: auto;
+      flex: 1;
+      /* take remaining space */
+      min-height: 0;
+      /* fixes flexbox overflow */
+      padding-right: 4px;
+      /* space for scrollbar */
+    }
+
+
+    .ru-modal .ru-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px
+    }
+
+    .ru-modal .ru-mkpi {
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03)
+    }
+
+    .ru-empty {
+      color: var(--ru-muted);
+      padding: 20px;
+      text-align: center
+    }
+
+    /* Quick filter buttons */
+    #ru-f-income {
+      background: #0d0d0d;
+      border: 1px solid rgba(16, 185, 129, 0.6);
+      color: rgb(16, 185, 129);
+    }
+
+    #ru-f-income:hover {
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.55);
+      border-color: rgba(16, 185, 129, 0.9);
+      color: rgb(20, 255, 170);
+    }
+
+    #ru-f-expense {
+      background: #0d0d0d;
+      border: 1px solid rgba(244, 63, 94, 0.6);
+      color: rgb(244, 63, 94);
+    }
+
+    #ru-f-expense:hover {
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.55);
+      border-color: rgba(244, 63, 94, 0.9);
+      color: rgb(255, 120, 140);
+    }
+
+    #ru-f-today {
+      background: #0d0d0d;
+      border: 1px solid rgba(139, 92, 246, 0.6);
+      color: rgb(139, 92, 246);
+    }
+
+    #ru-f-today:hover {
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.55);
+      border-color: rgba(139, 92, 246, 0.9);
+      color: rgb(180, 130, 255);
+    }
+
+    #ru-f-month {
+      background: #0d0d0d;
+      border: 1px solid #f472b6;
+      color: #f472b6;
+    }
+
+    #ru-f-month:hover {
+      box-shadow: 0 0 15px #f472b6;
+      border-color: #f472b6;
+      color: #f472b6;
+    }
+
+
+    :root {
+      --proj-bg: #08090c;
+      --proj-card: rgba(255, 255, 255, 0.03);
+      --proj-border: rgba(255, 255, 255, 0.06);
+      --proj-muted: #9aa6b6;
+      --proj-text: #e8eef7;
+      --proj-accent: #8b5cf6;
+      --proj-green: #10b981;
+      --proj-red: #ef4444;
+      --proj-radius: 14px;
+      --proj-neon: rgba(139, 92, 246, 0.14);
+    }
+
+
+    .proj-wrap {
+      max-width: 1240px;
+      margin: 24px auto;
+      padding: 16px
+    }
+
+    .proj-hdr {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px
+    }
+
+    .proj-title {
+      font-size: 20px;
+      font-weight: 800
+    }
+
+    .proj-sub {
+      color: var(--proj-muted);
+      font-size: 13px;
+      margin-top: 6px
+    }
+
+    .proj-grid {
+      display: grid;
+      grid-template-columns: 430px 1fr;
+      gap: 16px
+    }
+
+    @media (max-width:1100px) {
+      .proj-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .proj-card {
+      background: var(--proj-card);
+      border-radius: var(--proj-radius);
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px) saturate(140%);
+    }
+
+    /* baseline tiles */
+    .proj-baseline {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px
+    }
+
+    .proj-baseline .proj-tile {
+      background: #0d0d0d;
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 1px solid transparent;
+    }
+
+    .proj-tile {
+      transition: all 0.4s ease, transform 0.4s ease, opacity 0.4s ease;
+      opacity: 0.85;
+    }
+
+    .proj-tile:hover {
+      opacity: 1;
+      transform: translateY(-4px);
+      box-shadow: 0 0 18px rgba(255, 255, 255, 0.15);
+    }
+
+
+    .proj-tile.assets {
+      background: #0d0d0d;
+      border: 1px solid rgba(16, 185, 129, 0.6);
+      color: rgb(16, 185, 129);
+    }
+
+    .proj-tile.assets:hover {
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.55);
+      border-color: rgba(16, 185, 129, 0.9);
+      color: rgb(20, 255, 170);
+    }
+
+    .proj-tile.liabilities {
+      background: #0d0d0d;
+      border: 1px solid rgba(244, 63, 94, 0.6);
+      color: rgb(244, 63, 94);
+    }
+
+    .proj-tile.liabilities:hover {
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.55);
+      border-color: rgba(244, 63, 94, 0.9);
+      color: rgb(255, 120, 140);
+    }
+
+    .proj-tile.networth {
+      background: #0d0d0d;
+      border: 1px solid rgba(139, 92, 246, 0.6);
+      color: rgb(139, 92, 246);
+    }
+
+    .proj-tile.networth:hover {
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.55);
+      border-color: rgba(139, 92, 246, 0.9);
+      color: rgb(180, 130, 255);
+    }
+
+
+    .proj-baseline .proj-label {
+      color: var(--proj-muted);
+      font-size: 12px
+    }
+
+    .proj-baseline .proj-val {
+      font-weight: 900;
+      font-size: 16px;
+      margin-top: 6px
+    }
+
+
+
+
+
+    /* control area */
+    .proj-controls .proj-row {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px
+    }
+
+    .proj-field {
+      display: flex;
+      flex-direction: column;
+      /* stack label and inputs */
+      align-items: flex-start;
+      gap: 6px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .proj-field label {
+      color: var(--proj-muted);
+      font-size: 13px;
+    }
+
+    .proj-input {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(0, 0, 0, 0.25);
+      color: var(--proj-text);
+      min-width: 0;
+    }
+
+    .proj-input[type="range"] {
+      width: 100%;
+      /* let slider stretch nicely */
+    }
+
+
+
+
+    .proj-pills {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px
+    }
+
+    .proj-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.01);
+      cursor: pointer;
+      font-weight: 700
+    }
+
+    .proj-pill.proj-cons {
+      color: var(--proj-green);
+      border-color: rgba(16, 185, 129, 0.12)
+    }
+
+    .proj-pill.proj-base {
+      color: var(--proj-accent);
+      border-color: rgba(139, 92, 246, 0.14)
+    }
+
+    .proj-pill.proj-aggr {
+      color: #fb7185;
+      border-color: rgba(251, 113, 133, 0.12)
+    }
+
+    .proj-controls-footer {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px
+    }
+
+    /* KPI cards (top-right) */
+    .proj-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 12px
+    }
+
+    @media (max-width:900px) {
+      .proj-kpis {
+        grid-template-columns: 1fr
+      }
+    }
+
+
+    .proj-kpi {
+      background: #0d0d0d;
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 1px solid transparent;
+    }
+
+    .proj-kpi {
+      transition: all 0.4s ease, transform 0.4s ease, opacity 0.4s ease;
+      opacity: 0.85;
+    }
+
+    .proj-kpi:hover {
+      opacity: 1;
+      transform: translateY(-4px);
+      box-shadow: 0 0 18px rgba(255, 255, 255, 0.15);
+    }
+
+
+    .proj-kpi.net {
+      background: #0d0d0d;
+      border: 1px solid rgba(16, 185, 129, 0.6);
+      color: rgb(16, 185, 129);
+    }
+
+    .proj-kpi.net:hover {
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.55);
+      border-color: rgba(16, 185, 129, 0.9);
+      color: rgb(20, 255, 170);
+    }
+
+    .proj-kpi.debt {
+      background: #0d0d0d;
+      border: 1px solid rgba(244, 63, 94, 0.6);
+      color: rgb(244, 63, 94);
+    }
+
+    .proj-kpi.debt:hover {
+      box-shadow: 0 0 15px rgba(244, 63, 94, 0.55);
+      border-color: rgba(244, 63, 94, 0.9);
+      color: rgb(255, 120, 140);
+    }
+
+    .proj-kpi.target {
+      background: #0d0d0d;
+      border: 1px solid rgba(139, 92, 246, 0.6);
+      color: rgb(139, 92, 246);
+    }
+
+    .proj-kpi.target {
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.55);
+      border-color: rgba(139, 92, 246, 0.9);
+      color: rgb(180, 130, 255);
+    }
+
+    .proj-kpi.mon {
+      background: #0d0d0d;
+      border: 1px solid #f472b6;
+      color: #f472b6;
+    }
+
+    .proj-kpi.mon:hover {
+      box-shadow: 0 0 15px #f472b6;
+      border-color: #f472b6;
+      color: #f472b6;
+    }
+
+    .proj-kpi .proj-k {
+      color: var(--proj-muted);
+      font-size: 12px
+    }
+
+    .proj-kpi .proj-v {
+      font-weight: 900;
+      font-size: 18px;
+      margin-top: 6px
+    }
+
+
+    .proj-kpi.positive .proj-v {
+      color: var(--proj-green)
+    }
+
+    .proj-kpi.negative .proj-v {
+      color: var(--proj-red)
+    }
+
+    /* chart header */
+    .proj-chart-hdr {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px
+    }
+
+    .proj-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.01);
+      font-size: 13px
+    }
+
+    .proj-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block
+    }
+
+    /* milestones */
+    .proj-milestones .proj-row {
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.01);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px
+    }
+
+    .proj-small {
+      color: var(--proj-muted);
+      font-size: 12px
+    }
+
+    /* hover glow for cards */
+    .proj-card:hover {
+      box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7)
+    }
+
+    .proj-tile:hover {
+      outline: 2px solid var(--proj-neon);
+      box-shadow: 0 12px 36px rgba(139, 92, 246, 0.06)
+    }
+
+    /* buttons */
+    .proj-btn {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.01);
+      color: var(--proj-text);
+      cursor: pointer
+    }
+
+    /* small responsive tweaks */
+    @media (max-width:520px) {
+      .proj-field {
+        flex-direction: column;
+        align-items: flex-start
+      }
+    }
+
+    /* Split KPI colors */
+    .proj-splitA {
+      color: var(--proj-accent);
+      font-weight: 700;
+      margin-right: 8px;
+    }
+
+    .proj-splitB {
+      color: var(--proj-green);
+      font-weight: 700;
+    }
+
+    #proj-kpiTargetSub {
+      color: #999;
+      /* light gray */
+      font-style: italic;
+    }
+  </style>
+  <link rel="stylesheet" href="asset/tracker/app-shell.css?v=20261114-v3">
+<link rel="stylesheet" href="asset/tracker/original-five-additions.css?v=20261114-v3">
+<script src="asset/tracker/original-five-loader.js?v=20261114-v3" defer></script>
+<link rel="stylesheet" href="asset/tracker/tracker-ui-v3.css?v=20261114-v3">
+<script src="asset/tracker/tracker-read-cache.js?v=20261114-v3"></script>
+<link rel="stylesheet" href="asset/tracker/networth-ui-corrections.css?v=wealth-20261114-r2">
+<link rel="stylesheet" href="asset/tracker/workspace-progress-ring.css?v=loader-20261114-r1">
+</head>
+
+<body data-ui-release="20261114-v3">
+  <div class="container">
+    <div class="header">
+      <div>
+        <div class="title">Net Worth — Full Insights</div>
+        <div class="subtitle">Complete suite: KPIs, projections, risk, stress tests & more (glass style)</div>
+      </div>
+      <div class="controls">
+        <div class="pill" id="period">Last 12 months</div>
+        <button class="btn" id="reload">
+          <span class="label">🔄 Reload</span>
+          <span class="spinner" style="display:none;margin-left:6px;border:2px solid #ccc;
+               border-top:2px solid #8b5cf6;border-radius:50%;
+               width:12px;height:12px;animation:spin 1s linear infinite;">
+          </span>
+        </button>
+        <button class="btn" id="export">⬇ Export CSV</button>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="report tabs" style="margin-top:12px">
+      <div class="tab active" data-tab="core">Core Reports</div>
+      <div class="tab" data-tab="adv">Advanced Insights</div>
+    </div>
+
+    <!-- CORE -->
+    <div id="core" class="tab-panel" style="margin-top:12px">
+      <div class="grid">
+        <!-- KPIs -->
+        <div id="netWorthCard" class="card kpi kpi--balance">
+          <div class="label">Net Worth</div>
+          <div id="netWorth" class="value">—</div>
+          <div class="small">Δ month: <span id="netDelta">—</span></div>
+        </div>
+
+        <div id="assetsCard" class="card kpi kpi--green">
+          <div class="label">Total Assets</div>
+          <div id="totalAssets" class="value">—</div>
+          <div class="small nw-liquidity-summary"><span class="nw-pill">Liquidity</span><span id="liquidPct">—</span></div>
+        </div>
+
+        <div id="liabCard" class="card kpi kpi--red">
+          <div class="label">Total Liabilities</div>
+          <div id="totalLiab" class="value">—</div>
+          <div class="small">Debt ratio: <span id="debtRatio">—</span></div>
+        </div>
+
+        <div id="changeCard" class="card kpi kpi--balance">
+          <div class="label">Change (MoM / YoY)</div>
+          <div class="nw-period-grid"><div id="momChange">—</div><div id="yoyChange">—</div></div>
+          <div class="small">Changes use actual recorded comparison dates.</div>
+        </div>
+
+        <!-- Historical Net Worth full-width with adjusted columns -->
+        <div class="card" style="grid-column: span 12">
+          <div class="liab-wrap">
+            <div class="liab-header">
+              <div>
+                <div class="liab-title">Historical Net Worth</div>
+                <div class="liab-sub">Monthly trend, pace & allocation</div>
+              </div>
+              <div style="margin-left:auto" class="liab-small">Currency: INR</div>
+            </div>
+
+            <div class="liab-grid nw-history-grid" style="grid-template-columns: 40% 60%; width: 100%;">
+
+              <!-- Left: Historical trend -->
+              <div class="liab-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                  <strong>Net Worth Trend</strong>
+                  <div class="liab-small">Historical growth</div>
+                </div>
+                <canvas id="chartHistory" height="260"></canvas><p id="nw-history-context" class="nw-context"></p>
+              </div>
+
+              <!-- Right: Split into Pace + Allocation inside full right column -->
+              <div style="display:grid;grid-template-columns: 1fr 1fr;gap:12px;">
+                <!-- Recorded Pace -->
+                <div class="liab-card">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <strong>Recorded Pace</strong>
+                    <div class="liab-small">Growth Speed</div>
+                  </div>
+                  <canvas id="chartPace" height="260"></canvas><p id="nw-pace-context" class="nw-context"></p>
+                </div>
+
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+
+<div class="card ui-allocation" style="grid-column:span 12">                <!-- Asset Allocation -->
+                <div class="liab-card ui-allocation">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <strong>Asset Allocation</strong>
+                    <div class="liab-small">Current Mix</div>
+                  </div>
+                  <canvas id="chartAlloc" height="320"></canvas>
+                  <div id="allocLegend" class="legend small" style="margin-top:8px"></div>
+                </div></div>
+
+        <!-- alerts table -->
+        <div class="card" style="grid-column: span 12">
+          <div class="liab-wrap">
+            <div class="liab-header">
+              <div>
+                <div class="liab-title">Liability Breakdown</div>
+                <div class="liab-sub">Outstanding balances, EMIs & quick comparison (click a row for full details)</div>
+              </div>
+            </div>
+
+            <div class="liab-grid">
+              <!-- left: list -->
+              <div class="liab-card" id="liab-list-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <strong>Loans & Liabilities</strong>
+                  <span class="liab-small">Click a row for details</span>
+                </div>
+                <div id="liab-list"></div>
+                <div id="liab-empty" class="liab-small" style="display:none;color:var(--muted);margin-top:8px">No
+                  liabilities found</div>
+              </div>
+
+              <!-- right: chart -->
+              <div class="liab-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                  <strong>Comparison — Paid vs Outstanding</strong>
+                  <div class="liab-small">Visual comparison</div>
+                </div>
+                <canvas id="liab-chart" height="240"></canvas>
+                <div style="margin-top:10px" class="liab-small">Legend: <span style="color:#10b981">Paid</span> • <span
+                    style="color:#ef4444">Outstanding</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal -->
+          <div id="liab-modal-backdrop" class="liab-modal-backdrop" role="dialog" aria-modal="true">
+            <div class="liab-modal" role="document">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <h3 id="liab-modal-title">Loan details</h3>
+                <button id="liab-modal-close" class="liab-close">Close</button>
+              </div>
+              <div id="liab-modal-body"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top asset table start-->
+
+        <div class="card" style="grid-column: span 12">
+
+          <div class="tac-head">
+            <div>
+              <div class="tac-title">Top Asset Categories</div>
+              <div class="tac-sub">Black glass • click slice/row to drilldown • dynamic colors & tooltips</div>
+            </div>
+            <div class="tac-spacer"></div>
+
+            <div class="tac-badges" aria-hidden="false">
+              <div class="tac-badge"><span class="tac-lbl">Total Assets</span><span id="tac-totalValue"
+                  class="tac-val">—</span>
+              </div>
+              <div class="tac-badge"><span class="tac-lbl">Currency</span><span class="tac-val"
+                  style="background:none;color:var(--tac-muted)">INR</span></div>
+            </div>
+          </div>
+
+          <div class="tac-grid">
+            <div class="tac-card">
+              <div class="tac-card-head">
+                <div><strong>Category Distribution</strong>
+                  <div class="tac-small">Donut — hover & click</div>
+                </div>
+                <div></div>
+              </div>
+
+              <div id="tac-donut" style="height:380px"></div>
+              <div style="height:12px"></div>
+              <div id="tac-legend" class="tac-legend"></div>
+            </div>
+
+            <div class="tac-card">
+              <div class="tac-card-head">
+                <div><strong>Category Details</strong></div>
+                <div class="tac-small">Sort • Search • Toggle</div>
+              </div>
+
+              <div class="tac-filters" style="margin-bottom:10px">
+                <div class="tac-search"><input id="tac-search" class="tac-input" placeholder="Search category..." />
+                </div>
+                <div><button id="tac-clear" class="tac-chip">Clear</button></div>
+                <div style="margin-left:auto;display:flex;gap:8px">
+                  <button id="tac-toggle" class="tac-chip">Show %</button>
+                  <button id="tac-sort" class="tac-chip">Sort: Amount ▼</button>
+                </div>
+              </div>
+
+              <div class="tac-table-wrap">
+                <table class="tac-table" aria-label="Top asset categories">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th class="tac-right">Amount</th>
+                      <th class="tac-right">% of Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tac-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal -->
+        <div id="tac-modalBackdrop" class="tac-modal-backdrop" role="dialog" aria-hidden="true">
+          <div class="tac-modal" role="document" aria-modal="true">
+            <div class="tac-modal-header">
+              <div><strong id="tac-modalTitle">Category Trend</strong>
+                <div class="tac-small" id="tac-modalSubtitle"></div>
+              </div>
+              <div><button id="tac-modalClose" class="tac-chip">Close</button></div>
+            </div>
+
+            <div id="tac-modalKpis" class="tac-modal-kpis"></div>
+            <div id="tac-modalChart" class="tac-modal-chart"></div>
+            <div class="tac-small" id="tac-modalHint" style="margin-top:8px;color:var(--tac-muted)"></div>
+          </div>
+        </div>
+
+        <!-- Top asset table end -->
+
+
+
+
+
+        <!-- Recent update start -->
+
+        <div class="card" style="grid-column: span 12">
+          <div class="ru-hdr">
+            <div>
+              <div class="ru-title">Recent Updates — Transactions</div>
+              <div class="ru-sub">Live from your script (action=getData) • Glass UI • filters • drilldown</div>
+            </div>
+          </div>
+
+          <div class="ru-grid">
+            <!-- Left: CATEGORY-GROUPED table -->
+            <div class="ru-card">
+              <div class="ru-filters">
+                <div class="ru-search"><input id="ru-search" class="ru-input"
+                    placeholder="Search description / account / category..." /></div>
+
+                <select id="ru-type" class="ru-select" aria-label="Filter by type">
+                  <option value="">All types</option>
+                  <option value="income">Income</option>
+                  <option value="expense">Expense</option>
+                  <option value="other">Other</option>
+                </select>
+
+                <select id="ru-category" class="ru-select" aria-label="Filter by category">
+                  <option value="">All categories</option>
+                </select>
+
+                <input id="ru-date" class="ru-input" placeholder="Date range" style="width:190px"
+                  aria-label="Date range" />
+
+                <button id="ru-clear" class="ru-btn" aria-label="Clear filters">Clear</button>
+
+                <div style="margin-left:auto;display:flex;gap:8px">
+                  <button id="ru-sort" class="ru-btn" aria-label="Cycle sort">Sort: Net ▼</button>
+                </div>
+              </div>
+
+              <div class="ru-table-wrap">
+                <table class="ru-table" aria-label="Category summary">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th style="width:120px">Transactions</th>
+                      <th class="ru-right" style="width:140px">Income</th>
+                      <th class="ru-right" style="width:140px">Expense</th>
+                      <th class="ru-right" style="width:140px">Net</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ru-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right: summary -->
+            <div class="ru-summary">
+              <div class="ru-card">
+                <div class="ru-kpis">
+                  <div class="metric-card income">
+                    <div class="label">Total Income</div>
+                    <div id="ru-totalIncome" class="value">—</div>
+                  </div>
+                  <div class="metric-card expense">
+                    <div class="label">Total Expense</div>
+                    <div id="ru-totalExpense" class="value">—</div>
+                  </div>
+                  <div class="metric-card balance">
+                    <div class="label">Net Change</div>
+                    <div id="ru-netChange" class="value">—</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ru-card">
+                <div style="font-weight:700;margin-bottom:8px">Quick filters</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <button id="ru-f-income" class="ru-btn">Income</button>
+                  <button id="ru-f-expense" class="ru-btn">Expense</button>
+                  <button id="ru-f-today" class="ru-btn">Today</button>
+                  <button id="ru-f-month" class="ru-btn">This month</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal -->
+        <div id="ru-modalBackdrop" class="ru-modal-backdrop" role="dialog" aria-hidden="true">
+          <div class="ru-modal" role="document">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div>
+                <div id="ru-modalTitle" style="font-weight:700"></div>
+                <div id="ru-modalSub" style="color:var(--ru-muted);font-size:13px"></div>
+              </div>
+              <div><button id="ru-modalClose" class="ru-btn">Close</button></div>
+            </div>
+
+            <div id="ru-modalKpis" class="ru-meta"></div>
+            <div id="ru-modalChart" style="width:100%;height:360px"></div>
+
+            <div class="ru-table-wrap" style="margin-top:10px;max-height:320px;overflow:auto">
+              <table class="ru-table" aria-label="Transactions for selected category" style="border-spacing:0">
+                <thead>
+                  <tr>
+                    <th style="width:120px">Date</th>
+                    <th>Description</th>
+                    <th>Account</th>
+                    <th class="ru-right" style="width:140px">Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="ru-modalTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Recent update end -->
+
+
+        <!-- Projection / Scenario Planner start-->
+
+        <div class="card" style="grid-column: span 12">
+          <div class="ru-hdr">
+            <div>
+              <div class="proj-title">Projection / Scenario Planner</div>
+              <div class="proj-sub">Live • month-0 = baseline • glass UI</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button id="proj-btnA" class="proj-btn proj-active">Scenario A</button>
+              <button id="proj-btnB" class="proj-btn">Scenario B</button>
+            </div>
+          </div>
+
+          <div class="proj-grid">
+            <!-- LEFT: controls & baseline -->
+            <div class="proj-card proj-controls" aria-label="controls">
+              <div style="font-weight:800;margin-bottom:8px">Assumptions & Controls</div>
+
+              <div class="proj-baseline">
+                <div class="proj-tile assets">
+                  <div class="proj-label">Current Assets</div>
+                  <div id="proj-curAssets" class="proj-val">—</div>
+                </div>
+                <div class="proj-tile liabilities">
+                  <div class="proj-label">Current Liabilities</div>
+                  <div id="proj-curLiab" class="proj-val">—</div>
+                </div>
+                <div class="proj-tile networth">
+                  <div class="proj-label">Current Net Worth</div>
+                  <div id="proj-curNet" class="proj-val">—</div>
+                </div>
+              </div>
+
+              <div class="proj-pills">
+                <div id="proj-presetCons" class="proj-pill proj-cons">Conservative</div>
+                <div id="proj-presetBase" class="proj-pill proj-base">Base</div>
+                <div id="proj-presetAggr" class="proj-pill proj-aggr">Aggressive</div>
+              </div>
+
+              <div class="proj-row">
+                <div class="proj-field">
+                  <label for="proj-years">Projection horizon</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input id="proj-years" class="proj-input" type="number" min="1" max="40" value="10"
+                      style="width:84px">
+                    <input id="proj-yearsR" class="proj-input" type="range" min="1" max="40" value="10">
+                    <div class="proj-small">years</div>
+                  </div>
+                </div>
+
+                <div class="proj-field">
+                  <label for="proj-monthlyAdd">Monthly asset contribution</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span class="proj-small">₹</span>
+                    <input id="proj-monthlyAdd" class="proj-input" type="number" min="0" step="500" value="25000"
+                      style="width:120px">
+                    <input id="proj-monthlyAddR" class="proj-input" type="range" min="0" max="200000" step="500"
+                      value="25000">
+                  </div>
+                </div>
+
+                <div class="proj-field">
+                  <label for="proj-assetR">Expected asset return (annual)</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input id="proj-assetR" class="proj-input" type="number" step="0.1" value="9.0" style="width:84px">
+                    %
+                    <input id="proj-assetRR" class="proj-input" type="range" min="-5" max="25" step="0.1" value="9.0">
+                  </div>
+                </div>
+
+                <div class="proj-field">
+                  <label for="proj-debtR">Liability interest (annual)</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <input id="proj-debtR" class="proj-input" type="number" step="0.1" value="10.0" style="width:84px">
+                    %
+                    <input id="proj-debtRR" class="proj-input" type="range" min="0" max="24" step="0.1" value="10.0">
+                  </div>
+                </div>
+
+                <div class="proj-field">
+                  <label for="proj-extraDebt">Extra monthly debt paydown</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span class="proj-small">₹</span>
+                    <input id="proj-extraDebt" class="proj-input" type="number" min="0" step="500" value="10000"
+                      style="width:120px">
+                    <input id="proj-extraDebtR" class="proj-input" type="range" min="0" max="200000" step="500"
+                      value="10000">
+                  </div>
+                </div>
+
+                <div class="proj-field">
+                  <label for="proj-target">Target net worth (optional)</label>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span class="proj-small">₹</span>
+                    <input id="proj-target" class="proj-input" type="number" min="0" step="10000" value="0"
+                      style="width:140px">
+                    <button id="proj-reset" class="proj-btn">Reset</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="proj-controls-footer">
+                <button id="proj-run" class="proj-btn">Run Projection</button>
+                <div style="flex:1"></div>
+                <button id="proj-export" class="proj-btn">Export Chart PNG</button>
+              </div>
+            </div>
+
+            <!-- RIGHT: KPIs + chart -->
+            <div class="proj-card">
+              <div class="proj-kpis">
+                <div id="proj-kpiNet" class="proj-kpi net">
+                  <div class="proj-k">Projected Net Worth (end)</div>
+                  <div id="proj-kpiNetVal" class="proj-v">—</div>
+                  <div class="proj-small" id="proj-kpiNetSub">Scenario A</div>
+                </div>
+
+                <div id="proj-kpiDebt" class="proj-kpi debt">
+                  <div class="proj-k">Debt-free ETA</div>
+                  <div id="proj-kpiDebtVal" class="proj-v">—</div>
+                  <div class="proj-small">When liabilities reach ₹0</div>
+                </div>
+
+                <div id="proj-kpiTarget" class="proj-kpi target">
+                  <div class="proj-k">Target Hit ETA</div>
+                  <div id="proj-kpiTargetVal" class="proj-v">—</div>
+                  <div class="proj-small" id="proj-kpiTargetSub">Set a target to compute ETA</div>
+                </div>
+
+                <div id="proj-kpiMonthly" class="proj-kpi mon">
+                  <div class="proj-k">Monthly Contribution</div>
+                  <div id="proj-kpiMonthlyVal" class="proj-v">—</div>
+                  <div class="proj-small">as entered</div>
+                </div>
+              </div>
+
+              <div class="proj-chart-hdr">
+                <div class="proj-chip"><span class="proj-dot" style="background:#8b5cf6"></span> Scenario A</div>
+                <div class="proj-chip"><span class="proj-dot" style="background:#10b981"></span> Scenario B</div>
+                <div style="flex:1"></div>
+              </div>
+
+              <div id="proj-chart" style="width:100%;height:460px"></div>
+
+              <div style="margin-top:12px">
+                <div style="font-weight:800;margin-bottom:8px">Milestones</div>
+                <div id="proj-milestones" class="proj-milestones"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Projection / Scenario Planner end-->
+
+      </div>
+    </div>
+
+    <!-- ADVANCED -->
+    <div id="adv" class="tab-panel" style="display:none;margin-top:12px">
+      <div class="grid">
+        <!-- Liquidity -->
+        <div class="card" style="grid-column: span 4">
+          <strong>Liquidity Breakdown</strong>
+          <div class="small">Liquid vs Illiquid</div>
+          <canvas id="chartLiquidity" height="320"></canvas><div id="nw-liquidity-note" class="nw-advanced-note"></div>
+        </div>
+
+        <!-- Savings Rate -->
+        <div class="card" style="grid-column: span 4">
+          <strong>Savings Rate Tracker</strong>
+          <div class="small">Income vs Expense vs Savings</div>
+          <canvas id="chartSavings" height="320"></canvas><div id="nw-savings-note" class="nw-advanced-note"></div>
+        </div>
+
+        <!-- Cashflow / Sankey-like -->
+        <div class="card" style="grid-column: span 4">
+          <strong>Income, Spending & Net Flow</strong>
+          <div class="small">Recorded income, expenses and net cash flow</div>
+          <canvas id="chartFlow" height="320"></canvas><div id="nw-flow-note" class="nw-advanced-note"></div>
+        </div>
+
+        <!-- Debt payoff forecast -->
+        <div class="card" style="grid-column: span 6">
+          <strong>Debt Payoff Forecast</strong>
+          <div class="small">Projected payoff dates & prepay simulator</div>
+          <div style="margin-top:8px; display:flex; gap:8px; align-items:center">
+            <label class="small">Extra monthly prepay (selected currency): <input id="prepay" type="number" min="0" step="1" value="0"
+                style="width:110px;padding:6px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,0.04)"></label>
+            <button class="btn" id="runPrepay">Run</button>
+          </div>
+          <canvas id="chartDebt" height="320" style="margin-top:8px"></canvas><div id="wealth-debt-result" class="nw-advanced-note"></div>
+        </div>
+
+        <!-- Goals -->
+        <div class="card" style="grid-column: span 6">
+          <strong>Goal-Based Net Worth</strong>
+          <div class="small">Retirement, House, Child Education</div>
+          <div id="goals" style="margin-top:8px"></div>
+        </div>
+
+        <!-- Risk Allocation -->
+        <div class="card" style="grid-column: span 4">
+          <strong>Risk Allocation</strong>
+          <div class="small">Low / Medium / High</div>
+          <canvas id="chartRisk" height="320"></canvas><div id="nw-risk-note" class="nw-advanced-note"></div>
+        </div>
+
+        <!-- Inflation adjusted -->
+        <div class="card" style="grid-column: span 4">
+          <strong>Inflation-Adjusted Net Worth</strong>
+          <div class="small">Nominal vs Real</div>
+          <div id="inflationCard" style="margin-top:8px"></div>
+        </div>
+
+        <!-- Wealth-to-Income -->
+        <div class="card" style="grid-column: span 4">
+          <strong>Wealth-to-Income Ratio</strong>
+          <div class="small">Recorded net worth / trailing 365-day income</div>
+          <div id="w2i" style="margin-top:8px"></div>
+        </div>
+
+        <!-- Peer benchmarking -->
+        <div class="card" style="grid-column: span 6">
+          <strong>Peer Benchmarking</strong>
+          <div class="small">Age/Income cohort comparison</div>
+          <div id="peer" style="margin-top:8px"></div>
+        </div>
+
+        <!-- Stress test -->
+        <div class="card" style="grid-column: span 6">
+          <strong>Stress Test Simulator</strong>
+          <div class="small">Hypothetical shock to a recorded asset class</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+            <label class="small">Asset class <select id="nw-shock-class" aria-label="Stress test asset class"></select></label><label class="small">Selected-class shock: <input id="shock" type="range" min="-80" max="0" value="-20"></label>
+            <span id="shockLabel" class="small">-20%</span>
+            <button class="btn" id="applyShock">Apply</button>
+          </div>
+          <canvas id="chartShock" height="320" style="margin-top:8px"></canvas><div id="nw-shock-note" class="nw-advanced-note"></div>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- container -->
+
+  
+
+
+
+<script src="asset/tracker/original-five-planner.js?v=20261114-v3"></script>
+<script src="asset/tracker/original-five-core.js?v=20261114-v3"></script>
+<script src="asset/tracker/original-five-common.js?v=20261114-v3"></script>
+<script src="asset/tracker/wealth-view-core.js?v=wealth-20261114-r2"></script>
+<script src="asset/tracker/original-five-wealth-reports.js?v=wealth-20261114-r2"></script>
+<script src="asset/tracker/tracker-ui-v3.js?v=20261114-v3"></script>
+<script src="asset/tracker/networth-ui-corrections.js?v=wealth-20261114-r2"></script>
+<script src="asset/tracker/workspace-progress-ring.js?v=loader-20261114-r1"></script>
+</body>
+
+</html>
