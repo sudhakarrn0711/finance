@@ -1,0 +1,77 @@
+:root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  color: #f8f6fc;
+  background: radial-gradient(ellipse at 16% 10%, #231832, transparent 52%),
+    radial-gradient(ellipse at 92% 90%, #10242c, transparent 48%), #08090d;
+}
+.entry-card {
+  width: min(100%, 420px);
+  padding: clamp(22px, 6vw, 36px);
+  background: linear-gradient(145deg, #191822ea, #101117f5);
+  border: 1px solid #494052;
+  border-radius: 28px;
+  box-shadow: 0 24px 80px #0009;
+  backdrop-filter: blur(20px);
+}
+.entry-mark {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: #32234b;
+  border: 1px solid #634887;
+  color: #e1c8ff;
+  font-size: 27px;
+  font-weight: 800;
+}
+.entry-brand { color: #d4b9ff; font-size: 12px; letter-spacing: .14em; font-weight: 750; margin: 18px 0 6px; }
+h1 { margin: 0; font-size: clamp(25px, 7vw, 34px); line-height: 1.14; }
+.entry-copy { margin: 10px 0 23px; color: #c0bacb; line-height: 1.45; }
+form { display: grid; gap: 9px; }
+label { font-size: 14px; font-weight: 650; }
+input, button { font: inherit; }
+input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  background: #101117;
+  border: 1px solid #494454;
+  border-radius: 13px;
+  color: #f8f6fc;
+  padding: 10px 12px;
+  font-size: 16px;
+}
+.entry-password { position: relative; }
+.entry-password input { padding-right: 68px; }
+.entry-password button {
+  position: absolute;
+  inset: 2px 4px 2px auto;
+  border: 0;
+  padding: 0 10px;
+  background: transparent;
+  color: #dac7ff;
+}
+button { cursor: pointer; }
+.entry-primary {
+  margin-top: 8px;
+  min-height: 48px;
+  border: 1px solid #a37bdd;
+  border-radius: 13px;
+  color: #fff;
+  background: linear-gradient(125deg, #6837ae, #863c88);
+  font-weight: 750;
+}
+.entry-primary:disabled { opacity: .7; cursor: wait; }
+.entry-link { border: 0; background: none; color: #dac7ff; min-height: 44px; padding: 0; }
+.entry-message { color: #ffadb9; line-height: 1.4; margin: 0; }
+.entry-message:empty { display: none; }
+:focus-visible { outline: 2px solid #d1adff; outline-offset: 2px; }

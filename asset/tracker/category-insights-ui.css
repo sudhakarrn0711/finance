@@ -1,0 +1,65 @@
+/* Category Insights only. Preserve calculations and drill-down handlers. */
+body.category-insights-ui #ciApp{width:min(calc(100% - 32px),calc(var(--tracker-width,1440px) - 2 * var(--tracker-gutter,18px)));margin:18px auto;min-width:0}
+body.category-insights-ui #ciApp :is(.ci-shell,.mr-panel){background:linear-gradient(125deg,#1b3342,#26273e);border:1px solid #536e89;border-radius:21px;padding:20px;min-width:0}
+body.category-insights-ui #ciApp #ci-context{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:15px;border:1px solid #4d6884;border-radius:16px;background:linear-gradient(120deg,#203c48,#2b2841);line-height:1.7;margin:14px 0}
+body.category-insights-ui #ciApp .ci-semantic-pill{display:inline-flex;align-items:center;gap:7px;max-width:100%;padding:6px 11px;border-radius:999px;border:1px solid color-mix(in srgb,var(--ci-accent,#b6cce1) 45%,transparent)!important;background:#26394c!important;background:color-mix(in srgb,var(--ci-accent,#b6cce1) 13%,#172b3d)!important;color:var(--ci-accent,#c7dfef)!important;font-size:12px;font-weight:650;line-height:1.45;white-space:nowrap;box-sizing:border-box}
+body.category-insights-ui #ciApp button.ci-semantic-pill{min-height:38px;cursor:pointer;box-shadow:none;font-size:13px}
+body.category-insights-ui #ciApp :is(.ci-table-wrap,.mr-scroll){max-width:100%;overflow:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;border:1px solid #45617d;border-radius:15px;margin-block:15px}
+body.category-insights-ui #ciApp .ci-table{width:100%;border-collapse:separate;border-spacing:0!important;table-layout:auto;font-size:13px}
+body.category-insights-ui #ciApp .ci-table :is(th,td){padding:13px 14px!important;vertical-align:middle;text-align:right!important;border-bottom:1px solid #43536a;line-height:1.5;font-variant-numeric:tabular-nums}
+body.category-insights-ui #ciApp .ci-table :is(th,td):first-child{text-align:left!important}
+body.category-insights-ui #ciApp .ci-table th{background:#244258!important;color:#c5eaff!important;font-size:12px!important;font-weight:750;white-space:nowrap}
+body.category-insights-ui #ciApp .ci-table tbody tr:nth-child(odd)>td{background:#172e3e}
+body.category-insights-ui #ciApp .ci-table tbody tr:nth-child(even)>td{background:#292b43}
+body.category-insights-ui #ciApp .ci-table tbody tr:hover>td{background:#29475a}
+body.category-insights-ui #ciApp #ciDrillWrap :is(th,td):not(:last-child){text-align:left!important}
+body.category-insights-ui #ciApp #ciDrillWrap :is(th,td):last-child{text-align:right!important;white-space:nowrap}
+body.category-insights-ui #ciApp .ci-cell-name{white-space:normal;min-width:180px}
+body.category-insights-ui #ciApp .ci-cat-label{font-size:13px!important;font-weight:700;padding:7px 12px;border-radius:12px;white-space:normal}
+body.category-insights-ui #ciApp .ci-bar-wrap{height:6px;margin-top:10px;background:#34475d}
+body.category-insights-ui #ciApp .ci-bar-income{background:linear-gradient(90deg,#2bbd91,#8af0c6)}
+body.category-insights-ui #ciApp .ci-bar-expense{background:linear-gradient(90deg,#dd5e7f,#f8a4b9)}
+body.category-insights-ui #ciApp .ci-title{font-size:clamp(22px,2vw,29px);color:#b9e8ff!important;font-weight:800;line-height:1.5}
+body.category-insights-ui #ciApp :is(input,select){min-height:44px;padding:10px 13px;background:#172f42!important;color:#d5edfc!important;border:1px solid #5a7c98;border-radius:13px;color-scheme:dark;font-size:14px}
+body.category-insights-ui #ciApp select option{background:#1a3044;color:#d5edfc}
+body.category-insights-ui #ciApp .ci-select{background:transparent!important;border:0;min-width:0}
+body.category-insights-ui #ciApp .ci-chip{background:#253b50;border:1px solid #56728f;color:#c6e6fa;border-radius:999px;padding:7px 12px;line-height:1.5}
+body.category-insights-ui #ciApp .mr-controls button,body.category-insights-ui #ciApp .ci-back{min-height:42px;padding:10px 15px;border:1px solid #548c85;border-radius:13px;background:linear-gradient(120deg,#244d48,#26384f);color:#b2f1d9;font-weight:650}
+body.category-insights-ui #ciApp :is(#ci-refresh,#ci-export){background:linear-gradient(120deg,#3b2e53,#2a3550);border-color:#8e72ac;color:#dfccff}
+body.category-insights-ui #ciApp .ci-filters{gap:11px;flex-wrap:wrap}
+body.category-insights-ui #ciApp .ci-path{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+body.category-insights-ui #ciApp #ci-breadcrumb button{background:#29384e;border-color:#607b97;color:#c9e7fd}
+body.category-insights-ui #ciApp #ci-page{padding:7px 11px;border:1px solid #5a6f91;border-radius:999px;background:#2c304a;color:#d7ddf7;font-size:12px}
+body.category-insights-ui #ciApp :is(button,input,select,a):focus-visible{outline:2px solid #7dd3fc;outline-offset:3px}
+@media(max-width:767px){
+ body.category-insights-ui{padding-inline:0;padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+ body.category-insights-ui #ciApp{width:calc(100% - 16px);margin:12px auto}
+ body.category-insights-ui #ciApp :is(.ci-shell,.mr-panel){padding:14px;border-radius:18px}
+ body.category-insights-ui #ciApp .ci-header{flex-direction:column;align-items:stretch;gap:13px}
+ body.category-insights-ui #ciApp .ci-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
+ body.category-insights-ui #ciApp .ci-filters .ci-select{width:100%;min-width:0}
+ body.category-insights-ui #ciApp .ci-filters .ci-select:last-child{grid-column:1/-1}
+ body.category-insights-ui #ciApp .ci-filters :is(input,select){width:100%;box-sizing:border-box;font-size:16px}
+ body.category-insights-ui #ciApp #ci-context{padding:12px;gap:8px}
+ body.category-insights-ui #ciApp #ci-context .ci-semantic-pill{white-space:normal}
+ body.category-insights-ui #ciApp .mr-controls{gap:9px}
+ body.category-insights-ui #ciApp .mr-controls label{flex:1 1 130px;min-width:0}
+ body.category-insights-ui #ciApp .mr-controls :is(input,select){width:100%;box-sizing:border-box;font-size:16px}
+ body.category-insights-ui #ciApp #ci-comparison table{min-width:960px}
+ body.category-insights-ui #ciApp #ci-comparison :is(th,td):first-child{position:sticky;left:0;z-index:1;min-width:140px;max-width:180px}
+ body.category-insights-ui #ciApp #ciDrillWrap table{min-width:720px}
+ body.category-insights-ui #ciApp table:has(> #ciBody){display:block;min-width:0;width:100%}
+ body.category-insights-ui #ciApp table:has(> #ciBody)>thead{display:none}
+ body.category-insights-ui #ciApp #ciBody{display:grid;gap:12px;padding:10px;background:#102334}
+ body.category-insights-ui #ciApp #ciBody>tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid #4e6783;border-radius:16px;overflow:hidden;background:#1b3043}
+ body.category-insights-ui #ciApp #ciBody>tr:nth-child(even){border-color:#6e6489}
+ body.category-insights-ui #ciApp #ciBody td{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px!important;min-width:0;text-align:left!important;border-bottom:0}
+ body.category-insights-ui #ciApp #ciBody td:first-child{grid-column:1/-1;min-width:0;border-bottom:1px solid #405772}
+ body.category-insights-ui #ciApp #ciBody td:before{content:attr(data-label);display:block;color:#afc9df;font-size:10px;font-weight:650;letter-spacing:.02em}
+ body.category-insights-ui #ciApp #ciBody td:first-child:before{display:none}
+ body.category-insights-ui #ciApp #ciBody .ci-semantic-pill{white-space:normal;overflow-wrap:anywhere}
+ body.category-insights-ui #ciApp #ciBody .ci-bar-wrap{width:100%;margin-top:0}
+ body.category-insights-ui #trackerFooter{position:static!important;transform:none!important;width:calc(100% - 16px);margin-inline:auto;left:auto;right:auto}
+}
+@media print{body.category-insights-ui #ciApp .ci-semantic-pill{background:#edf4f7!important;color:#18354c!important;border-color:#8395a6!important}body.category-insights-ui #ciApp .ci-table{display:table!important}body.category-insights-ui #ciApp .ci-table thead{display:table-header-group!important}body.category-insights-ui #ciApp #ciBody{display:table-row-group!important}body.category-insights-ui #ciApp #ciBody tr{display:table-row!important}body.category-insights-ui #ciApp #ciBody td{display:table-cell!important}body.category-insights-ui #ciApp #ciBody td:before{display:none!important}}
+@media(max-width:767px){body.category-insights-ui #ciApp button.ci-semantic-pill,body.category-insights-ui #ciApp .mr-controls button{min-height:44px}}

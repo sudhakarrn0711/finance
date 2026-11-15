@@ -1,0 +1,101 @@
+/* All presentation changes are limited to phone/tablet widths. */
+@media screen and (max-width:768px){
+ body.mobile-report-ui{--mobile-dock-height:78px;color-scheme:dark;overflow-x:clip;padding-bottom:calc(var(--mobile-dock-height) + env(safe-area-inset-bottom) + 12px)!important}
+ body.mobile-report-ui *,body.mobile-report-ui *::before,body.mobile-report-ui *::after{box-sizing:border-box}
+ body.mobile-report-ui #trackerContent{width:100%!important;min-width:0!important;max-width:100%!important;padding-left:10px!important;padding-right:10px!important}
+ body.mobile-report-ui #trackerContent>*,body.mobile-report-ui :is(.container,.wrap,.advisor-wrap,#ciApp,.main-wrap,#mainContent){min-width:0!important;max-width:100%!important}
+ body.mobile-report-ui :is(.mr-panel,.glass-card,.card,.ci-shell,.ad-panel){border-radius:17px;min-width:0}
+ /* Keep the original Finance buttons and their event handlers. */
+ body.mobile-report-ui.finance-theme .finance-workspace{display:block!important;grid-template-columns:minmax(0,1fr)!important;padding-inline:0!important;width:100%!important}
+ body.mobile-report-ui.finance-theme .finance-workspace>.finance-sidebar{display:block!important;position:relative!important;inset:auto!important;transform:none!important;visibility:visible!important;opacity:1!important;float:none!important;width:100%!important;max-width:100%!important;margin:0 0 14px!important;padding:12px!important;z-index:2!important;border-radius:17px;background:linear-gradient(130deg,#1b2c3e,#22243a)}
+ body.mobile-report-ui .mobile-workspace-heading{display:flex;gap:8px;align-items:center;color:#9ee9d2;font:700 13px/1.4 system-ui;margin:0 0 9px}
+ body.mobile-report-ui.finance-theme .finance-sidebar-heading{display:none!important}
+ body.mobile-report-ui.finance-theme .finance-sidebar-nav{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:8px!important;width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;padding:3px 2px 8px!important;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+ body.mobile-report-ui.finance-theme .finance-sidebar-nav .tab-btn{display:flex!important;flex-direction:row!important;flex:0 0 auto!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-width:max-content!important;width:auto!important;min-height:46px!important;padding:10px 13px!important;border-radius:14px!important;scroll-snap-align:start;white-space:nowrap!important;background:#1b3347;border:1px solid #42627b}
+ body.mobile-report-ui.finance-theme .finance-sidebar-nav .tab-btn:nth-child(2){background:#2b2a48;border-color:#64577c}
+ body.mobile-report-ui.finance-theme .finance-sidebar-nav .tab-btn:nth-child(3){background:#203b38;border-color:#416e62}
+ body.mobile-report-ui.finance-theme .finance-sidebar-nav .tab-btn:nth-child(4){background:#3b3023;border-color:#7c663d}
+ body.mobile-report-ui.finance-theme .finance-sidebar-nav .tab-btn:nth-child(5){background:#392739;border-color:#7b5269}
+ body.mobile-report-ui.finance-theme .finance-sidebar-nav .tab-btn.active{box-shadow:inset 0 0 0 1px #8de8cc;border-color:#8de8cc;color:#c3ffe8}
+ body.mobile-report-ui.finance-theme .finance-sidebar-nav strong{display:block!important;font:650 12px/1.35 system-ui!important;overflow-wrap:normal!important;word-break:normal!important;white-space:nowrap!important}
+ body.mobile-report-ui.finance-theme .finance-sidebar-nav small{display:none!important}
+ body.mobile-report-ui.finance-theme .finance-sidebar-nav .finance-module-icon{width:23px!important;height:23px!important;flex:0 0 23px!important;font-size:16px!important}
+ body.mobile-report-ui.finance-theme .finance-workspace #mainContent{margin-left:0!important;padding:0!important;width:100%!important}
+ /* Native date indicators must not form an invisible full-screen click layer. */
+ body.mobile-report-ui :is(input[type=date],input[type=month],input[type=datetime-local],input[type=time]){display:block!important;position:relative!important;inset:auto!important;transform:none!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:46px!important;height:auto!important;padding:10px 12px!important;font-size:16px!important;line-height:1.4!important;appearance:auto;color-scheme:dark;touch-action:manipulation}
+ body.mobile-report-ui :is(input[type=date],input[type=month],input[type=datetime-local],input[type=time])::-webkit-calendar-picker-indicator{position:static!important;inset:auto!important;display:block!important;opacity:1!important;width:22px!important;height:22px!important;margin-left:6px!important;padding:0!important;transform:none!important;pointer-events:auto!important;cursor:pointer}
+ body.mobile-report-ui :is(input[type=date],input[type=month],input[type=datetime-local],input[type=time])::-webkit-date-and-time-value{text-align:left;min-height:1.4em}
+ body.mobile-report-ui :is(.mr-controls,.ad-controls,.fp-toolbar,.controls,.finance-entry-fields,.fp-form-fields,.mr-fields,.ad-fields) label{position:relative;min-width:0!important;max-width:100%!important;overflow:visible}
+ body.mobile-report-ui :is(.mr-controls,.ad-controls,.fp-toolbar,.controls){flex-wrap:wrap!important;gap:10px!important;align-items:stretch!important}
+ body.mobile-report-ui :is(.mr-controls,.ad-controls,.fp-toolbar,.controls)>label{flex:1 1 160px!important;display:flex!important;flex-direction:column!important;gap:6px!important}
+ body.mobile-report-ui :is(.mr-fields,.fp-form-fields,.finance-entry-fields,.ad-fields){display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important}
+ body.mobile-report-ui :is(input,select,textarea){min-width:0!important;max-width:100%;font-size:16px!important}
+ body.mobile-report-ui :is(button,.btn,.mr-button,.small-btn,.ad-next){touch-action:manipulation;min-height:44px}
+ body.mobile-report-ui :is(button,a,input,select,textarea):focus-visible{outline:2px solid #7dd3fc;outline-offset:3px}
+ /* Scroll wide content inside the panel, preserving table semantics and values. */
+ body.mobile-report-ui :is(.mobile-table-scroll,.mr-scroll,.fp-table-scroll,.finance-ledger-scroll,.finance-table-scroll,.ci-table-wrap,.ad-scroll){display:block;min-width:0!important;width:100%!important;max-width:100%!important;overflow-x:auto!important;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;border-radius:13px}
+ body.mobile-report-ui .mobile-table-scroll>table{max-width:none!important;min-width:100%;width:max-content;table-layout:auto!important}
+ body.mobile-report-ui table :is(.finance-pill,.finance-report-pill,.ui-pill,.ui-status,.mr-pill,.goals-pill,.ci-semantic-pill,.ci-cat-label,.ad-pill,.bp-pill,.chip,.badge,.tac-pill,.ru-pill,.nw-pill,.bu-pill,[class*="pill"]){white-space:nowrap!important;word-break:normal!important;overflow-wrap:normal!important;flex-shrink:0!important;max-width:none!important;line-height:1.5;vertical-align:middle}
+ body.mobile-report-ui table :is(th,td){word-break:normal!important;overflow-wrap:normal!important;vertical-align:middle}
+ body.mobile-report-ui table th{white-space:nowrap!important}
+ body.mobile-report-ui :is(dialog,.mr-dialog,.modal-content,#modalContent,.tac-modal,.ru-modal){box-sizing:border-box!important;min-width:0!important;width:min(96vw,720px)!important;max-width:96vw!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;overscroll-behavior-y:contain;border-radius:20px!important}
+ body.mobile-report-ui dialog{margin:auto!important;padding:16px!important}
+ body.mobile-report-ui :is(.mr-chart-viewport,canvas){max-width:100%!important;min-width:0}
+ body.mobile-report-ui :is(.proj-grid,.tac-main,.ru-layout,.liab-grid){grid-template-columns:minmax(0,1fr)!important}
+ body.mobile-report-ui .flatpickr-calendar{max-width:calc(100vw - 20px)!important}
+ body.mobile-report-ui #budgMonthDrop{position:fixed!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;transform:translate(-50%,-50%)!important;width:min(340px,calc(100vw - 24px))!important;max-height:calc(100dvh - 24px)!important;overflow:auto!important;z-index:10010!important}
+ body.mobile-report-ui #trackerNav{position:sticky!important;inset:auto!important;top:0!important;width:100%!important;z-index:80!important;padding-top:env(safe-area-inset-top)!important}
+ body.mobile-report-ui #trackerNav .tracker-nav-inner{display:flex!important;flex-wrap:wrap!important;gap:6px!important;padding:8px!important;width:100%!important}
+ body.mobile-report-ui #trackerNav .tracker-brand{display:none!important}
+ body.mobile-report-ui #trackerNav .tracker-mobile-menu{display:flex!important;flex:1;min-height:44px;min-width:0;background:#202e45;border:1px solid #4c5b7b;border-radius:13px}
+ body.mobile-report-ui #trackerNav :is([data-lock],[data-logout]){display:none!important}
+ body.mobile-report-ui #trackerNav .tracker-module-links{display:none!important;position:absolute!important;left:8px!important;right:8px!important;top:100%!important;bottom:auto!important;max-height:65dvh!important;overflow:auto!important;padding:12px!important;background:#111e30fa!important;border:1px solid #4c6381;border-radius:17px;box-shadow:0 12px 40px #0009}
+ body.mobile-report-ui #trackerNav.tracker-menu-open .tracker-module-links{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ body.mobile-report-ui #trackerNav .tracker-module-links :is(a,button){min-height:46px!important;justify-content:center;white-space:nowrap;font-size:12px;padding:9px 6px}
+ body.mobile-report-ui #trackerMobileDock{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;position:fixed!important;inset:auto 0 0!important;gap:4px;padding:8px 8px calc(8px + env(safe-area-inset-bottom))!important;background:#101d2ef5!important;backdrop-filter:blur(18px);border-top:1px solid #48617b;z-index:75!important}
+ body.mobile-report-ui #trackerMobileDock :is(a,button){display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;padding:5px 2px!important;min-width:0!important;min-height:48px!important;border:0;border-radius:12px;background:transparent;color:#bfd0e6;font:650 10px/1.3 system-ui;text-decoration:none;white-space:nowrap}
+ body.mobile-report-ui #trackerMobileDock span{font-size:20px;line-height:1.1}
+ body.mobile-report-ui #trackerMobileDock [aria-current=page]{background:#22473f!important;color:#98f2d2!important;box-shadow:inset 0 0 0 1px #4b8c76}
+ body.mobile-report-ui #trackerFooter{position:static!important;inset:auto!important;transform:none!important;width:100%!important;max-width:100%!important;margin:14px 0!important;border-radius:14px;padding:12px!important}
+
+ body.mobile-report-ui #trackerContent>:is(div.container,div.wrap,#ciApp){width:100%!important;padding-inline:0!important;margin-inline:0!important}
+ /* r2: intrinsic table width, date tokens and explicit column navigation. */
+ body.mobile-report-ui .mobile-report-scroller{display:block!important;box-sizing:border-box!important;min-width:0!important;width:100%!important;max-width:100%!important;overflow-x:auto!important;overscroll-behavior-x:contain;scrollbar-width:auto;scrollbar-color:#648ba3 #142536;-webkit-overflow-scrolling:touch}
+ body.mobile-report-ui .mobile-report-scroller::-webkit-scrollbar{height:9px}
+ body.mobile-report-ui .mobile-report-scroller::-webkit-scrollbar-thumb{background:#648ba3;border-radius:6px}
+ body.mobile-report-ui .mobile-report-scroller>table.mobile-report-table{display:table!important;width:max-content!important;min-width:100%!important;max-width:none!important;table-layout:auto!important}
+ body.mobile-report-ui table :is(th,td).mobile-date-cell{white-space:nowrap!important;word-break:normal!important;overflow-wrap:normal!important;min-width:104px!important;width:auto!important;font-variant-numeric:tabular-nums}
+ body.mobile-report-ui table :is(th,td).mobile-date-cell :is(time,span,a){white-space:nowrap!important;word-break:normal!important;overflow-wrap:normal!important}
+ body.mobile-report-ui .mobile-table-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 2px;margin-top:8px;color:#bcd4e8;font:600 11px/1.4 system-ui;min-width:0;max-width:100%}
+ body.mobile-report-ui .mobile-table-tools[hidden]{display:none!important}
+ body.mobile-report-ui .mobile-table-tools>span{min-width:0;flex:1}
+ body.mobile-report-ui .mobile-table-tools>button{display:inline-grid;place-items:center;flex:0 0 44px;width:44px;min-height:44px;padding:4px;border:1px solid #537895;border-radius:12px;background:#203c52;color:#ccefff;font-size:23px}
+ body.mobile-report-ui .mobile-table-tools>button:disabled{opacity:.4}
+ body.mobile-report-ui #trackerContent :is(.chart-card,.calheat-card,.panel,.mr-panel,.neo-card,.card,.glass-card){box-sizing:border-box!important;min-width:0!important;max-width:100%!important}
+ body.mobile-report-ui #trackerContent .chart-card{width:100%!important;padding:14px!important}
+ body.mobile-report-ui #trackerContent :is(.chart-card,.panel,.card,.glass-card)>.grid{min-width:0;max-width:100%}
+ body.mobile-report-ui #overrunList{width:100%!important;min-width:0!important;max-width:100%!important;margin:12px 0 0!important;padding:0!important;list-style:none!important}
+ body.mobile-report-ui #overrunList .bu-overrun{width:100%!important;min-width:0!important;max-width:100%!important;padding:13px!important;margin:0!important;gap:11px!important}
+ body.mobile-report-ui #overrunList .bu-overrun-details{width:100%!important;min-width:0!important;max-width:100%!important;gap:7px!important;flex-wrap:wrap!important}
+ body.mobile-report-ui #overrunList .bu-badge{max-width:100%!important;min-width:0;box-sizing:border-box;line-height:1.5;font-size:11px;padding:5px 9px}
+ body.mobile-report-ui #trackerContent :is(.liab-grid,.nw-history-grid,.proj-grid,.tac-main,.ru-layout){grid-template-columns:minmax(0,1fr)!important;width:100%!important;min-width:0!important}
+ /* Retain every original Tasks action; stack identity and actions instead of squeezing. */
+ body.mobile-report-ui.tasks-ui #trackerContent>.mobile-tasks-header{width:100%!important;max-width:100%!important;padding:10px 0!important;margin-inline:0!important;min-width:0!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-hero{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;min-width:0!important;max-width:100%!important;gap:15px!important;padding:16px!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-identity{display:flex!important;align-items:flex-start!important;gap:11px!important;width:100%!important;min-width:0!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-identity>div:first-child{width:36px!important;height:36px!important;min-width:36px!important;flex:0 0 36px!important;border-radius:12px}
+ body.mobile-report-ui.tasks-ui .mobile-task-identity>div:last-child{min-width:0!important;flex:1}
+ body.mobile-report-ui.tasks-ui .mobile-task-identity h1{margin:0 0 4px!important;font-size:22px!important;line-height:1.3!important;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-identity p{margin:0!important;font-size:11px!important;line-height:1.6!important;white-space:normal!important;word-break:normal!important;overflow-wrap:normal!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-actions{display:grid!important;grid-template-columns:44px minmax(0,1fr) minmax(0,1fr)!important;gap:8px!important;width:100%!important;min-width:0!important;max-width:100%!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-actions>button{width:100%!important;min-width:0!important;min-height:46px!important;max-width:100%!important;display:flex;align-items:center!important;justify-content:center!important;gap:6px!important;padding:8px 6px!important;font-size:12px!important;white-space:nowrap!important;word-break:normal!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-actions>#installApp.hidden{display:none!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-actions>#installApp:not(.hidden){grid-column:1/-1}
+ body.mobile-report-ui.tasks-ui .mobile-task-actions :is(svg,i){width:18px!important;height:18px!important;flex-shrink:0!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-actions .kbd{display:none!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-switches{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;width:100%!important;min-width:0!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-switches nav{display:flex!important;width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:auto!important;padding:4px 1px!important;gap:6px!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-switches nav>button{flex:1 0 auto!important;min-width:0!important;padding:9px 8px!important;font-size:12px!important;white-space:nowrap!important;gap:5px!important}
+ body.mobile-report-ui.tasks-ui .mobile-task-switches nav svg{width:18px;height:18px;flex-shrink:0}
+ body.mobile-report-ui.tasks-ui .mobile-task-switches .pf-view-toggle{display:flex!important;width:100%!important;justify-content:flex-end!important;gap:8px!important;padding:5px 0}
+}

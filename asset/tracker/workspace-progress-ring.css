@@ -1,0 +1,27 @@
+/* Shared only by the two pages that explicitly load this Budget-style loader. */
+body.tracker-budget-loader #trackerBusy{display:block!important;position:fixed!important;left:50%!important;top:50%!important;bottom:auto!important;right:auto!important;transform:translate(-50%,-50%)!important;width:min(450px,calc(100vw - 32px))!important;max-width:calc(100vw - 32px)!important;padding:0!important;z-index:10050!important;border-radius:23px!important;overflow:hidden;box-shadow:0 20px 90px #000b}
+body.tracker-budget-loader #trackerBusy[hidden]{display:none!important}
+body.tracker-budget-loader:has(#trackerBusy:not([hidden])):before{content:'';position:fixed;inset:0;background:#020a14a8;backdrop-filter:blur(4px);z-index:10040;pointer-events:all}
+body.tracker-budget-loader #trackerBusy .tracker-loading-title{display:block;padding:20px 24px;font-weight:750;font-size:18px}
+body.tracker-budget-loader #trackerBusy .tracker-loading-body{display:flex;gap:20px;align-items:center;padding:24px}
+body.tracker-budget-loader #trackerBusy .tracker-loading-body strong{display:block;color:#d0f3ef;font-size:14px;line-height:1.5}
+body.tracker-budget-loader #trackerBusy .tracker-loading-body small{display:block;color:#aec7db;font-size:12px;line-height:1.6;margin-top:6px}
+body.tracker-budget-loader #trackerBusy .tracker-loading-orbit{display:block;position:relative;flex:0 0 70px;width:70px;height:88px}
+body.tracker-budget-loader .shared-progress-ring{display:block;width:70px;height:70px}
+body.tracker-budget-loader .shared-progress-number{fill:#baf7dc;font:700 12px system-ui;text-anchor:middle;dominant-baseline:central}
+body.tracker-budget-loader .shared-progress-caption{display:block;text-align:center;font-size:10px;color:#b9cddf}
+body.tracker-budget-loader #trackerBusy .tracker-loading-steps{display:grid;gap:10px;margin:0;padding:0 24px 20px;list-style:none}
+body.tracker-budget-loader #trackerBusy .tracker-loading-steps li{padding:12px;border:1px solid #3c526b;border-radius:13px;background:#172635;color:#acc5da;font-size:12px}
+body.tracker-budget-loader #trackerBusy .tracker-loading-steps li.is-active{background:#1e413c;color:#a8f1d3;border-color:#4e8171}
+body.tracker-budget-loader #trackerBusy .tracker-loading-steps b{display:inline-grid;place-items:center;width:23px;height:23px;border-radius:50%;background:#ffffff10;margin-right:8px}
+body.tracker-budget-loader #trackerBusy .tracker-loading-foot{display:block;padding:0 24px 22px;text-align:center;line-height:1.5;font-size:10px;color:#99b4cb}
+body.tracker-budget-loader #trackerBusy{height:auto!important;max-height:calc(100dvh - 28px)!important;max-width:calc(100vw - 28px)!important;border:1px solid #548878!important;background:linear-gradient(140deg,#152b36,#1c2035)!important;color:#d9eef4!important;overflow:auto!important;box-sizing:border-box!important}
+body.tracker-budget-loader #trackerBusy .tracker-loading-title{width:auto!important;min-width:0!important;margin:0!important;background:#1c3a40!important;color:#94f5d1!important;border-bottom:1px solid #486476;line-height:1.5}
+body.tracker-budget-loader #trackerBusy .tracker-loading-body>div:last-child{min-width:0;flex:1}
+body.tracker-budget-loader #trackerBusy .tracker-loading-orbit{box-sizing:border-box;overflow:visible;align-self:center}
+body.tracker-budget-loader #trackerBusy .tracker-loading-steps{width:auto!important;box-sizing:border-box}
+body.tracker-budget-loader #trackerBusy .tracker-loading-foot{width:auto!important;box-sizing:border-box}
+@media(max-width:480px){body.tracker-budget-loader #trackerBusy .tracker-loading-body{gap:14px;padding:18px}body.tracker-budget-loader #trackerBusy .tracker-loading-title{padding:17px 18px;font-size:17px}body.tracker-budget-loader #trackerBusy .tracker-loading-steps{padding:0 18px 17px}body.tracker-budget-loader #trackerBusy .tracker-loading-foot{padding:0 18px 18px}}
+body.tracker-budget-loader #trackerBusy .tracker-loading-steps li{background:#172635!important;border-color:#3c526b!important}
+body.tracker-budget-loader #trackerBusy .tracker-loading-steps li.is-active{background:#1e413c!important;border-color:#4e8171!important;color:#a8f1d3!important}
+@media print{body.tracker-budget-loader #trackerBusy,body.tracker-budget-loader:has(#trackerBusy:not([hidden])):before{display:none!important}}

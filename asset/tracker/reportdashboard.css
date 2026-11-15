@@ -1,0 +1,353 @@
+
+
+/* Glass + gradients */
+#reportdashboard .glass { backdrop-filter: blur(12px); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); }
+#reportdashboard .glass-soft { backdrop-filter: blur(8px); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); }
+#reportdashboard .card { border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+#reportdashboard .grad-green { background-image: linear-gradient(135deg, rgba(217, 249, 157, .25), rgba(134, 239, 172, .25)); }
+#reportdashboard .grad-red   { background-image: linear-gradient(135deg, rgba(254, 215, 170, .25), rgba(254, 205, 211, .25)); }
+#reportdashboard .grad-blue  { background-image: linear-gradient(135deg, rgba(251, 207, 232, .25), rgba(191, 219, 254, .25)); }
+#reportdashboard .header-grad { background-image: linear-gradient(90deg, #a7f3d0, #93c5fd); }
+#reportdashboard .text-glass { color: rgba(255,255,255,.82); }
+#reportdashboard .muted { color: rgba(255,255,255,.65); }
+#reportdashboard .table-head { background: rgba(255,255,255,0.12); }
+#reportdashboard .row-alt { background: rgba(255,255,255,0.06); }
+#reportdashboard .bar-bg { background: rgba(255,255,255,0.16); }
+#reportdashboard .bar-fill-pos { background-image: linear-gradient(90deg, #34d399, #84cc16); }
+#reportdashboard .bar-fill-neg { background-image: linear-gradient(90deg, #f43f5e, #f97316); }
+#reportdashboard .badge { border: 1px solid rgba(255,255,255,.2); border-radius: 9999px; padding: 2px 8px; font-size: 12px; }
+#reportdashboard .chip { font-size: 12px; padding: 2px 8px; border-radius: 9999px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.16); }
+#reportdashboard .btn { border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.08); padding: 8px 12px; }
+#reportdashboard .btn:hover { background: rgba(255,255,255,.14); }
+#reportdashboard .tab { padding: 10px 14px; border-radius: 12px; }
+#reportdashboard .tab.active { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.22); }
+#reportdashboard .skeleton { background: linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,.12), rgba(255,255,255,.06)); background-size: 200% 100%; animation: load 1.2s infinite; border-radius: 10px; }
+
+@keyframes load { 
+  0% {background-position: 200% 0} 
+  100% {background-position: -200% 0} 
+}
+
+/* Transparent gradient headline text */
+#reportdashboard .headline {
+  background-image: linear-gradient(90deg, rgba(163,230,53,1), rgba(59,130,246,1));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+#reportdashboard .headline-red {
+  background-image: linear-gradient(90deg, rgba(251,146,60,1), rgba(244,63,94,1));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Scoped (safe) */
+#reportdashboard h2 {
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+#reportdashboard .table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#reportdashboard .report-tab.active {
+  background: linear-gradient(to right, #9a22f6, #f96fdc);
+  color: white !important;
+  border-radius: 30px;
+  padding: 6px 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+#reportdashboard .report-tab {
+  background: transparent;
+  color: #555;
+  border-radius: 30px;
+  padding: 6px 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+#reportdashboard .report-tab:hover:not(.active) {
+  background: linear-gradient(to right, #42e695, #3bb2b8);
+  color: white !important;
+}
+
+  /* ===== SCOPE EVERYTHING UNDER #ciApp ===== */
+  :root {
+    --ci-glass: rgba(255,255,255,0.08);
+    --ci-glass-soft: rgba(255,255,255,0.06);
+    --ci-border: rgba(255,255,255,0.16);
+    --ci-border-strong: rgba(255,255,255,0.22);
+    --ci-text: rgba(255,255,255,0.92);
+    --ci-muted: rgba(255,255,255,0.70);
+    --ci-muted-2: rgba(255,255,255,0.60);
+    --ci-hover: rgba(154,34,246,0.20);
+    --ci-row-1: rgba(255,255,255,0.05);
+    --ci-row-2: rgba(255,255,255,0.08);
+    --ci-head-grad-1:#a3e635; /* lime-400 */
+    --ci-head-grad-2:#3b82f6; /* blue-500 */
+    --ci-chip-grad-1:#9a22f6; /* purple */
+    --ci-chip-grad-2:#f96fdc; /* pink */
+    --ci-ok-1:#22c55e;  /* green-500 */
+    --ci-ok-2:#84cc16;  /* lime-500 */
+    --ci-warn-1:#f97316;/* orange-500 */
+    --ci-warn-2:#f43f5e;/* rose-500 */
+    --ci-shadow: 0 18px 40px rgba(0,0,0,0.35);
+    --ci-radius-xl: 18px;
+    --ci-radius-lg: 14px;
+    --ci-radius-pill: 9999px;
+  }
+
+
+  /* ===== WRAPPER ===== */
+  #ciApp {
+    color: var(--ci-text);
+    padding: 32px min(6vw, 48px);
+        margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 800px at 10% -10%, rgba(153, 102, 255, .25), transparent 60%),
+      radial-gradient(900px 700px at 110% 0%, rgba(59, 130, 246, .20), transparent 60%),
+      #0b1020;
+    font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+  }
+  #ciApp .ci-shell {
+    border-radius: var(--ci-radius-xl);
+    border: 1px solid var(--ci-border);
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    backdrop-filter: blur(14px);
+    box-shadow: var(--ci-shadow);
+    padding: 20px;
+  }
+
+  /* ===== HEADER ===== */
+  #ciApp .ci-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: end;
+  }
+  #ciApp .ci-title {
+    margin: 0 0 4px 0;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    font-size: clamp(20px, 2.5vw, 26px);
+    background: linear-gradient(90deg, var(--ci-head-grad-1), var(--ci-head-grad-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  #ciApp .ci-sub {
+    margin: 0;
+    color: var(--ci-muted);
+    font-size: 14px;
+  }
+
+  /* ===== FILTERS (gradient-pill controls) ===== */
+  #ciApp .ci-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-self: end;
+  }
+  #ciApp .ci-select {
+    position: relative;
+    display: inline-flex;
+    border-radius: var(--ci-radius-pill);
+    padding: 2px;
+    background: linear-gradient(90deg, var(--ci-chip-grad-1), var(--ci-chip-grad-2), var(--ci-chip-grad-1));
+    background-size: 300% 300%;
+    animation: ci-anim 12s ease infinite;
+  }
+  @keyframes ci-anim { 
+    0%{background-position:0% 50%} 
+    50%{background-position:100% 50%} 
+    100%{background-position:0% 50%}
+  }
+
+  /* Match your “gradient-select”, but scoped and transparent */
+  #ciApp .ci-select select,
+  #ciApp .ci-select input {
+  border: none;
+  outline: none;
+  border-radius: var(--ci-radius-pill);
+  background-color: rgba(0,0,0,0.35); 
+  padding: 10px 36px 10px 14px;
+  font-size: 14px;
+  color: var(--ci-text);
+  min-width: 160px;
+  backdrop-filter: blur(6px);
+}
+
+#ciApp .ci-select select {
+  appearance: none;
+  -webkit-appearance: none; /* Safari / Chrome */
+  -moz-appearance: none;    /* Firefox */
+  background: transparent;
+  padding-right: 28px; /* space for our custom arrow */
+}
+
+#ciApp .ci-select option {
+  background: #0b1020;       /* dark dropdown menu background */
+  color: var(--ci-text);     /* visible text inside dropdown */
+}
+  
+  #ciApp .ci-select input::placeholder { color: var(--ci-muted-2); }
+  /* caret */
+  #ciApp .ci-select::after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 8px; height: 8px;
+    border: solid #a7f3d0;
+    border-width: 0 2px 2px 0;
+    transform: translateY(-50%) rotate(45deg);
+    pointer-events: none;
+    opacity: .85;
+  }
+  /* remove arrow for “Back” chip only (not a select) */
+  #ciApp .ci-select--no-caret::after { display: none; }
+
+  /* ===== PATH/CHIPS ===== */
+  #ciApp .ci-path {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 2px 0;
+  }
+  #ciApp .ci-chip {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: var(--ci-radius-pill);
+    color: var(--ci-text);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--ci-border);
+    backdrop-filter: blur(6px);
+  }
+  #ciApp .ci-back {
+    cursor: pointer;
+    transition: .2s ease;
+  }
+  #ciApp .ci-back:hover {
+    background: rgba(255,255,255,0.16);
+    border-color: var(--ci-border-strong);
+  }
+
+  /* ===== TABLE ===== */
+  #ciApp .ci-table-wrap { margin-top: 16px; overflow-x: auto; }
+  #ciApp .ci-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+  }
+  
+  
+#ciApp .ci-table thead tr {
+  background: linear-gradient(to right, #9a22f6, #f96fdc);
+}
+
+#ciApp .ci-table thead th {
+  text-align: Right;
+  font-weight: 700;
+  font-size: 16px;
+  color: white;              /* keep text visible */
+  padding: 10px 12px;
+  border-radius: 0;          /* reset individual th rounding */
+}
+
+/* Full-width bar under category name */
+#ciApp .ci-bar-wrap {
+  margin-top: 6px;
+  height: 8px;
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#ciApp .ci-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width .4s ease;
+}
+
+#ciApp .ci-bar-expense {
+  background: linear-gradient(90deg, var(--ci-warn-1), var(--ci-warn-2));
+}
+
+#ciApp .ci-bar-income {
+  background: linear-gradient(90deg, var(--ci-ok-1), var(--ci-ok-2));
+}
+
+  
+  #ciApp .ci-table tbody tr {
+    background: var(--ci-row-1);
+    transition: background .15s ease, transform .15s ease;
+  }
+  #ciApp .ci-table tbody tr:nth-child(even) {
+    background: var(--ci-row-2);
+  }
+  #ciApp .ci-table tbody tr:hover {
+    background: var(--ci-hover);
+  }
+  #ciApp .ci-table td {
+    padding: 12px 12px;
+    color: var(--ci-text);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  #ciApp .ci-cell-name {
+    white-space: nowrap;
+  }
+  
+  /* tiny inline bar next to name */
+  #ciApp .ci-bar {
+    display: inline-block;
+    height: 4px;
+    border-radius: 4px;
+    margin-left: 10px;
+    vertical-align: middle;
+    background: linear-gradient(90deg, var(--ci-warn-2), var(--ci-warn-1)); /* default Expense */
+  }
+  #ciApp .ci-bar--income {
+    background: linear-gradient(90deg, var(--ci-ok-1), var(--ci-ok-2));
+  }
+
+  /* Drill header */
+  #ciApp .ci-subtitle {
+    margin: 18px 4px 8px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #fb923c, #f43f5e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Utils */
+  #ciApp .hidden { display: none !important; }
+  #ciApp .right { text-align: right; }
+  #ciApp .click { cursor: pointer; text-decoration: underline dotted; }
+  
+  /* Category label with distinct background colors */
+#ciApp .ci-cat-label {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--ci-radius-pill);
+  color: white;
+  margin-right: 6px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+#ciApp .ci-cat-expense {
+  background: linear-gradient(135deg, #9a22f6, #f96fdc);  /* purple → pink */
+}
+
+#ciApp .ci-cat-income {
+  background: linear-gradient(135deg, #3b82f6, #06b6d4);  /* blue → cyan */
+}

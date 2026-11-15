@@ -1,0 +1,107 @@
+/* Net Worth only: preserve existing balances, actions and KPI hover shadows. */
+body.networth-ui{color-scheme:dark}
+body.networth-ui :is(#netWorthCard,#assetsCard,#liabCard,#changeCard){text-align:left!important;padding:19px!important;border-radius:20px!important;min-width:0;overflow-wrap:anywhere}
+body.networth-ui #netWorthCard{background:linear-gradient(130deg,#302b48,#192635)!important;border-color:#78649b!important;color:#c4b5fd}
+body.networth-ui #assetsCard{background:linear-gradient(130deg,#1f4039,#172635)!important;border-color:#488470!important;color:#6ee7b7}
+body.networth-ui #liabCard{background:linear-gradient(130deg,#422b39,#1c2433)!important;border-color:#91576c!important;color:#fda4af}
+body.networth-ui #changeCard{background:linear-gradient(130deg,#243b50,#23273e)!important;border-color:#5a7a9b!important}
+body.networth-ui #changeCard.kpi--green{background:linear-gradient(130deg,#214238,#202a3c)!important;border-color:#548b76!important}
+body.networth-ui #changeCard.kpi--red{background:linear-gradient(130deg,#422a37,#23273b)!important;border-color:#985d72!important}
+body.networth-ui #netWorthCard:hover{border-color:rgba(139,92,246,.9)!important}
+body.networth-ui #assetsCard:hover{border-color:rgba(16,185,129,.9)!important}
+body.networth-ui #liabCard:hover{border-color:rgba(244,63,94,.9)!important}
+body.networth-ui #changeCard.kpi--green:hover{border-color:rgba(16,185,129,.9)!important}
+body.networth-ui #changeCard.kpi--red:hover{border-color:rgba(244,63,94,.9)!important}
+body.networth-ui :is(#netWorthCard,#assetsCard,#liabCard,#changeCard)>.label{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;margin-bottom:13px;border:1px solid currentColor;border-radius:999px;font-size:12px!important;font-weight:700;background:#0c17264d}
+body.networth-ui .nw-kpi-icon{width:19px;height:19px;flex-shrink:0}
+body.networth-ui :is(#netWorth,#totalAssets,#totalLiab){font-size:clamp(20px,1.6vw,29px)!important;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.4}
+body.networth-ui .nw-period-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-block:6px}
+body.networth-ui .nw-period-grid>div{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:10px;background:#111d2d77;border:1px solid #536881;border-radius:14px;min-width:0}
+body.networth-ui .nw-period-grid strong{font-size:15px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+body.networth-ui .nw-period-label{color:#c6e9ff;font-size:11px;font-weight:750}
+body.networth-ui .nw-comparison-note{font-size:10px;color:#bac9df;line-height:1.5}
+body.networth-ui .nw-pill{display:inline-flex!important;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--nw-accent,#a5c5e4) 45%,transparent)!important;background:#223447!important;background:color-mix(in srgb,var(--nw-accent,#a5c5e4) 13%,#172435)!important;color:var(--nw-accent,#c6e2f7)!important;font-size:12px;font-weight:650;line-height:1.45;white-space:nowrap;max-width:100%}
+body.networth-ui .nw-mint{color:#6ee7b7!important;--nw-accent:#6ee7b7}body.networth-ui .nw-rose{color:#fda4af!important;--nw-accent:#fda4af}
+body.networth-ui table{width:100%;border-collapse:separate;border-spacing:0}
+body.networth-ui :is(td,th){padding:12px 14px;vertical-align:middle;border-bottom:1px solid #3d4e66;line-height:1.5}
+body.networth-ui th{color:#bde8ff;background:#223c51!important;text-align:left;white-space:nowrap}
+body.networth-ui tbody tr:nth-child(odd)>td{background:#152737}body.networth-ui tbody tr:nth-child(even)>td{background:#22263c}
+body.networth-ui tbody tr:hover>td{background:#263e52}
+body.networth-ui .nw-number{text-align:right!important;font-variant-numeric:tabular-nums;white-space:nowrap}
+body.networth-ui #wealth-freshness [data-mr-action=wealth-classify]{background:#40321f;color:#fbd581;border:1px solid #8b743e;border-radius:999px;padding:8px 13px}
+body.networth-ui :is(#wealth-freshness>p,#wealth-classifications>p,#wealth-runway>p,.nw-context){padding:13px 15px;border:1px solid #476377;background:linear-gradient(120deg,#1d3540,#25293f);border-radius:14px;color:#bdd6e7;font-size:12px;line-height:1.7;margin-block:12px}
+body.networth-ui #wealth-change{margin:18px 0;padding:19px;border-radius:20px;border:1px solid #596b8d;background:linear-gradient(120deg,#1e2d40,#29243e)}
+body.networth-ui .nw-change-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:15px 0}
+body.networth-ui .nw-change-tile{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:17px;border:1px solid #4c8b77;background:linear-gradient(135deg,#22443c,#1b2a39);border-radius:16px;min-width:0}
+body.networth-ui .nw-change-tile:nth-child(2){border-color:#75639a;background:linear-gradient(135deg,#342d4e,#202b3c)}
+body.networth-ui .nw-change-tile:nth-child(3){border-color:#927341;background:linear-gradient(135deg,#3e3325,#242b3b)}
+body.networth-ui .nw-change-tile strong{font-size:23px;line-height:1.4;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+body.networth-ui .nw-explanation-note{display:flex;gap:10px;align-items:flex-start;background:#23394b;border:1px solid #56748c;border-left:4px solid #7dd3fc;border-radius:13px;padding:15px;color:#c5deed;line-height:1.7;font-size:12px;margin-block:14px}
+body.networth-ui .nw-explanation-note p{margin:0}
+body.networth-ui .nw-history-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important}
+body.networth-ui .nw-history-grid>div:last-child{grid-template-columns:minmax(0,1fr)!important}
+body.networth-ui .nw-history-grid .liab-card{background:linear-gradient(135deg,#1b3040,#29253d);border:1px solid #526b87;border-radius:18px;min-width:0}
+body.networth-ui .nw-history-grid .mr-chart-viewport{height:260px!important;max-height:260px!important}
+body.networth-ui #allocLegend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:10px}
+body.networth-ui #allocLegend button{padding:8px 13px;border-radius:999px;font-size:12px;white-space:normal;line-height:1.5}
+body.networth-ui :is(dialog.mr-dialog,.tac-modal,.ru-modal){width:min(1080px,calc(100vw - 32px))!important;max-width:calc(100vw - 32px)!important;max-height:calc(100dvh - 40px)!important;min-width:0!important;padding:22px!important;border-radius:22px!important;border:1px solid #586e88!important;background:linear-gradient(130deg,#182e3d,#23243b)!important;overflow:auto;box-sizing:border-box}
+body.networth-ui :is(.tac-modal-backdrop,.ru-modal-backdrop){padding:20px;align-items:center;justify-content:center;overflow:auto;background:#020a14b8;backdrop-filter:blur(6px)}
+body.networth-ui :is(.tac-modal-header,.ru-modal-header){position:sticky;top:-22px;background:#1d2c40;z-index:2;padding:12px;margin:-4px -4px 14px;border-radius:12px;gap:12px}
+body.networth-ui :is(#tac-modalClose,#ru-modalClose,dialog.mr-dialog>[data-mr-detail-close]){padding:10px 16px;background:#3c304f;color:#e3caff;border:1px solid #8c6a9f;border-radius:999px;min-height:42px;flex-shrink:0}
+body.networth-ui dialog.mr-dialog>[data-mr-detail-close]{position:sticky;bottom:0;float:right;margin-top:14px}
+body.networth-ui :is(.tac-modal-kpis,.ru-modal-kpis){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+body.networth-ui :is(.tac-modal-kpi,.ru-mkpi){padding:16px;border-radius:15px;border:1px solid #4a7c6b;background:linear-gradient(135deg,#224438,#1e2b3b);min-width:0}
+body.networth-ui :is(.tac-modal-kpi,.ru-mkpi):nth-child(2n){background:linear-gradient(135deg,#422a39,#222b3c);border-color:#8e5872}
+body.networth-ui .mr-scroll{max-width:100%;overflow:auto;border:1px solid #435b76;border-radius:12px;margin-block:12px;overscroll-behavior-x:contain}
+body.networth-ui .proj-grid{grid-template-columns:minmax(330px,.9fr) minmax(0,1.5fr)!important;gap:18px}
+body.networth-ui .proj-card{min-width:0;padding:18px;border:1px solid #49617d;border-radius:20px;background:linear-gradient(130deg,#172e3a,#24263e)}
+body.networth-ui .proj-baseline{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;min-width:0}
+body.networth-ui :is(.proj-tile,.proj-kpi){min-width:0;padding:14px!important;border-radius:16px!important;opacity:1;border:1px solid #508c76!important;background:linear-gradient(130deg,#244438,#1b2c3c)!important;overflow-wrap:anywhere}
+body.networth-ui :is(.proj-tile.liabilities,.proj-kpi.debt){border-color:#965c70!important;background:linear-gradient(130deg,#432b38,#202b3b)!important;color:#fda4af}
+body.networth-ui :is(.proj-tile.networth,.proj-kpi.target){border-color:#7a679b!important;background:linear-gradient(130deg,#352e4e,#1e2d3d)!important;color:#d2bfff}
+body.networth-ui .proj-kpi.mon{border-color:#567f9e!important;background:linear-gradient(130deg,#254155,#1d2b3d)!important;color:#afe3ff}
+body.networth-ui .proj-val{font-size:17px!important;line-height:1.5;font-variant-numeric:tabular-nums}
+body.networth-ui .proj-label{font-size:11px;line-height:1.5;white-space:normal}
+body.networth-ui .proj-controls .proj-row{grid-template-columns:minmax(0,1fr)}
+body.networth-ui .proj-field{width:100%;min-width:0;padding:13px;border:1px solid #465d76;border-radius:14px;background:#192c3e}
+body.networth-ui .proj-field>div{width:100%;min-width:0;flex-wrap:wrap}
+body.networth-ui .proj-field input[type=number]{flex:1 1 110px;width:auto!important;min-width:0;max-width:100%;min-height:44px}
+body.networth-ui .proj-field input[type=range]{flex:1 1 100%;width:100%;min-width:0;accent-color:#9c90e9}
+body.networth-ui .proj-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
+body.networth-ui .proj-k{font-size:12px;padding:5px 9px;border:1px solid currentColor;border-radius:999px;display:inline-block;line-height:1.5;margin-bottom:12px}
+body.networth-ui .proj-v{font-size:22px!important;font-variant-numeric:tabular-nums;line-height:1.5;overflow-wrap:anywhere}
+body.networth-ui .proj-small{white-space:normal;line-height:1.6}
+body.networth-ui #proj-milestones{border:1px solid #6a7295;background:linear-gradient(130deg,#283a47,#312d45);border-radius:16px;padding:17px;color:#d0def3;line-height:1.8}
+body.networth-ui #proj-chart,body.networth-ui #proj-chart .mr-chart-viewport{height:340px!important;max-height:340px!important}
+@media(max-width:1100px){body.networth-ui .proj-grid{grid-template-columns:minmax(0,1fr)!important}}
+@media(max-width:767px){body.networth-ui{padding-inline:10px;padding-bottom:calc(100px + env(safe-area-inset-bottom))}body.networth-ui .container{padding-inline:0;width:100%;max-width:100%}body.networth-ui .nw-history-grid{grid-template-columns:minmax(0,1fr)!important}body.networth-ui .nw-change-grid{grid-template-columns:minmax(0,1fr)}body.networth-ui .nw-period-grid{grid-template-columns:minmax(0,1fr)}body.networth-ui :is(#netWorthCard,#assetsCard,#liabCard,#changeCard){padding:14px!important}body.networth-ui .proj-baseline{grid-template-columns:minmax(0,1fr)}body.networth-ui .proj-tile{text-align:left!important}body.networth-ui :is(dialog.mr-dialog,.tac-modal,.ru-modal){padding:16px!important;width:calc(100vw - 24px)!important;max-width:calc(100vw - 24px)!important;max-height:calc(100dvh - 24px)!important}body.networth-ui :is(.tac-modal-backdrop,.ru-modal-backdrop){padding:12px}body.networth-ui .tac-modal-header,body.networth-ui .ru-modal-header{top:-16px}body.networth-ui .mr-scroll table{min-width:580px}body.networth-ui .proj-v{font-size:19px!important}body.networth-ui .mr-controls label{flex:1 1 140px}body.networth-ui .proj-btn{min-height:44px}body.networth-ui #proj-chart,body.networth-ui #proj-chart .mr-chart-viewport{height:280px!important;max-height:280px!important}}
+@media(max-width:380px){body.networth-ui .proj-kpis,body.networth-ui .tac-modal-kpis,body.networth-ui .ru-modal-kpis{grid-template-columns:minmax(0,1fr)}}
+body.networth-ui :is(.proj-k,.proj-label){display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+body.networth-ui :is(.proj-k,.proj-label) .nw-kpi-icon{width:16px;height:16px}
+body.networth-ui [data-mr-action=wealth-classify]{min-height:40px}
+body.networth-ui .nw-period-grid .nw-pill{white-space:normal;overflow-wrap:anywhere;font-size:10px}
+body.networth-ui .nw-change-tile .nw-pill{white-space:normal}
+/* r2: larger Advanced Insights and whole-money presentation. */
+body.networth-ui #adv>.grid>.card{grid-column:span 6!important;min-width:0;padding:20px;border-radius:20px;background:linear-gradient(135deg,#1c3343,#29263f);border:1px solid #526b88}
+body.networth-ui #adv>.grid>.card:nth-child(3n+2){background:linear-gradient(135deg,#203e39,#212c40);border-color:#507f76}
+body.networth-ui #adv>.grid>.card:nth-child(3n){background:linear-gradient(135deg,#302d48,#203044);border-color:#72658d}
+body.networth-ui #adv>.grid>.card:has(#chartShock){grid-column:span 12!important}
+body.networth-ui #adv .card>strong{display:block;font-size:17px;color:#c2e9ff;line-height:1.5;margin-bottom:8px}
+body.networth-ui #adv .mr-chart-viewport{height:320px!important;max-height:320px!important;margin-top:16px}
+body.networth-ui .nw-liquidity-summary,body.networth-ui #liquidPct{display:flex;flex-wrap:wrap;align-items:center;gap:7px;line-height:1.6}
+body.networth-ui .nw-assumption-pills{display:flex;gap:8px;flex-wrap:wrap;margin:13px 0;align-items:center}
+body.networth-ui .nw-assumption-pills .nw-pill:nth-child(3n+2){--nw-accent:#c4b5fd}
+body.networth-ui .nw-assumption-pills .nw-pill:nth-child(3n){--nw-accent:#fcd34d}
+body.networth-ui .nw-detail-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:13px;margin:16px 0}
+body.networth-ui .nw-detail-metrics>div{display:flex;flex-direction:column;align-items:flex-start;gap:12px;min-width:0;padding:17px;border:1px solid #4e8574;border-radius:17px;background:linear-gradient(130deg,#21463d,#1c2d40)}
+body.networth-ui .nw-detail-metrics>div:nth-child(3n+2){border-color:#786694;background:linear-gradient(130deg,#362f4e,#202d40)}
+body.networth-ui .nw-detail-metrics>div:nth-child(3n){border-color:#917542;background:linear-gradient(130deg,#403626,#232f40)}
+body.networth-ui .nw-detail-metrics strong{display:block;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.5;overflow-wrap:anywhere;color:#d1e5fb}
+body.networth-ui .nw-detail-metrics .nw-pill{white-space:normal}
+body.networth-ui .nw-ratio-value{display:inline-block;padding:18px 25px;border-radius:20px;background:linear-gradient(120deg,#264c43,#2c324e);border:1px solid #629985;font-size:42px;font-weight:800;margin:15px 0;font-variant-numeric:tabular-nums;line-height:1.4}
+body.networth-ui #adv .card:has(#chartShock)>div:has(#shock){flex-wrap:wrap;gap:12px!important}
+body.networth-ui #adv input[type=number],body.networth-ui #adv select,body.networth-ui #adv button{min-height:44px}
+body.networth-ui #shockLabel{display:inline-flex;padding:7px 11px;border-radius:999px;color:#fcdba0;background:#413421;border:1px solid #8b7146;font-weight:650}
+body.networth-ui #wealth-debt-result{margin-top:15px}
+body.networth-ui #adv .nw-context{font-size:12px;line-height:1.8}
+@media(max-width:767px){body.networth-ui #adv>.grid{grid-template-columns:minmax(0,1fr)!important}body.networth-ui #adv>.grid>.card{grid-column:1/-1!important;padding:15px}body.networth-ui #adv .mr-chart-viewport{height:290px!important;max-height:290px!important}body.networth-ui .nw-detail-metrics{grid-template-columns:minmax(0,1fr)}body.networth-ui .nw-detail-metrics strong{font-size:22px}body.networth-ui .nw-ratio-value{font-size:36px}body.networth-ui #adv .mr-scroll table{min-width:360px}}
