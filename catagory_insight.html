@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<script src="asset/tracker/tracker-feedback.js?v=20261114-v3"></script>
+<script src="asset/tracker/tracker-navigation.js?v=20261114-v3"></script>
+<script src="asset/tracker/app-shell.js?v=mobile-20261115-r2"></script>
+
+  <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Category Insights – Glass UI (Scoped)</title>
+<script src="asset/tracker/config.js?v=20261114-v3"></script>
+<style>
+  /* ===== SCOPE EVERYTHING UNDER #ciApp ===== */
+  :root {
+    --ci-glass: rgba(255,255,255,0.08);
+    --ci-glass-soft: rgba(255,255,255,0.06);
+    --ci-border: rgba(255,255,255,0.16);
+    --ci-border-strong: rgba(255,255,255,0.22);
+    --ci-text: rgba(255,255,255,0.92);
+    --ci-muted: rgba(255,255,255,0.70);
+    --ci-muted-2: rgba(255,255,255,0.60);
+    --ci-hover: rgba(154,34,246,0.20);
+    --ci-row-1: rgba(255,255,255,0.05);
+    --ci-row-2: rgba(255,255,255,0.08);
+    --ci-head-grad-1:#a3e635; /* lime-400 */
+    --ci-head-grad-2:#3b82f6; /* blue-500 */
+    --ci-chip-grad-1:#9a22f6; /* purple */
+    --ci-chip-grad-2:#f96fdc; /* pink */
+    --ci-ok-1:#22c55e;  /* green-500 */
+    --ci-ok-2:#84cc16;  /* lime-500 */
+    --ci-warn-1:#f97316;/* orange-500 */
+    --ci-warn-2:#f43f5e;/* rose-500 */
+    --ci-shadow: 0 18px 40px rgba(0,0,0,0.35);
+    --ci-radius-xl: 18px;
+    --ci-radius-lg: 14px;
+    --ci-radius-pill: 9999px;
+  }
+
+  /* Page backdrop (for demo) */
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 800px at 10% -10%, rgba(153, 102, 255, .25), transparent 60%),
+      radial-gradient(900px 700px at 110% 0%, rgba(59, 130, 246, .20), transparent 60%),
+      #0b1020;
+    font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+  }
+
+  /* ===== WRAPPER ===== */
+  #ciApp {
+    color: var(--ci-text);
+    padding: 32px min(6vw, 48px);
+	    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 800px at 10% -10%, rgba(153, 102, 255, .25), transparent 60%),
+      radial-gradient(900px 700px at 110% 0%, rgba(59, 130, 246, .20), transparent 60%),
+      #0b1020;
+    font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+  }
+  #ciApp .ci-shell {
+    border-radius: var(--ci-radius-xl);
+    border: 1px solid var(--ci-border);
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    backdrop-filter: blur(14px);
+    box-shadow: var(--ci-shadow);
+    padding: 20px;
+  }
+
+  /* ===== HEADER ===== */
+  #ciApp .ci-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: end;
+  }
+  #ciApp .ci-title {
+    margin: 0 0 4px 0;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    font-size: clamp(20px, 2.5vw, 26px);
+    background: linear-gradient(90deg, var(--ci-head-grad-1), var(--ci-head-grad-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  #ciApp .ci-sub {
+    margin: 0;
+    color: var(--ci-muted);
+    font-size: 14px;
+  }
+
+  /* ===== FILTERS (gradient-pill controls) ===== */
+  #ciApp .ci-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-self: end;
+  }
+  #ciApp .ci-select {
+    position: relative;
+    display: inline-flex;
+    border-radius: var(--ci-radius-pill);
+    padding: 2px;
+    background: linear-gradient(90deg, var(--ci-chip-grad-1), var(--ci-chip-grad-2), var(--ci-chip-grad-1));
+    background-size: 300% 300%;
+    animation: ci-anim 12s ease infinite;
+  }
+  @keyframes ci-anim { 
+    0%{background-position:0% 50%} 
+    50%{background-position:100% 50%} 
+    100%{background-position:0% 50%}
+  }
+
+  /* Match your “gradient-select”, but scoped and transparent */
+  #ciApp .ci-select select,
+  #ciApp .ci-select input {
+  border: none;
+  outline: none;
+  border-radius: var(--ci-radius-pill);
+  background-color: rgba(0,0,0,0.35); 
+  padding: 10px 36px 10px 14px;
+  font-size: 14px;
+  color: var(--ci-text);
+  min-width: 160px;
+  backdrop-filter: blur(6px);
+}
+
+#ciApp .ci-select select {
+  appearance: none;
+  -webkit-appearance: none; /* Safari / Chrome */
+  -moz-appearance: none;    /* Firefox */
+  background: transparent;
+  padding-right: 28px; /* space for our custom arrow */
+}
+
+#ciApp .ci-select option {
+  background: #0b1020;       /* dark dropdown menu background */
+  color: var(--ci-text);     /* visible text inside dropdown */
+}
+  
+  #ciApp .ci-select input::placeholder { color: var(--ci-muted-2); }
+  /* caret */
+  #ciApp .ci-select::after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 8px; height: 8px;
+    border: solid #a7f3d0;
+    border-width: 0 2px 2px 0;
+    transform: translateY(-50%) rotate(45deg);
+    pointer-events: none;
+    opacity: .85;
+  }
+  /* remove arrow for “Back” chip only (not a select) */
+  #ciApp .ci-select--no-caret::after { display: none; }
+
+  /* ===== PATH/CHIPS ===== */
+  #ciApp .ci-path {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 2px 0;
+  }
+  #ciApp .ci-chip {
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: var(--ci-radius-pill);
+    color: var(--ci-text);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--ci-border);
+    backdrop-filter: blur(6px);
+  }
+  #ciApp .ci-back {
+    cursor: pointer;
+    transition: .2s ease;
+  }
+  #ciApp .ci-back:hover {
+    background: rgba(255,255,255,0.16);
+    border-color: var(--ci-border-strong);
+  }
+
+  /* ===== TABLE ===== */
+  #ciApp .ci-table-wrap { margin-top: 16px; overflow-x: auto; }
+  #ciApp .ci-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+  }
+  
+  
+#ciApp .ci-table thead tr {
+  background: linear-gradient(to right, #9a22f6, #f96fdc);
+}
+
+#ciApp .ci-table thead th {
+  text-align: Right;
+  font-weight: 700;
+  font-size: 16px;
+  color: white;              /* keep text visible */
+  padding: 10px 12px;
+  border-radius: 0;          /* reset individual th rounding */
+}
+
+/* Full-width bar under category name */
+#ciApp .ci-bar-wrap {
+  margin-top: 6px;
+  height: 8px;
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#ciApp .ci-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width .4s ease;
+}
+
+#ciApp .ci-bar-expense {
+  background: linear-gradient(90deg, var(--ci-warn-1), var(--ci-warn-2));
+}
+
+#ciApp .ci-bar-income {
+  background: linear-gradient(90deg, var(--ci-ok-1), var(--ci-ok-2));
+}
+
+  
+  #ciApp .ci-table tbody tr {
+    background: var(--ci-row-1);
+    transition: background .15s ease, transform .15s ease;
+  }
+  #ciApp .ci-table tbody tr:nth-child(even) {
+    background: var(--ci-row-2);
+  }
+  #ciApp .ci-table tbody tr:hover {
+    background: var(--ci-hover);
+  }
+  #ciApp .ci-table td {
+    padding: 12px 12px;
+    color: var(--ci-text);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  #ciApp .ci-cell-name {
+    white-space: nowrap;
+  }
+  
+  /* tiny inline bar next to name */
+  #ciApp .ci-bar {
+    display: inline-block;
+    height: 4px;
+    border-radius: 4px;
+    margin-left: 10px;
+    vertical-align: middle;
+    background: linear-gradient(90deg, var(--ci-warn-2), var(--ci-warn-1)); /* default Expense */
+  }
+  #ciApp .ci-bar--income {
+    background: linear-gradient(90deg, var(--ci-ok-1), var(--ci-ok-2));
+  }
+
+  /* Drill header */
+  #ciApp .ci-subtitle {
+    margin: 18px 4px 8px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #fb923c, #f43f5e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Utils */
+  #ciApp .hidden { display: none !important; }
+  #ciApp .right { text-align: right; }
+  #ciApp .click { cursor: pointer; text-decoration: underline dotted; }
+  
+  /* Category label with distinct background colors */
+#ciApp .ci-cat-label {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--ci-radius-pill);
+  color: white;
+  margin-right: 6px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+#ciApp .ci-cat-expense {
+  background: linear-gradient(135deg, #9a22f6, #f96fdc);  /* purple → pink */
+}
+
+#ciApp .ci-cat-income {
+  background: linear-gradient(135deg, #3b82f6, #06b6d4);  /* blue → cyan */
+}
+  
+  
+</style>
+  <link rel="stylesheet" href="asset/tracker/app-shell.css?v=20261114-v3">
+<link rel="stylesheet" href="asset/tracker/original-five-additions.css?v=20261114-v3">
+<script src="asset/tracker/original-five-loader.js?v=20261114-v3" defer></script>
+<link rel="stylesheet" href="asset/tracker/tracker-ui-v3.css?v=20261114-v3">
+<script src="asset/tracker/tracker-read-cache.js?v=20261114-v3"></script>
+<link rel="stylesheet" href="asset/tracker/category-insights-ui.css?v=category-20261115-r1">
+<link rel="stylesheet" href="asset/tracker/workspace-progress-ring.css?v=category-loader-20261115-r1">
+</head>
+<body class="category-insights-ui" data-ui-release="20261114-v3">
+  <div id="ciApp">
+    <div class="ci-shell">
+      <!-- Header + Filters (same row on wide, wrap on small) -->
+      <div class="ci-header">
+        <div>
+          <h2 class="ci-title">Category Insights</h2>
+          <p class="ci-sub">Filter by type, then drill into a category to see sub-totals by Description.</p>
+        </div>
+        <div class="ci-filters">
+          <div class="ci-select">
+            <select id="ciType">
+              <option value="expense" selected>Expenses</option>
+              <option value="income">Income</option>
+            </select>
+          </div>
+          <div class="ci-select">
+            <select id="ciTime">
+              <option value="this-month" selected>This Month</option>
+              <option value="last-month">Last Month</option>
+              <option value="this-year">This Year</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <div class="ci-select ci-select--no-caret">
+            <input id="ciSearch" placeholder="Search category…" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Path / Chips -->
+      <div class="ci-path">
+        <span class="ci-chip">Level: <strong id="ciLevel">Category</strong></span>
+        <span class="ci-chip">Type: <strong id="ciTypeChip">expense</strong></span>
+        <span class="ci-chip">Range: <strong id="ciTimeChip">This Month</strong></span>
+        <button id="ciBack" class="ci-chip ci-back hidden">Back</button>
+      </div>
+
+      <!-- Table -->
+      <div class="ci-table-wrap">
+        <table class="ci-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Name</th>
+              <th class="right">Total</th>
+              <th class="right">% of Total</th>
+              <th class="right">Count</th>
+            </tr>
+          </thead>
+          <tbody id="ciBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Drill Transactions -->
+      <h3 id="ciDrillHdr" class="ci-subtitle hidden">Transactions (selected)</h3>
+      <div id="ciDrillWrap" class="ci-table-wrap hidden">
+        <table class="ci-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Date</th>
+              <th style="text-align:left">Account</th>
+              <th style="text-align:left">Category</th>
+              <th style="text-align:left">Description</th>
+              <th class="right">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="ciTxBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+<script src="asset/tracker/original-five-planner.js?v=20261114-v3"></script>
+<script src="asset/tracker/original-five-core.js?v=20261114-v3"></script>
+<script src="asset/tracker/original-five-common.js?v=20261114-v3"></script>
+<script src="asset/tracker/category-insights-view.js?v=category-20261115-r1"></script>
+<script src="asset/tracker/original-five-category-reports.js?v=category-20261115-r1"></script>
+<script src="asset/tracker/tracker-ui-v3.js?v=20261114-v3"></script>
+<script src="asset/tracker/workspace-progress-ring.js?v=category-loader-20261115-r1"></script>
+</body>
+</html>

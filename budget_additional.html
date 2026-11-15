@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+<script src="asset/tracker/tracker-feedback.js?v=20261114-v3"></script>
+<script src="asset/tracker/tracker-navigation.js?v=20261114-v3"></script>
+<script src="asset/tracker/app-shell.js?v=mobile-20261115-r2"></script>
+
+  <meta charset="utf-8" />
+  <title>Budget+ — Spending & Planning Studio</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <!-- Chart.js -->
+
+<script src="asset/tracker/config.js?v=20261114-v3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ============ Glassmorphism Dark Theme ============ */
+    :root {
+      --bg: #08101a;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.06);
+      --accent: #60a5fa;
+      --muted: #9aa7b8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --glass-radius: 12px;
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:
+        radial-gradient(800px 400px at 10% 10%, rgba(96, 165, 250, 0.06), transparent 15%),
+        radial-gradient(600px 320px at 90% 80%, rgba(99, 102, 241, 0.04), transparent 12%),
+        var(--bg);
+      color: #e6eef8;
+      -webkit-font-smoothing: antialiased;
+      padding: 18px;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.2px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select,
+    button {
+      background: rgba(255, 255, 255, 0.03);
+      color: inherit;
+      border: 1px solid var(--card-border);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, var(--accent), #3b82f6);
+      border: none;
+      color: #031026;
+      font-weight: 600;
+    }
+
+    .chip {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    /* card */
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      border: 1px solid var(--card-border);
+      border-radius: var(--glass-radius);
+      padding: 14px;
+      box-shadow: 0 6px 20px rgba(2, 6, 23, 0.6);
+      backdrop-filter: blur(10px) saturate(1.1);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width:900px) {
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 220px !important;
+    }
+
+    .kpi {
+      font-size: 20px;
+      font-weight: 700;
+      color: #e8f7ff;
+    }
+
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    #heatGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .heat-cell {
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .heat-cell:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .heat-cell:hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: 110%;
+      /* show above the cell */
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+
+    .badge {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .progress {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 999px;
+      height: 22px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--success), #34d399);
+      width: 0%;
+      text-align: center;
+      font-size: 12px;
+      color: #021215;
+      padding-left: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: inherit;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      color: inherit
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600
+    }
+
+    .tips .card {
+      margin-bottom: 8px;
+    }
+
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* Heatmap Sort Button */
+    .heat-btn {
+      background: #2563eb;
+      /* blue theme */
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      /* rounded corners */
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .heat-btn:hover {
+      background: #1e40af;
+      /* darker blue on hover */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .heat-btn:active {
+      transform: scale(0.97);
+      /* subtle click effect */
+    }
+
+    #loadBtn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    #loadBtn:hover {
+      background: #1e40af;
+    }
+
+    /* Tiny spinner hidden by default */
+    #loadBtn .btn-loader {
+      display: none;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #fff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .alert-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      line-height: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      white-space: nowrap;
+    }
+  </style>
+  <link rel="stylesheet" href="asset/tracker/app-shell.css?v=20261114-v3">
+<link rel="stylesheet" href="asset/tracker/original-five-additions.css?v=20261114-v3">
+<script src="asset/tracker/original-five-loader.js?v=20261114-v3" defer></script>
+<link rel="stylesheet" href="asset/tracker/tracker-ui-v3.css?v=20261114-v3">
+<script src="asset/tracker/tracker-read-cache.js?v=20261114-v3"></script>
+<link rel="stylesheet" href="asset/tracker/budgetplus-ui-corrections.css?v=budgetplus-20261115-r1">
+<link rel="stylesheet" href="asset/tracker/workspace-progress-ring.css?v=budgetplus-loader-20261115-r1">
+</head>
+
+<body data-ui-release="20261114-v3">
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Budget+ · Spending & Planning Studio</h1>
+        <div class="sub">Live fetch + robust normalizer. Theme: black glassmorphism.</div>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center;">
+        <div class="chip" id="dataSourceChip">Data: sample</div>
+      </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="card controls">
+      <div>
+        <label class="small">Year</label><br>
+        <select id="yearSel"></select>
+      </div>
+      <div>
+        <label class="small">Month</label><br>
+        <select id="monthSel"></select>
+      </div>
+      <div>
+        <label class="small">Currency</label><br>
+        <select id="ccySel">
+          <option selected>INR</option>
+          <option>USD</option>
+          <option>EUR</option>
+        </select>
+      </div>
+      <div style="margin-left:auto">
+        <button id="loadBtn">
+          <span class="btn-text">🔄 Load Live</span>
+          <span class="btn-loader"></span>
+        </button>
+      </div>
+    </div>
+
+    <main>
+      <!-- KPIs -->
+      <div class="grid-2">
+        <div class="card">
+          <div class="small">Income (Month)</div>
+          <div id="kpiIncome" class="kpi">—</div>
+        </div>
+        <div class="card">
+          <div class="small">Expense (Month)</div>
+          <div id="kpiExpense" class="kpi">—</div>
+        </div>
+        <div class="card">
+          <div class="small">Savings Rate</div>
+          <div id="kpiSaveRate" class="kpi">—</div>
+        </div>
+        <div class="card">
+          <div class="small">Over-Budget Categories</div>
+          <div id="kpiOver" class="kpi">—</div>
+        </div>
+      </div>
+
+      <!-- (All other sections unchanged from your original layout) -->
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">1. Budget vs Actual</h3>
+          <canvas id="chBudgetVsActual"></canvas><p class="bp-note">Category budgets are whole-month limits. Account filters affect recorded actuals, not budget allocation. Amber bars show budget; green bars show actual.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">2. Income vs Expense — 12 mo</h3>
+          <canvas id="chIncExpTrend"></canvas><p class="bp-note">Recorded income and expenses through the selected cutoff. Future months are gaps.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">3. Monthly Cashflow</h3><canvas id="chCashflow"></canvas><p class="bp-note">Net cash flow = recorded income − recorded expenses. Positive and negative values retain their sign.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">4. Top 5 Expenses</h3><canvas id="chTop5"></canvas><p class="bp-note">Five largest expense categories plus Others. Amount labels are rounded for readability; the tooltip shows exact recorded amounts.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">5. Category Heatmap</h3>
+          <div style="margin-bottom:10px; text-align:right;">
+            <button id="heatSortToggle" class="heat-btn">Sort: By Overspend</button>
+          </div>
+          <div id="heatGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">6. Recurring vs One-time</h3><canvas id="chRecurring"></canvas><div id="bp-recurring-details"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">7. Payment Methods</h3><canvas id="chPayMethod"></canvas>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">8. Income Streams</h3><canvas id="chIncomeStreams"></canvas><div id="bp-income-sources"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">9. Variance by Category</h3><canvas id="chVariance"></canvas><p class="bp-note">Variance = actual − budget. Positive values are overspending; negative values are below budget. Unbudgeted spending is identified in Alerts.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">10. Cumulative Budget Burn (YTD)</h3><canvas id="chBurn"></canvas><p class="bp-note">Cumulative monthly category budgets compared with cumulative recorded expenses. Missing or invalid budgets require review; these are not daily forecasts.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">11. Affordability Index</h3><canvas id="chAfford"></canvas><p class="bp-note">One colored point per category. X = share of category budgets; Y = share of recorded spending. This compares allocations, not personal affordability.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">12. Alerts & Exceptions · Review required</h3>
+
+          <div class="text-right mb-2">
+            <select id="alertSort" class="px-2 py-1 rounded bg-white/10 border border-white/20 text-sm">
+              <option value="used">Sort: By Used %</option>
+              <option value="variance">Sort: By Variance</option>
+              <option value="alpha">Sort: Alphabetical</option>
+            </select>
+          </div>
+
+
+          <div style="overflow:auto">
+            <table class="min-w-full">
+              <thead class="bg-white/10">
+                <tr>
+                  <th class="px-3 py-2 text-left">Category</th>
+                  <th class="px-3 py-2 text-right">Budget</th>
+                  <th class="px-3 py-2 text-right">Actual</th>
+                  <th class="px-3 py-2 text-right">Used%</th>
+                  <th class="px-3 py-2 text-left">Status</th>
+                  <th class="px-3 py-2 text-left">Style</th>
+                </tr>
+              </thead>
+              <tbody id="tblAlerts"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">13. Savings Rate Trend</h3><canvas id="chSaveTrend"></canvas><p class="bp-note">Savings rate = (income − expenses) ÷ income × 100. Months with no income have no rate; future months remain gaps.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">14. Expense Forecast (3 mo)</h3><canvas id="chForecast"></canvas><div id="bp-forecast-details"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">15. Net Worth Trend</h3><canvas id="chNetWorth"></canvas><p class="bp-note">Uses actual valuation history in the selected currency through the recorded cutoff. Ledger cash flow is not substituted for net worth.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">16. Debt & EMI</h3><canvas id="chDebt"></canvas><p class="bp-note">Outstanding balances and monthly EMI have separate labeled axes. Missing EMI values remain gaps.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">17. Seasonality YoY</h3><canvas id="chSeasonality"></canvas><div id="bp-seasonality-details"></div><p class="bp-note">Compares recorded expenses through equivalent month/day cutoffs. Missing comparison-year history is not estimated.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">18. Scenario Simulator</h3>
+
+          <!-- Sliders will be injected dynamically -->
+          <div id="simSliders"></div>
+
+          <!-- Savings summary -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px">
+            <div class="card">
+              <div class="small">Projected Monthly Savings</div>
+              <div id="simSavings" class="kpi">—</div>
+            </div>
+            <div class="card">
+              <div class="small">New Savings Rate</div>
+              <div id="simRate" class="kpi">—</div>
+            </div>
+          </div>
+
+          <!-- Chart -->
+          <canvas id="chScenario" style="margin-top:10px"></canvas><p class="bp-note">Recorded values and your hypothetical reductions are separate datasets. Scenario sliders are in Report 19; saving a scenario changes no transaction.</p>
+        </div>
+
+      </div>
+
+
+      <div class="card">
+        <div class="bp-opportunity-layout">
+          <div>
+            <h3 style="margin:0 0 8px 0">19. Savings Opportunity Meter</h3>
+            <canvas id="gaugeCanvas" height="240"></canvas><div id="bp-opportunity-percent" class="bp-meter-value">0%</div>
+            <div id="gaugeSummary" class="small" style="margin-top:8px">—</div>
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center">
+              <h3 id="tipsHeading" style="margin:0">Top Tips of the Month</h3>
+              <div class="badge small">Actionable</div>
+            </div>
+            <div id="tipsContainer" class="tips" style="margin-top:8px"></div>
+
+            <div style="margin-top:12px">
+              <h4 id="whatIfHeading" style="margin:0 0 8px 0">What-If Simulator</h4>
+              <div id="slidersArea" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px"></div>
+
+              <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px">
+                <div class="card text-center">
+                  <div class="small">Projected New Expense</div>
+                  <div id="projExpense" class="kpi">—</div>
+                </div>
+                <div class="card text-center">
+                  <div class="small">Projected New Savings</div>
+                  <div id="projSavings" class="kpi">—</div>
+                </div>
+                <div class="card text-center">
+                  <div class="small">Projected Savings Rate</div>
+                  <div id="projRate" class="kpi">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <h4 style="margin:0 0 6px 0">Savings Challenge Tracker</h4>
+          <div class="small">Goal: ₹5,000 this month</div>
+          <div class="progress" style="margin-top:8px">
+            <div id="challengeBar" class="progress-bar">0%</div>
+          </div>
+          <div id="challengeSummary" class="small" style="margin-top:8px">—</div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+        <h4 id="whatIfHeadingDuplicate" style="margin:0">What-If Simulator</h4>
+        <button id="resetBtn" class="btn small">Reset</button>
+      </div>
+
+    </main>
+
+    <footer>Recorded reports and explicitly labelled planning scenarios.</footer>
+  </div>
+
+  
+
+
+
+<script src="asset/tracker/original-five-planner.js?v=20261114-v3"></script>
+<script src="asset/tracker/original-five-core.js?v=20261114-v3"></script>
+<script src="asset/tracker/budgetplus-view-core.js?v=budgetplus-20261115-r1"></script>
+<script src="asset/tracker/budgetplus-ui-corrections.js?v=budgetplus-20261115-r1"></script>
+<script src="asset/tracker/budgetplus-report-common.js?v=budgetplus-20261115-r1"></script>
+<script src="asset/tracker/original-five-budgetplus-reports.js?v=budgetplus-20261115-r1"></script>
+<script src="asset/tracker/tracker-ui-v3.js?v=20261114-v3"></script>
+<script src="asset/tracker/workspace-progress-ring.js?v=budgetplus-loader-20261115-r1"></script>
+</body>
+
+</html>
